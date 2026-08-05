@@ -80,6 +80,20 @@ Keep `workers: 1`; record one module at a time.
 | `setup-tts.sh` + `requirements.txt` | Reproducible Kokoro venv. |
 | `flows/` | `playwright.config` + `support/actions` + example spec templates. |
 
+## Prerequisites (not bundled — set up once per machine)
+
+The plugin ships the skill + scripts, but recording needs these locally first:
+
+- **System tools:** `node`, `python3`, `ffmpeg` + `ffprobe`, `espeak-ng`. On the
+  target project also `npm i` + `npx playwright install chromium`.
+- **Kokoro TTS venv:** `./setup-tts.sh` (downloads torch + the model, heavy;
+  gitignored, so recreated per machine). It checks for `espeak-ng`/`ffmpeg` first.
+- **Per-target config:** the copied `.env` (target URL, creds, login selectors,
+  storage) and `modules.mjs` (your scenes). Nothing works until these are filled.
+
+Installing the plugin does NOT make it turnkey — it makes Claude able to *do* the
+setup and recording. Walk the user through anything missing above.
+
 ## Quickstart (per project)
 
 ```bash
