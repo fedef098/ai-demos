@@ -1,0 +1,76 @@
+# Example CI: after a deploy, re-record the demos for the features that changed
+# and publish them. Copy to .github/workflows/demos.yml in your PROJECT repo and
+# adapt. Runs on the self-hosted runners (free minutes; Kokoro/ffmpeg are heavy).
+#
+# The loop the skill predicates — deploy -> demo -> update tests & flows — is
+# encoded here: this job assumes the deploy already happened (chain it after your
+# deploy workflow via `workflow_run`, or merge the steps). It then runs the E2E
+# flows (fail fast on real bugs), records, and publishes to the project storage.
+
+name: Demos (record + publish)
+
+on:
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: "Space-separated module ids (blank = all)"
+        required: false
+        default: ""
+  workflow_run:
+    workflows: ["Deploy"]   # <- your deploy workflow name
+    types: [completed]
+
+concurrency:
+  group: demos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demos:
+    # only after a successful deploy (or manual dispatch)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: [self-hosted]
+    defaults:
+      run:
+        working-directory: demos   # where this toolkit lives in your repo
+    env:
+      DEMO_URL: ${{ vars.DEMO_URL }}
+      DEMO_PASS: ${{ secrets.DEMO_PASS }}
+      S3_BUCKET: ${{ vars.S3_BUCKET }}
+      S3_PUBLIC_URL: ${{ vars.S3_PUBLIC_URL }}
+      S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+      S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+      PF_CMD: ${{ vars.PF_CMD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install JS deps + Playwright Chromium
+        run: |
+          npm ci || npm i
+          npx playwright install --with-deps chromium
+
+      - name: Setup Kokoro TTS venv
+        run: ./setup-tts.sh
+
+      - name: Verify a fresh pod serves the new code
+        run: curl -fsS "$DEMO_URL/up" || curl -fsS "$DEMO_URL/"
+
+      - name: Run E2E flows (fail fast on real bugs before recording)
+        run: npx playwright test || (echo "flows failed — fix the app, not the demo" && exit 1)
+
+      - name: Record demos
+        run: ./build-modules.sh ${{ github.event.inputs.modules }}
+
+      - name: Publish to project storage (+ manifest)
+        run: ./publish.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: demos
+          path: |
+            demos/modules/*.mp4
+            demos/modules/*.vtt

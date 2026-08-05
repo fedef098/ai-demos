@@ -1,0 +1,20 @@
+{
+  "name": "demo-recording-toolkit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Project-agnostic toolkit for narrated, per-feature product demo videos (Playwright + Kokoro TTS + ffmpeg).",
+  "scripts": {
+    "setup:tts": "./setup-tts.sh",
+    "record": "./build-modules.sh",
+    "subtitles": "node make-subtitles.mjs",
+    "publish": "./publish.sh",
+    "test:flows": "playwright test"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "demo-recording",
+  "displayName": "AI Demo Recorder",
+  "version": "1.0.0",
+  "description": "Record narrated, subtitled product demo videos of the live app (Playwright + Kokoro TTS + ffmpeg): visible cursor, narration synced to the action, small passing subtitles, and one-command publish to your own storage.",
+  "author": { "name": "fedef098" },
+  "repository": "https://github.com/fedef098/ai-demos",
+  "license": "MIT",
+  "keywords": ["demo", "recording", "video", "screencast", "playwright", "tts"],
+  "skills": "./skills/"
+}

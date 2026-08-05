@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "ai-demos",
+  "owner": { "name": "fedef098", "url": "https://github.com/fedef098" },
+  "description": "Tooling for recording narrated AI product demo videos.",
+  "plugins": [
+    {
+      "name": "demo-recording",
+      "displayName": "AI Demo Recorder",
+      "source": ".",
+      "description": "Record narrated, subtitled product demo videos of the live app, with a visible cursor and synced narration.",
+      "category": "automation",
+      "tags": ["demo", "recording", "video", "screencast"]
+    }
+  ]
+}

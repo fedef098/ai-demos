@@ -1,0 +1,23 @@
+# Secrets & per-project config
+**/.env
+
+# TTS venv (recreated by setup-tts.sh)
+**/.kokoro-venv/
+
+# Node
+**/node_modules/
+
+# Recording intermediates & outputs
+**/build/
+**/modules/
+**/*.mp4
+**/*.webm
+**/*.wav
+**/*.srt
+**/*.vtt
+
+# Smoke-test scratch
+**/_smoke*.mjs
+**/_smoke*.png
+
+.DS_Store

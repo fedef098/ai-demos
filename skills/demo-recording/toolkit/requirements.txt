@@ -1,0 +1,8 @@
+# Kokoro TTS stack — pinned to the versions proven on the LuxuryApp reference.
+# Installed into ./.kokoro-venv by setup-tts.sh. CPU torch is enough (no GPU).
+kokoro==0.9.4
+misaki==0.9.4
+soundfile==0.14.0
+numpy==2.5.0
+torch==2.12.1
+espeakng-loader==0.2.4
