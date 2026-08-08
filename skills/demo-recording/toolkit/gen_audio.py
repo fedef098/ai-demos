@@ -35,7 +35,11 @@ def main():
             chunks.append(np.asarray(audio, dtype=np.float32))
         seg = np.concatenate(chunks) if chunks else np.zeros(int(SR), dtype=np.float32)
         dur = len(seg) / SR
-        slot = max(dur + GAP, MIN_SLOT)
+        # `minSlot` (seconds) lets a module force a longer slot for steps whose
+        # on-screen actions take longer than the narration, so the recorder can
+        # always pad the video to fit and never desyncs. Set from measured
+        # per-step action times (see record-module.mjs sync-report.json).
+        slot = max(dur + GAP, MIN_SLOT, step.get("minSlot", 0))
         pad = int((slot - dur) * SR)
         full.append(seg)
         full.append(np.zeros(pad, dtype=np.float32))

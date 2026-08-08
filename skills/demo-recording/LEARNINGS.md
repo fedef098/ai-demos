@@ -26,12 +26,72 @@ Read this before recording — it's cheaper than rediscovering them.
   **Fix (rule):** make each scroll **its own step** whose narration literally
   says "scrolling down…". `finish()` guarantees the previous step is fully spoken
   before the scroll step starts.
-- **The `finish()` clock only pads; it never compresses.** If a step's actions
-  take longer than its narration, the video falls behind the audio for the *rest*
-  of the module. Keep per-step actions short, or lengthen the narration.
-- **Verify at step boundaries**, not just mid-step: `ffmpeg -ss <t> -i out.mp4
-  -frames:v 1 f.png` at a few timestamps and actually look — confirm the cursor
-  is visible, the right screen is shown, and the subtitle matches what's on it.
+- **The `finish()` clock only pads; it never compresses** (this is THE cause of
+  progressive desync). `finish(id)` does `waitForTimeout(max(0, clock + acc -
+  now))`. If a step's on-screen actions take LONGER than its narration slot,
+  `now` is already past the target, the wait is 0, and the video is behind — and
+  it **stays** behind for every later step, so "it talks about the next section
+  while still on the current one" gets worse toward the end. One slow step poisons
+  the whole rest of the video.
+
+### The deterministic fix — measure, then force the slot (automated)
+
+Guessing narration lengths (or measuring with a `run_code` dry-run) is NOT enough:
+the real recording adds cursor-move animation + real network latency, so actions
+run **several seconds longer** than a bare dry-run suggests. Measure from a real
+recording and let the audio pad to fit:
+
+1. **`record-module.mjs` writes `build/<id>/sync-report.json`** — per step
+   `{actionMs, slotMs, overrunMs}` (actual action wall-time vs allocated slot).
+   `overrunMs > 0` == that step overran and desynced everything after it. It also
+   prints `sync: N overrun step(s)`.
+2. **`minSlot` per step** (`gen_audio.py` honours `step.minSlot`, merged from
+   `minslots.json` by `emit-narration.mjs`). Setting `minSlot >= actionMs/1000 +
+   ~0.7s buffer` forces the slot to be long enough, so `finish()` can always pad.
+   The narration finishes and the video quietly completes the action in the
+   remaining slot — no desync. `update-minslots.mjs` writes it straight from the
+   report.
+3. **Loop until clean:** record → `update-minslots.mjs` → record → repeat until
+   `sync-report.json` shows **0 overruns**. Usually 2 passes. Deterministic; no
+   eyeballing.
+
+### Overrun causes actually hit (fix these at the source, don't just pad)
+
+- **The UI login sat inside the first timed step.** The multi-second
+  email→password→submit→wait-for-dashboard flow ran during the `intro` slot, so
+  the intro narration (talking about the sidebar) played over the *login screen*
+  and everything after was ~8s behind from frame one.
+  **Fix:** log in **without the UI** — `page.request.post('/auth/login', …)`; the
+  APIRequestContext shares the browser cookie jar, so the session cookie lands and
+  `nav()` to the app is already authenticated. The intro then starts on the real
+  page. (Keep the shared-secret / test-mode bypass in mind for Turnstile-gated
+  forms.)
+- **A modal-close click hung for 30s.** Adding a *charity preset* auto-closes its
+  picker modal, so the follow-up "click the X" waited 30s for a button that no
+  longer existed → one step ballooned to 34s and desynced the rest.
+  **Fix:** close modals with `Escape` first, then an X click with a **short**
+  timeout (`click({timeout:1200}).catch(()=>{})`); and know per-modal whether
+  adding an item auto-closes it (don't close what already closed).
+- **Debounced text fields clobber each other.** Filling name then headline saved
+  only the headline (the debounced patch replaces the pending one). **Wait ~1.7s
+  between debounced fields** so each flush lands (and it costs slot time — budget
+  for it).
+- **Collapsed panels / hidden controls.** The obituary templates panel is
+  collapsed by default; the "Use this template" button isn't clickable until you
+  toggle it open. Real content beats a template full of `[Name]` placeholders —
+  type a short real bio into the editor instead.
+- **Show the navigation.** Between editor steps, `window.scrollTo({top:0})` first
+  so the step tabs are visible and the click is on screen (otherwise you're still
+  scrolled down in the previous section when the next one is selected).
+- **Verify at step boundaries**, not just mid-step: compute each step's audio
+  midpoint from `timing.json` (`lead + Σslots`), `ffmpeg -ss <t> -frames:v 1`, and
+  confirm the subtitle matches the screen. But `sync-report.json` (0 overruns) is
+  the authoritative check — frames just confirm it.
+- **Non-sync re-records are usually "the flow ran but the result looks wrong":**
+  empty sections (fill every section, via presets where they exist), placeholder
+  images (fetch real photos — `curl` may need the sandbox off), or a background
+  that only breaks on the *rendered public page*. Always screenshot the final
+  rendered artifact, not just the editor.
 
 ## Live AI assistant (or any async response) in a demo
 

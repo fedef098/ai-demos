@@ -18,7 +18,10 @@ const dir = path.join(HERE, "build", id);
 const timing = JSON.parse(fs.readFileSync(path.join(dir, "timing.json"), "utf8"));
 const slot = Object.fromEntries(timing.steps.map((s) => [s.id, s.slot]));
 
-const b = await chromium.launch({ headless: true });
+const b = await chromium.launch({
+  headless: true,
+  ...(process.env.DEMO_CHROME ? { executablePath: process.env.DEMO_CHROME } : {}),
+});
 const ctx = await b.newContext({
   viewport: { width, height },
   deviceScaleFactor,
@@ -38,9 +41,25 @@ fs.writeFileSync(path.join(dir, "offset.json"), JSON.stringify({ loadTime: +load
 
 const clock = Date.now();
 let acc = timing.lead || 0.6;
+// Sync instrumentation: each step's actions must fit inside its narration slot,
+// or finish() can't pad and the video falls behind the audio permanently. We log
+// the actual wall time each step's actions took vs its slot, so overruns (the
+// cause of desync) can be found and the narration lengthened until it fits.
+let lastFinishWall = clock + (timing.lead || 0.6) * 1000;
+const syncReport = [];
 async function finish(id2) {
+  const now = Date.now();
+  const actionMs = now - lastFinishWall;
+  const slotMs = (slot[id2] || 4) * 1000;
   acc += slot[id2] || 4;
+  syncReport.push({
+    id: id2,
+    actionMs: Math.round(actionMs),
+    slotMs: Math.round(slotMs),
+    overrunMs: Math.round(actionMs - slotMs),
+  });
   await page.waitForTimeout(Math.max(0, clock + acc * 1000 - Date.now()));
+  lastFinishWall = Date.now();
 }
 await page.waitForTimeout((timing.lead || 0.6) * 1000);
 
@@ -49,6 +68,12 @@ try {
 } catch (e) {
   console.error("run error:", e.message);
 }
+fs.writeFileSync(path.join(dir, "sync-report.json"), JSON.stringify(syncReport, null, 2));
+const overruns = syncReport.filter((s) => s.overrunMs > 0);
+console.log(
+  `[${id}] sync: ${overruns.length} overrun step(s)` +
+    (overruns.length ? ": " + overruns.map((s) => `${s.id}+${s.overrunMs}ms`).join(", ") : " (all fit)")
+);
 
 await page.waitForTimeout(500);
 await ctx.close();
