@@ -1,0 +1,110 @@
+# yaml-language-server: $schema=../templates/demo.schema.json
+#
+# ARQUETIPO: checkout — "cobrar sin fricción"
+#
+# COPIALO a demos/<tu-slug>.demo.yml y rellenalo.
+#
+# ⚠ ES EL ÚNICO ARQUETIPO DONDE SE PERMITE MOCKEAR AL PROVEEDOR de entrada, y sólo
+# porque es un tercero: no vas a grabar una demo contra la API de producción de
+# Stripe. Igual hay que DECLARARLO en `fixtures:` — la página HTML lo va a mostrar
+# como "datos de demostración". Y sigue prohibido mockear TUS endpoints de
+# escritura: la suscripción que se crea en el video tiene que ser real.
+#
+# ⚠ `redact:` sobre el campo de tarjeta NO ES OPCIONAL. Aunque uses una tarjeta de
+# prueba, un número de 16 dígitos en un video que se comparte por Slack es una
+# conversación que no querés tener.
+#
+#   valor      → qué desbloquea el pago (ANTES del precio)
+#   checkout   → el formulario, corto
+#   objeción   → un pago RECHAZADO y cómo se recupera
+#   exito      → el pago que entra
+#   desbloqueo → EL CIERRE: la función que antes estaba cerrada, ahora abierta
+
+id: <slug-de-la-demo>
+product: <Producto>
+archetype: checkout
+title: <De la limitación al acceso, en un minuto>
+promise: >
+  <Qué se desbloquea. El pago no es el valor: el valor es lo que viene después.>
+
+viewport: desktop
+locale: es-AR
+timezone: America/Argentina/Buenos_Aires
+freezeTime: 2026-03-10T16:00:00-03:00
+
+cast:
+  - as: cliente
+    name: <Nombre Apellido>
+    context: <por qué está topeando el plan gratis justo ahora>
+    auth: { via: api, email: "${DEMO_CUSTOMER_EMAIL}", password: "${DEMO_CUSTOMER_PW}" }
+
+world:
+  # ⚠ El seed tiene que DEVOLVER LA CUENTA AL PLAN GRATIS antes de cada corrida.
+  # Si no, la segunda vez arranca ya pagada y no hay demo.
+  seed: ./seeds/<slug>.mjs
+  assert:
+    - la cuenta está en el plan gratis y topeada
+    - no tiene suscripción activa
+
+# Mockear al PROVEEDOR de pagos (tercero) está permitido acá. Se declara.
+fixtures:
+  - route: "**/v1/prices**"
+    method: GET
+    body: ./fixtures/<slug>-prices.json
+
+hide: ["nextjs-portal", "[data-nextjs-toast]", "#crisp-chatbox"]
+# Obligatorio: nunca un número de tarjeta legible en cámara.
+redact: ['[data-testid="card-number"]', 'iframe[title*="card"]', '[data-testid="user-email"]']
+
+scenes:
+  - id: valor
+    title: "<Lo que no puede hacer todavía>"
+    proves: <El límite del plan gratis, mostrado donde duele.>
+    watch: El tope aparece en el momento en que lo necesita, no en una tabla de precios.
+    beats:
+      - as: cliente
+        go: /<ruta-donde-topea>
+        awaits: aviso-limite
+        say: <Llegó al límite justo cuando lo necesitaba. El costo es concreto.>
+      - highlight: aviso-limite
+
+  - id: checkout
+    title: "<El checkout son cuatro campos>"
+    proves: <Checkout corto, con el precio claro antes de pedir la tarjeta.>
+    watch: El precio final, con impuestos, ANTES de pedir la tarjeta.
+    beats:
+      - click: boton-mejorar-plan
+        awaits: resumen-precio
+        say: <Ve exactamente lo que va a pagar, sin letra chica.>
+      - click: elegir-plan
+        awaits: campo-tarjeta
+
+  - id: rechazado
+    title: "<Y si la tarjeta rebota, lo dice claro>"
+    objection: true
+    proves: <Manejo del pago rechazado, con un mensaje accionable.>
+    watch: Dice QUÉ pasó y qué hacer. No es un "error inesperado".
+    beats:
+      # Tarjeta de prueba de rechazo del proveedor (Stripe: 4000 0000 0000 0002).
+      - type: { target: campo-tarjeta, text: "<tarjeta de prueba que rechaza>" }
+      - click: pagar
+        awaits: error-pago
+        say: <El error explica la causa y deja seguir. Nadie pierde el carrito.>
+
+  - id: exito
+    title: "<Con la tarjeta buena, entra>"
+    proves: <Cobro real contra el proveedor y confirmación inmediata.>
+    beats:
+      - type: { target: campo-tarjeta, text: "<tarjeta de prueba que aprueba>" }
+      - click: pagar
+        awaits: confirmacion-pago
+        say: <El cobro entra y la confirmación llega al instante.>
+
+  - id: desbloqueo
+    title: "<Y ahora sí puede>"
+    proves: <El acceso se habilita en el acto, sin esperar una conciliación.>
+    hold: 3s
+    beats:
+      - go: /<ruta-donde-topeaba>
+        awaits: funcion-desbloqueada
+        say: <Vuelve a lo que quería hacer y ahora puede. Ese era el punto.>

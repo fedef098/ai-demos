@@ -1,0 +1,123 @@
+# yaml-language-server: $schema=../templates/demo.schema.json
+#
+# ARQUETIPO: login-onboarding — "de cero a usándolo en N minutos"
+#
+# COPIALO a demos/<tu-slug>.demo.yml y rellenalo.
+#
+# El error que evita este arquetipo: la mayoría de las demos de onboarding
+# muestran el formulario de registro y terminan en un dashboard vacío. Eso no
+# demuestra nada — un dashboard vacío lo tiene cualquiera. La escena que importa
+# es la tercera: EL PRIMER VALOR ENTREGADO, o sea el momento en que la persona
+# recibe algo que no tenía antes de registrarse.
+#
+#   invitación    → llega y entra sin fricción (el login NO es el protagonista)
+#   primer-dato   → carga lo mínimo suyo, y se nota que es suyo
+#   primer-valor  → EL MOMENTO: el producto le devuelve algo
+#   objeción      → recupera el acceso solo, sin escribirle a nadie
+#   invito        → suma a alguien más (donde el producto empieza a crecer)
+
+id: <slug-de-la-demo>
+product: <Producto>
+archetype: login-onboarding
+title: <De la invitación al primer resultado, en tres minutos>
+promise: >
+  <Qué se lleva la persona al final del video que no tenía al principio.>
+
+viewport: desktop
+locale: es-AR
+timezone: America/Argentina/Buenos_Aires
+freezeTime: 2026-03-10T09:00:00-03:00
+
+cast:
+  - as: nuevo
+    name: <Nombre Apellido>
+    context: <su rol y por qué lo están invitando>
+    # El link de invitación deja la sesión lista: quemar 20 segundos de video en
+    # un formulario de registro es tiempo que no cuenta nada.
+    auth: { via: api, email: "${DEMO_NEW_EMAIL}", password: "${DEMO_NEW_PW}" }
+
+  - as: companero
+    name: <Nombre Apellido>
+    context: <a quién invita al final>
+    curtain: "Y del lado de quien recibe la invitación"
+    auth: { via: api, email: "${DEMO_MATE_EMAIL}", password: "${DEMO_MATE_PW}" }
+
+world:
+  # ⚠ El seed tiene que DEJAR LA CUENTA COMO NUEVA en cada corrida: borrar los
+  # datos del onboarding anterior. Si no, la segunda vez la demo arranca con la
+  # cuenta ya configurada y las escenas no tienen sentido.
+  seed: ./seeds/<slug>.mjs
+  assert:
+    - la cuenta de <nuevo> existe pero no completó el onboarding
+    - no tiene <el objeto que va a crear> todavía
+
+hide: ["nextjs-portal", "[data-nextjs-toast]", "#crisp-chatbox"]
+redact: ['[data-testid="user-email"]']
+
+scenes:
+  - id: invitacion
+    title: "<Entra desde la invitación, sin instalar nada>"
+    proves: <Alta por invitación, sin fricción ni instalación.>
+    watch: No hay descarga, ni configuración, ni "hablá con ventas".
+    beats:
+      - as: nuevo
+        go: /<ruta-de-bienvenida>
+        awaits: pantalla-bienvenida
+        say: <Llega invitada por alguien. En un clic ya está adentro.>
+
+  - id: primer-dato
+    title: "<Carga lo suyo en un minuto>"
+    proves: <El setup mínimo real, no un wizard de 8 pasos.>
+    watch: Son <N> campos. No hay un asistente de ocho pantallas.
+    beats:
+      - click: empezar
+        awaits: campo-nombre
+      - type: { target: campo-nombre, text: "<dato realista>" }
+      - select: { target: selector-tipo, value: "<valor>" }
+        say: <Lo mínimo indispensable para que el producto le sirva.>
+      - click: continuar
+        awaits: panel-principal
+        say: <Y ya está adentro, con su espacio propio.>
+
+  # ── EL MOMENTO. Es la escena más importante del arquetipo. ──────────────────
+  - id: primer-valor
+    title: "<Y el producto ya le devuelve algo>"
+    proves: "<El primer valor entregado: qué recibe sin haber configurado nada más.>"
+    watch: Esto es lo que no tenía hace dos minutos.
+    beats:
+      - click: accion-principal
+        awaits: resultado
+        say: <Qué obtuvo. Concreto y verificable en pantalla, no una promesa.>
+      - highlight: resultado
+        say: <Por qué eso le ahorra tiempo/plata/un viaje.>
+
+  - id: recupero
+    title: "<Y si pierde la contraseña, la recupera sola>"
+    objection: true
+    proves: <Recuperación de acceso sin depender de soporte.>
+    watch: "No hay que escribirle a nadie: el circuito se cierra en el mail."
+    beats:
+      - go: /<ruta-de-recupero>
+        awaits: campo-email-recupero
+      - type: { target: campo-email-recupero, text: "<mail>" }
+      - click: enviar-recupero
+        awaits: confirmacion-envio
+        say: <El acceso se recupera solo, en un minuto y sin soporte.>
+
+  - id: invito
+    title: "<Suma a su equipo y ya están trabajando juntos>"
+    proves: <Invitación de miembros y permisos por rol.>
+    hold: 3s
+    beats:
+      - as: nuevo
+        go: /<ruta-equipo>
+        awaits: boton-invitar
+      - click: boton-invitar
+      - type: { target: campo-invitado, text: "<mail del compañero>" }
+      - click: confirmar-invitacion
+        awaits: fila-invitado
+
+      - as: companero
+        go: /<ruta-principal>
+        awaits: recurso-compartido
+        say: <Del otro lado ya lo ve. El cierre, en la pantalla que mejor lo prueba.>

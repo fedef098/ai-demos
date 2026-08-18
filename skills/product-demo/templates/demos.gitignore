@@ -1,0 +1,35 @@
+# Demos de producto — agregar estas líneas al .gitignore del proyecto.
+#
+# Política: NINGÚN binario va a git. Sin umbral, sin excepciones.
+#
+# Qué SÍ va a git (todo texto, KB, y exactamente lo que se revisa en un PR):
+# el guion .demo.yml, selectors.yml, los seeds, demo.vtt, demo.chapters.vtt,
+# narration.md, run.json, catalog.json y el index.html.
+#
+# Qué NO va a git: el mp4, el webm crudo, los wav de narración, el poster y
+# cualquier screenshot. Todo eso lo sube `.runner/publish.mjs` a S3 bajo una
+# clave con el sha del contenido, y run.json guarda la URL pública.
+#
+# Por qué git no sirve para video: no deltifica H.264 (dos grabaciones de la
+# misma pantalla no comparten NADA a nivel de objeto), así que cada regrabación
+# suma un blob entero y PERMANENTE al historial. `git rm` no lo saca: sigue en
+# los packs, se clona igual, y sacarlo de verdad exige reescribir la historia y
+# que todo el equipo re-clone. Un repo que se recontamina cada vez que alguien
+# regraba una demo no tiene arreglo incremental — por eso la regla es "cero".
+#
+# Si no tenés DEMO_S3_BUCKET configurado, el mp4 queda SÓLO en tu máquina y
+# run.json lo marca `"pending": true`. No lo fuerces con `git add -f`.
+
+# Video, audio e imágenes: todo se publica, nada se versiona.
+demos/**/*.mp4
+demos/**/*.webm
+demos/**/*.wav
+demos/**/*.jpg
+demos/**/*.png
+
+# Estado de sesión: son credenciales.
+demos/.auth/
+
+# Audio intermedio y cache de TTS: se regeneran desde el guion.
+demos/**/voice/
+demos/.voice-cache/

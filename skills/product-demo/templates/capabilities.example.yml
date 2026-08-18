@@ -1,0 +1,100 @@
+# demos/capabilities.yml — el inventario de lo que el producto SABE hacer.
+#
+# Esta lista NO describe demos: describe capacidades del producto. Existe aunque
+# no haya ni un video grabado, y no se toca cuando se graba uno. Es la respuesta
+# a "¿qué podemos mostrar?" — la de "¿qué mostramos hoy?" la da el catálogo.
+#
+# El catálogo (`node demos/.runner/catalog.mjs demos/`) cruza esta lista contra
+# los guiones y las grabaciones que encuentra, y clasifica cada capacidad en:
+#
+#   cubierta   hay una escena GRABADA que la cubre  → link al timestamp exacto
+#   guionada   la escena existe en un .demo.yml pero todavía no se grabó
+#   sin cubrir ningún guion la menciona  → esto es lo que no es demoable hoy
+#
+# El cruce se hace por id: una escena declara `covers: [reclamo-alta, ...]` en su
+# .demo.yml. `proves:` sigue existiendo y es texto libre para el humano que mira
+# la página; `covers:` es la clave que engancha con este archivo. Una escena
+# normalmente tiene los dos.
+#
+# Todo esto es opcional: sin capabilities.yml el catálogo igual se genera, pero
+# sólo puede listar lo que está cubierto — no tiene contra qué medir los huecos,
+# que es justamente lo que se quiere ver.
+#
+# Cómo mantenerlo:
+#   · Una capacidad = algo que un cliente pediría ver, no un endpoint ni una
+#     pantalla. "Un vecino da de alta un reclamo desde el celular", no "POST
+#     /tramites" ni "pantalla de alta".
+#   · El id es estable y no se renombra: es lo que referencian los guiones.
+#     Si una capacidad se va del producto, se borra de acá (y el lint va a marcar
+#     los `covers:` que quedaron colgados).
+#   · `priority` es cuán caro sale NO poder mostrarla, no cuán difícil es
+#     grabarla. Es el orden en que la lista de huecos se lee en la página.
+#   · Si nadie sabe decir la capacidad en una frase que le importe a alguien de
+#     afuera, probablemente no es una capacidad: es un detalle de implementación.
+
+product: Civis
+
+capabilities:
+  # ── Portal ciudadano ────────────────────────────────────────────────────────
+  - id: reclamo-alta
+    title: "Un vecino da de alta un reclamo desde el celular"
+    area: Portal ciudadano
+    priority: alta        # alta | media | baja — cuán importante es poder mostrarlo
+
+  - id: reclamo-seguimiento
+    title: "El vecino sigue el estado de su reclamo con un número"
+    area: Portal ciudadano
+    priority: alta
+
+  - id: reclamo-ubicacion-mapa
+    title: "El reclamo se ubica en el mapa sin escribir una dirección"
+    area: Portal ciudadano
+    priority: media
+
+  - id: notificacion-cambio-estado
+    title: "El vecino se entera del avance sin volver a entrar"
+    area: Portal ciudadano
+    priority: media
+
+  # ── Backoffice municipal ────────────────────────────────────────────────────
+  - id: bandeja-por-area
+    title: "Cada área ve sólo los reclamos que le tocan"
+    area: Backoffice municipal
+    priority: alta
+
+  - id: derivacion-entre-areas
+    title: "Un reclamo mal clasificado se deriva sin perder la traza"
+    area: Backoffice municipal
+    priority: media
+
+  - id: cierre-con-constancia
+    title: "Se cierra el reclamo y queda constancia de quién y con qué"
+    area: Backoffice municipal
+    priority: alta
+
+  - id: permisos-por-rol
+    title: "Nadie ve ni toca lo que no le corresponde"
+    area: Backoffice municipal
+    priority: alta
+
+  # ── Configuración ───────────────────────────────────────────────────────────
+  - id: formulario-configurable
+    title: "El municipio arma el formulario de un trámite sin desarrollo"
+    area: Configuración
+    priority: alta
+
+  - id: horarios-y-feriados
+    title: "Los plazos respetan el calendario del municipio"
+    area: Configuración
+    priority: baja
+
+  # ── Transparencia ───────────────────────────────────────────────────────────
+  - id: tablero-tiempos
+    title: "El intendente ve los tiempos de respuesta por área"
+    area: Transparencia
+    priority: media
+
+  - id: auditoria-acciones
+    title: "Toda acción sobre un expediente queda auditada"
+    area: Transparencia
+    priority: baja

@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+#
+# .githooks/pre-push — corre los checks antes de que nada salga del repo.
+#
+# Instalar (una vez por clone):
+#     mkdir -p .githooks && cp <skill>/templates/pre-push .githooks/pre-push
+#     chmod +x .githooks/pre-push
+#     git config core.hooksPath .githooks
+#
+# `core.hooksPath` es lo que hace que el hook se versione: vive en el repo, se
+# revisa en un PR y lo tiene todo el equipo. Un hook en .git/hooks lo tenés vos
+# solo y se pierde al reclonar.
+#
+# ── Qué NO hace ──────────────────────────────────────────────────────────────
+# No corre builds pesados (`next build` se come 2-4 GB y en una VPS compartida
+# dispara el OOM killer). El build es el gate del deploy, no el del push.
+#
+# ── Honestidad sobre --no-verify ─────────────────────────────────────────────
+# Este hook se saltea con `git push --no-verify`, y está bien que se pueda: a
+# veces necesitás pushear una rama rota a propósito. Por eso el mismo conjunto
+# de checks tiene que correr también en CI sobre el PR. El hook es para el
+# feedback rápido — 20 segundos ahora en vez de 4 minutos de CI — no una barrera
+# de seguridad.
+
+set -uo pipefail
+
+# Push de borrado de rama: no hay nada que chequear.
+if [ -t 0 ]; then :; else
+  while read -r _local_ref local_sha _remote_ref _remote_sha; do
+    [ "$local_sha" = "0000000000000000000000000000000000000000" ] && exit 0
+  done
+fi
+
+FAILED=0
+START_ALL=$(date +%s)
+
+bold() { printf '\033[1m%s\033[0m\n' "$*"; }
+ok()   { printf '  \033[32m✓\033[0m %-14s %s\n' "$1" "$2"; }
+bad()  { printf '  \033[31m✖\033[0m %-14s %s\n' "$1" "$2"; }
+skip() { printf '  \033[2m·\033[0m \033[2m%-14s %s\033[0m\n' "$1" "$2"; }
+
+# run <nombre> <comando...>
+# Guarda la salida y sólo la muestra si falla: un hook que escupe 200 líneas en
+# cada push se termina desactivando.
+run() {
+  local name="$1"; shift
+  local out start elapsed
+  start=$(date +%s)
+  if ! out=$("$@" 2>&1); then
+    elapsed=$(( $(date +%s) - start ))
+    bad "$name" "(${elapsed}s)"
+    printf '%s\n' "$out" | tail -30 | sed 's/^/      /'
+    FAILED=1
+    return 1
+  fi
+  elapsed=$(( $(date +%s) - start ))
+  ok "$name" "(${elapsed}s)"
+}
+
+has() { [ -f package.json ] && node -e "process.exit(require('./package.json').scripts?.['$1']?0:1)" 2>/dev/null; }
+bin() { command -v "$1" >/dev/null 2>&1 || [ -x "node_modules/.bin/$1" ]; }
+
+bold "pre-push"
+
+# ── 1. Secretos ──────────────────────────────────────────────────────────────
+# Primero porque es lo único irreversible: un test roto se arregla con otro
+# commit, una credencial pusheada hay que rotarla.
+# Qué commits se están por pushear. Con upstream es exacto; en una rama nueva
+# —que es el caso MÁS común al pushear— no hay upstream, así que se compara
+# contra la rama base. El fallback a HEAD~1..HEAD sólo mira el último commit y
+# se le escapa, por ejemplo, un cambio de schema hecho dos commits atrás.
+resolve_range() {
+  if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+    echo '@{u}..HEAD'; return
+  fi
+  for base in origin/main origin/master main master; do
+    if git rev-parse --verify -q "$base" >/dev/null 2>&1 &&
+       [ "$(git rev-parse "$base")" != "$(git rev-parse HEAD)" ]; then
+      echo "$base..HEAD"; return
+    fi
+  done
+  echo 'HEAD~1..HEAD'
+}
+RANGE=$(resolve_range)
+git rev-list "$RANGE" >/dev/null 2>&1 || RANGE='HEAD~1..HEAD'
+
+PATTERN='(AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|sk-[A-Za-z0-9]{32,}|xox[baprs]-[A-Za-z0-9-]{10,})'
+if git diff "$RANGE" 2>/dev/null | grep -qE "^\+.*$PATTERN"; then
+  bad "secretos" "hay algo que parece una credencial en el diff"
+  git diff "$RANGE" | grep -nE "^\+.*$PATTERN" | head -5 | sed 's/^/      /'
+  FAILED=1
+else
+  ok "secretos" ""
+fi
+
+# ── 2. Typecheck ─────────────────────────────────────────────────────────────
+# Es el check con mejor relación señal/tiempo: rápido y encuentra lo que rompe
+# el build de verdad.
+if [ -f tsconfig.json ]; then
+  if has typecheck; then run "typecheck" npm run -s typecheck
+  elif bin tsc;       then run "typecheck" npx --no-install tsc --noEmit
+  else skip "typecheck" "sin tsc"; fi
+else
+  skip "typecheck" "sin tsconfig.json"
+fi
+
+# ── 3. Lint ──────────────────────────────────────────────────────────────────
+if has lint; then run "lint" npm run -s lint
+else skip "lint" "sin script de lint"; fi
+
+# ── 4. Tests ─────────────────────────────────────────────────────────────────
+# Vitest es el runner por defecto en nuestros proyectos. Si la suite tarda más
+# de ~60 s, acotá el hook a los tests unitarios y dejá la integración en CI:
+# un hook lento se termina salteando siempre, que es peor que no tenerlo.
+if has test; then run "tests" npm run -s test
+elif bin vitest; then run "tests" npx --no-install vitest run
+else skip "tests" "sin suite"; fi
+
+# ── 5. Guiones de demo ───────────────────────────────────────────────────────
+# Sólo el lint del guion: no abre browser ni graba, tarda menos de un segundo.
+# Grabar NUNCA bloquea un push.
+if [ -d demos ] && [ -f demos/.runner/lint.mjs ]; then
+  for guion in demos/*.demo.yml; do
+    [ -e "$guion" ] || continue
+    run "demo:$(basename "$guion" .demo.yml)" node demos/.runner/lint.mjs "$guion"
+  done
+fi
+
+# ── Resultado ────────────────────────────────────────────────────────────────
+TOTAL=$(( $(date +%s) - START_ALL ))
+if [ "$FAILED" -ne 0 ]; then
+  printf '\n\033[31m✖ push abortado\033[0m (%ss). Arreglá lo de arriba, o `git push --no-verify` si sabés lo que hacés.\n\n' "$TOTAL"
+  exit 1
+fi
+printf '\n\033[32m✓ todo verde\033[0m (%ss)\n\n' "$TOTAL"
+exit 0

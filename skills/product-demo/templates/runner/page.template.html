@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+/* Vanilla, cero build: en la VPS compartida no se puede correr un bundler.
+   Tokens alineados con la skill ui-design-system. */
+:root {
+  --text-strong: #1a1d1f; --text-secondary: #5a6169;
+  --bg-page: #fff; --bg-surface: #fcfcfc; --bg-surface-hover: #f4f4f4;
+  --border-default: #efefef; --accent: #0369a1;
+  --radius-sm: 8px; --radius-md: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-strong: #fcfcfc; --text-secondary: #9a9fa5;
+    --bg-page: #1a1d1f; --bg-surface: #232629; --bg-surface-hover: #2c2f33;
+    --border-default: #2c2f33; --accent: #4aa3df;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 32px 20px 64px;
+  background: var(--bg-page); color: var(--text-strong);
+  font: 400 1rem/1.5 Inter, system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+h1 { font-size: 1.5rem; line-height: 2rem; letter-spacing: -0.03em; margin: 0 0 8px; }
+h2 { font-size: 1.125rem; line-height: 1.625rem; letter-spacing: -0.03em; margin: 40px 0 12px; }
+.promise { color: var(--text-secondary); font-size: 1rem; margin: 0 0 24px; max-width: 62ch; }
+.meta { color: var(--text-secondary); font-size: .75rem; line-height: 1rem; margin-top: 8px; }
+.meta code { background: var(--bg-surface-hover); padding: 1px 6px; border-radius: 999px; }
+.stale { color: #c2410c; font-weight: 600; }
+
+.player { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 20px; align-items: start; }
+@media (max-width: 860px) { .player { grid-template-columns: 1fr; } }
+video { width: 100%; border-radius: var(--radius-md); background: #000; display: block; }
+
+.chapters { border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+.chapters h3 { margin: 0; padding: 12px 16px; font-size: .75rem; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-secondary); border-bottom: 1px solid var(--border-default); }
+.chapter {
+  display: block; width: 100%; text-align: left; border: 0; cursor: pointer;
+  background: transparent; color: inherit; font: inherit;
+  padding: 12px 16px; border-bottom: 1px solid var(--border-default);
+}
+.chapter:last-child { border-bottom: 0; }
+.chapter:hover { background: var(--bg-surface-hover); }
+.chapter[aria-current="true"] { background: var(--bg-surface-hover); box-shadow: inset 3px 0 0 var(--accent); }
+.chapter .t { font-size: .75rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.chapter .title { display: block; font-weight: 600; font-size: .875rem; margin: 2px 0 4px; }
+.chapter .watch { display: block; font-size: .75rem; line-height: 1rem; color: var(--text-secondary); }
+
+.transcript { margin-top: 12px; border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 8px; }
+.cue { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: var(--text-secondary);
+  font: inherit; font-size: .875rem; padding: 6px 10px; border-radius: var(--radius-sm); cursor: pointer; }
+.cue:hover { background: var(--bg-surface-hover); }
+.cue[aria-current="true"] { color: var(--text-strong); font-weight: 500; background: var(--bg-surface-hover); }
+
+table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-default); vertical-align: top; }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-secondary); font-weight: 600; }
+.note { background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 12px 16px; font-size: .875rem; color: var(--text-secondary); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; }
+.card { border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden;
+  text-decoration: none; color: inherit; display: block; background: var(--bg-surface); }
+.card:hover { background: var(--bg-surface-hover); }
+.card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #000; }
+.card .body { padding: 12px 14px; }
+.card .body strong { display: block; font-size: .9375rem; }
+</style>
+</head>
+<body>
+<div class="wrap">__CONTENT__</div>
+<script>
+// Player: capítulos clicables + transcript sincronizado. Es lo que hace la
+// página *navegable*; sin esto es un video suelto con un título arriba.
+(() => {
+  const v = document.querySelector("video");
+  if (!v) return;
+  const marks = window.__DEMO_MARKS__ || { chapters: [], cues: [] };
+
+  const bind = (sel, list) => {
+    const nodes = [...document.querySelectorAll(sel)];
+    nodes.forEach((n, i) => n.addEventListener("click", () => {
+      v.currentTime = (list[i].startMs ?? list[i].start) / 1000;
+      v.play();
+    }));
+    return nodes;
+  };
+  const chapterNodes = bind(".chapter", marks.chapters);
+  const cueNodes = bind(".cue", marks.cues);
+
+  const sync = (nodes, list) => {
+    const t = v.currentTime * 1000;
+    let active = -1;
+    list.forEach((item, i) => {
+      const s = item.startMs ?? item.start;
+      const e = item.endMs ?? item.end;
+      if (t >= s && t < e) active = i;
+    });
+    nodes.forEach((n, i) => n.setAttribute("aria-current", String(i === active)));
+  };
+  v.addEventListener("timeupdate", () => {
+    sync(chapterNodes, marks.chapters);
+    sync(cueNodes, marks.cues);
+  });
+})();
+</script>
+</body>
+</html>

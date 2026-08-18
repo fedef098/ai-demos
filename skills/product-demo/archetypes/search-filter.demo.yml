@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=../templates/demo.schema.json
+#
+# ARQUETIPO: search-filter — "encontrar la aguja"
+#
+# COPIALO a demos/<tu-slug>.demo.yml y rellenalo.
+#
+# La regla de este arquetipo: UNA BÚSQUEDA SOBRE 12 REGISTROS NO DEMUESTRA NADA.
+# El valor está en el volumen, así que la primera escena tiene que MOSTRAR EL N
+# en pantalla ("4.812 expedientes"). Si tu entorno de demo no tiene ese volumen,
+# el seed lo tiene que generar — es la parte más importante de la fixture acá.
+#
+#   volumen    → cuántos hay, en pantalla. Sin esto el resto no impresiona.
+#   filtro     → dos o tres criterios combinados, no uno
+#   resultado  → aparece rápido, y se ve que salió del servidor
+#   objeción   → una búsqueda SIN resultados, y qué te ofrece ahí
+#   guardar    → la vista queda guardada o se exporta (el valor recurrente)
+
+id: <slug-de-la-demo>
+product: <Producto>
+archetype: search-filter
+title: <Encontrar uno entre miles, en un segundo>
+promise: >
+  <Qué tarea que hoy lleva media hora de scrollear un Excel pasa a llevar
+  quince segundos.>
+
+viewport: desktop
+locale: es-AR
+timezone: America/Argentina/Buenos_Aires
+freezeTime: 2026-03-10T11:00:00-03:00
+
+cast:
+  - as: analista
+    name: <Nombre Apellido>
+    context: <su rol y qué necesita encontrar todos los días>
+    auth: { via: api, email: "${DEMO_USER_EMAIL}", password: "${DEMO_USER_PW}" }
+
+world:
+  # ⚠ Acá el seed es el corazón de la demo: tiene que garantizar VOLUMEN y que
+  # exista exactamente un registro que cumpla los criterios combinados.
+  seed: ./seeds/<slug>.mjs
+  assert:
+    - hay al menos <N> registros (el contador tiene que verse en pantalla)
+    - existe exactamente uno que cumple <criterio A> + <criterio B>
+    - la combinación <criterio C> no devuelve ninguno (para la escena de la objeción)
+
+hide: ["nextjs-portal", "[data-nextjs-toast]", "#crisp-chatbox"]
+
+scenes:
+  - id: volumen
+    title: "<Son 4.812 registros>"
+    proves: <El volumen real que el producto maneja.>
+    watch: El número en pantalla es lo que hace que el resto importe.
+    beats:
+      - as: analista
+        go: /<ruta-listado>
+        awaits: contador-total
+        say: <El universo completo. Encontrar uno a mano es media mañana.>
+      - highlight: contador-total
+
+  - id: filtro
+    title: "<Tres criterios a la vez, en SQL>"
+    proves: <Filtrado combinado del lado del servidor, no en el navegador.>
+    watch: El resultado cambia con el listado completo, no con la página que estabas viendo.
+    beats:
+      - type: { target: buscador, text: "<término>" }
+        say: <Busca por lo que tiene a mano, no por un código interno.>
+      - select: { target: filtro-estado, value: "<valor>" }
+      - select: { target: filtro-categoria, value: "<valor>" }
+        awaits: fila-resultado
+        say: <Los criterios se combinan y el listado se recalcula entero.>
+
+  - id: resultado
+    title: "<Y ahí está>"
+    proves: <Del listado al detalle sin perder el contexto de búsqueda.>
+    beats:
+      - click: fila-resultado
+        awaits: detalle
+        say: <Lo abre y tiene todo lo que necesitaba, sin volver a buscar.>
+
+  - id: sin-resultados
+    title: "<Y cuando no hay nada, lo dice>"
+    objection: true
+    proves: <Estado vacío que distingue "no hay resultados" de "todavía no hay nada".>
+    watch: "No es una tabla vacía: ofrece la salida."
+    beats:
+      - go: /<ruta-listado>
+      - type: { target: buscador, text: "<algo que no existe>" }
+        awaits: estado-vacio
+        say: <Dice que no encontró nada para ESE filtro, y ofrece limpiarlo.>
+
+  - id: guardar
+    title: "<La búsqueda queda guardada>"
+    proves: "<Vistas guardadas o exportación: el valor que se repite todos los días.>"
+    hold: 3s
+    beats:
+      - go: /<ruta-listado>
+      - type: { target: buscador, text: "<término>" }
+        awaits: fila-resultado
+      - click: guardar-vista
+        awaits: vista-guardada
+        say: "<Mañana no la vuelve a armar: la abre hecha.>"

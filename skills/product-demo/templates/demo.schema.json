@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://adavance.com/schemas/demo.schema.json",
+  "title": "Guion de demo de producto",
+  "description": "La historia. No lleva selectores: las acciones apuntan a targets con nombre definidos en selectors.yml.",
+  "type": "object",
+  "required": ["id", "product", "title", "promise", "cast", "scenes"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Slug. Da nombre al directorio de salida."
+    },
+    "product": { "type": "string" },
+    "archetype": {
+      "type": "string",
+      "enum": ["login-onboarding", "crud", "search-filter", "admin-panel", "checkout", "custom"],
+      "description": "De qué arquetipo se copió. Metadato: el lint lo usa para chequear cobertura."
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Va en la placa de portada. Una afirmación, no un nombre de feature."
+    },
+    "promise": {
+      "type": "string",
+      "description": "Qué cambia PARA EL QUE MIRA. No qué hace el software."
+    },
+    "viewport": {
+      "oneOf": [
+        { "type": "string", "enum": ["desktop", "mobile", "tablet"] },
+        {
+          "type": "object",
+          "required": ["width", "height"],
+          "additionalProperties": false,
+          "properties": { "width": { "type": "integer" }, "height": { "type": "integer" } }
+        }
+      ],
+      "default": "desktop"
+    },
+    "locale": { "type": "string", "default": "es-AR" },
+    "timezone": { "type": "string", "default": "America/Argentina/Buenos_Aires" },
+    "freezeTime": {
+      "type": "string",
+      "description": "ISO 8601. Congela Date.now() con page.clock.setFixedTime para que 'hace 2 horas' salga siempre igual."
+    },
+    "brandColor": { "type": "string", "description": "Color de las cortinas y placas." },
+
+    "narration": {
+      "description": "Voz en off. Se sintetiza ANTES de grabar (narrate.mjs) y cada beat dura al menos lo que dura su locución. `false` apaga la voz para esta demo sin tocar el entorno.",
+      "oneOf": [
+        { "type": "boolean", "enum": [false] },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "provider": { "type": "string", "enum": ["kokoro", "espeak"], "default": "kokoro", "description": "espeak sólo para smoke tests: suena a robot." },
+            "voice": { "type": "string", "default": "ef_dora", "description": "Voz del proveedor. Las 'e*' de Kokoro son en español." },
+            "lang": { "type": "string", "default": "e", "description": "Código de idioma de Kokoro: 'e' es español." }
+          }
+        }
+      ]
+    },
+
+    "cast": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Las personas de la historia. Nombre y contexto concretos: 'usuario A' mata la demo.",
+      "items": {
+        "type": "object",
+        "required": ["as", "name", "auth"],
+        "additionalProperties": false,
+        "properties": {
+          "as": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "name": { "type": "string" },
+          "context": { "type": "string", "description": "Rol, edad, situación. Por qué le importa." },
+          "curtain": { "type": "string", "description": "Texto de la cortina al cambiar a esta persona." },
+          "auth": {
+            "type": "object",
+            "required": ["via"],
+            "properties": {
+              "via": { "type": "string", "enum": ["api", "storageState", "none"] },
+              "email": { "type": "string" },
+              "password": { "type": "string" },
+              "endpoint": { "type": "string", "default": "/api/auth/login" },
+              "file": { "type": "string", "description": "Para via:storageState." }
+            }
+          }
+        }
+      }
+    },
+
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "seed": { "type": "string", "description": "Script idempotente que siembra la fixture por API." },
+        "assert": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lo que tiene que ser cierto antes de grabar. Se verifica a ojo o en el seed."
+        }
+      }
+    },
+
+    "fixtures": {
+      "type": "array",
+      "description": "Mocks de LECTURA con page.route, para que los datos sean lindos y estables. Mockear un endpoint de escritura está PROHIBIDO: la demo tiene que mostrar el producto funcionando.",
+      "items": {
+        "type": "object",
+        "required": ["route", "body"],
+        "additionalProperties": false,
+        "properties": {
+          "route": { "type": "string" },
+          "method": { "type": "string", "enum": ["GET", "HEAD"], "default": "GET" },
+          "body": { "type": "string", "description": "Ruta a un .json" },
+          "status": { "type": "integer", "default": 200 }
+        }
+      }
+    },
+
+    "hide": { "type": "array", "items": { "type": "string" }, "description": "Selectores de ruido a ocultar (badges de dev, widgets de chat)." },
+    "redact": { "type": "array", "items": { "type": "string" }, "description": "Selectores a difuminar (mails reales, tarjetas)." },
+
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 7,
+      "description": "Máximo 7. Dos escenas que prueban lo mismo se fusionan.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "proves", "beats"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "title": { "type": "string", "maxLength": 70, "description": "Una afirmación en el idioma del cliente. Va en pantalla." },
+          "proves": { "type": "string", "description": "Qué capacidad demuestra, en prosa. Va a la tabla de cobertura, no al video." },
+          "covers": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Ids de capabilities.yml que esta escena cubre. Es lo que engancha el guion con el inventario: sin esto el catálogo no puede decir qué quedó sin demo."
+          },
+          "watch": { "type": "string", "description": "A dónde tiene que mirar el ojo. Va al HTML, no al video." },
+          "objection": {
+            "type": "boolean",
+            "default": false,
+            "description": "Esta escena muestra el producto haciendo lo difícil (error manejado, permiso denegado). Al menos una del guion tiene que tenerla."
+          },
+          "hold": { "type": "string", "description": "Silencio extra al final, ej. '3s'. Sólo para forzar un remate." },
+          "beats": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/beat" } }
+        }
+      }
+    }
+  },
+
+  "definitions": {
+    "beat": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "as": { "type": "string", "description": "Cambia de persona. Dispara la cortina." },
+        "say": { "type": "string", "maxLength": 90, "description": "El subtítulo. Enuncia la consecuencia, nunca el click." },
+        "voice": { "type": "string", "description": "Lo que se locuta, si difiere del subtítulo. Sirve para que en pantalla diga 'queda asignado a Obras Públicas' y la voz lea el número de expediente completo, que escrito sobraría." },
+        "go": { "type": "string", "description": "Ruta relativa." },
+        "click": { "type": "string", "description": "Nombre de un target de selectors.yml." },
+        "hover": { "type": "string" },
+        "type": {
+          "type": "object",
+          "required": ["target", "text"],
+          "additionalProperties": false,
+          "properties": { "target": { "type": "string" }, "text": { "type": "string" } }
+        },
+        "select": {
+          "type": "object",
+          "required": ["target", "value"],
+          "additionalProperties": false,
+          "properties": { "target": { "type": "string" }, "value": { "type": "string" } }
+        },
+        "upload": {
+          "type": "object",
+          "required": ["target", "file"],
+          "additionalProperties": false,
+          "properties": { "target": { "type": "string" }, "file": { "type": "string" } }
+        },
+        "scroll": { "type": "string", "description": "Target al que scrollear, suave." },
+        "highlight": { "type": "string", "description": "Target a resaltar con un halo." },
+        "awaits": { "type": "string", "description": "Target que prueba que la acción surtió efecto. Reemplaza a networkidle." },
+        "wait": { "type": "string", "description": "Pausa explícita. Usar con moderación." },
+        "shot": { "type": "string", "description": "Nombre de una captura extra." }
+      }
+    }
+  }
+}

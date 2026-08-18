@@ -1,0 +1,128 @@
+# yaml-language-server: $schema=../templates/demo.schema.json
+#
+# ARQUETIPO: crud — "el circuito completo, sin papel"
+#
+# Cómo se usa: COPIÁ este archivo a demos/<tu-slug>.demo.yml y rellenalo. No se
+# hereda ni se mergea en runtime: un guion que se resuelve al ejecutarse es
+# imposible de revisar en un PR, que es justo lo que queríamos evitar.
+#
+# La forma del arquetipo, y por qué:
+#   alta          → el usuario crea algo con sus palabras, no con las del formulario
+#   otro-lado     → APARECE del lado de quien lo tiene que atender (lo que ningún
+#                   competidor con un Excel puede mostrar)
+#   objeción      → un permiso o una validación IMPIDE romper el dato
+#   resolución    → cambia de estado y el primero se entera solo
+#
+# Todo lo que dice <ASÍ> hay que reemplazarlo.
+
+id: <slug-de-la-demo>
+product: <Producto>
+archetype: crud
+title: <Una afirmación, no un nombre de feature>
+promise: >
+  <Qué cambia para el que mira. "Un vecino reporta un bache desde el sillón y el
+  municipio lo cierra con constancia. Dos minutos." — no "gestión integral de
+  reclamos".>
+
+viewport: desktop
+locale: es-AR
+timezone: America/Argentina/Buenos_Aires
+# Congela Date.now() para que "hace 2 horas" salga igual en cada corrida.
+freezeTime: 2026-03-10T14:30:00-03:00
+
+cast:
+  # Nombre y contexto CONCRETOS. "usuario A" mata la demo: lo que hace que se lea
+  # como una historia son los datos específicos.
+  - as: usuario
+    name: <Nombre Apellido>
+    context: <edad, lugar, por qué le importa esto>
+    auth: { via: api, email: "${DEMO_USER_EMAIL}", password: "${DEMO_USER_PW}" }
+
+  - as: staff
+    name: <Nombre Apellido>
+    context: <su rol del otro lado del mostrador>
+    curtain: "Ahora, del otro lado del mostrador"
+    auth: { via: api, email: "${DEMO_STAFF_EMAIL}", password: "${DEMO_STAFF_PW}" }
+
+  - as: staff-sin-permiso
+    name: <Nombre Apellido>
+    context: <alguien de otra área, que NO debería ver esto>
+    curtain: "Y alguien de otra área"
+    auth: { via: api, email: "${DEMO_OTHER_EMAIL}", password: "${DEMO_OTHER_PW}" }
+
+world:
+  # Idempotente y por API. Si la fixture no se puede sembrar dos veces seguidas
+  # sin ensuciar nada, la demo no existe: va a salir distinta cada vez.
+  seed: ./seeds/<slug>.mjs
+  assert:
+    - <lo que tiene que ser cierto antes de grabar>
+    - <ej. el usuario no tiene registros abiertos>
+
+hide: ["nextjs-portal", "[data-nextjs-toast]", "#crisp-chatbox"]
+redact: ['[data-testid="user-email"]']
+
+scenes:
+  - id: alta
+    title: "<El registro entra en 40 segundos>"
+    proves: <Qué capacidad demuestra. Va a la tabla de cobertura, no al video.>
+    watch: <A dónde tiene que mirar el ojo. Va al HTML, no al video.>
+    beats:
+      - as: usuario
+        go: /<ruta>
+        awaits: lista-propia
+        say: <Dónde está parado y por qué. Nunca "entramos a la home".>
+
+      - click: boton-nuevo
+      - click: opcion-tipo
+        awaits: campo-principal
+        say: <Algo que se vea en pantalla y que el competidor no tenga.>
+
+      - type: { target: campo-principal, text: "<texto realista, del dominio>" }
+        say: <Describe el problema con SUS palabras, no con las del formulario.>
+
+      - click: boton-enviar
+        awaits: identificador
+        say: "<La consecuencia: qué se lleva, qué le llega.>"
+
+  - id: otro-lado
+    title: "<Del otro lado ya está en la bandeja correcta>"
+    proves: <Ruteo / bandeja / aislamiento.>
+    watch: Es el MISMO registro. No es una pantalla de ejemplo.
+    beats:
+      - as: staff
+        go: /<ruta-admin>
+        awaits: fila-del-registro
+        say: <Lo ve entrar sin que nadie le avise.>
+
+      - click: fila-del-registro
+        awaits: detalle
+        say: <Qué tiene a mano para resolverlo sin volver a preguntar.>
+
+  # ── La objeción. Sin esto la demo es un folleto, y el lint la rechaza. ──────
+  - id: sin-permiso
+    title: "<Nadie toca lo que no le corresponde>"
+    objection: true
+    proves: <Permisos evaluados en la capa de datos, no escondidos en la UI.>
+    watch: El botón no está gris — la acción directamente no existe para ese rol.
+    beats:
+      - as: staff-sin-permiso
+        go: /<ruta-admin>
+        awaits: estado-vacio
+        say: <Ni siquiera lo ve. No es un botón deshabilitado.>
+
+  - id: resolucion
+    title: "<Se resuelve, y el usuario se entera solo>"
+    proves: <Cambio de estado con constancia y traza auditable.>
+    hold: 3s
+    beats:
+      - as: staff
+        click: boton-resolver
+      - type: { target: nota-resolucion, text: "<nota realista>" }
+      - click: confirmar
+        awaits: badge-resuelto
+        say: <Queda el registro de quién, cuándo y con qué.>
+
+      - as: usuario
+        go: /<ruta>
+        awaits: badge-resuelto-usuario
+        say: "<El cierre: el beat más fuerte, no un resumen.>"

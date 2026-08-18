@@ -1,0 +1,108 @@
+# yaml-language-server: $schema=../templates/demo.schema.json
+#
+# ARQUETIPO: admin-panel — "el negocio se configura sin tocar código"
+#
+# COPIALO a demos/<tu-slug>.demo.yml y rellenalo.
+#
+# La escena que hace que este arquetipo funcione es la CUARTA: mostrar el efecto
+# del cambio DEL LADO DEL USUARIO. Un panel de administración donde sólo se ve el
+# panel es un formulario con pretensiones; lo que se está demostrando es que una
+# persona de negocio cambia algo y el producto cambia, sin un deploy.
+#
+#   metrica    → arranca por el número que duele, no por el menú
+#   drill      → de la métrica al caso concreto que la explica
+#   config     → cambia la regla desde la UI
+#   efecto     → EL MOMENTO: el usuario final ve el cambio
+#   objeción   → la auditoría: quién cambió qué y cuándo
+
+id: <slug-de-la-demo>
+product: <Producto>
+archetype: admin-panel
+title: <Cambiar la regla sin pedirle nada a sistemas>
+promise: >
+  <Qué decisión que hoy necesita un ticket y un deploy pasa a ser un cambio de
+  dos clics.>
+
+viewport: desktop
+locale: es-AR
+timezone: America/Argentina/Buenos_Aires
+freezeTime: 2026-03-10T10:00:00-03:00
+
+cast:
+  - as: admin
+    name: <Nombre Apellido>
+    context: <su rol de negocio — NO "el administrador del sistema">
+    auth: { via: api, email: "${DEMO_ADMIN_EMAIL}", password: "${DEMO_ADMIN_PW}" }
+
+  - as: usuario
+    name: <Nombre Apellido>
+    context: <quien sufre o disfruta el cambio>
+    curtain: "Y del lado de quien lo usa"
+    auth: { via: api, email: "${DEMO_USER_EMAIL}", password: "${DEMO_USER_PW}" }
+
+world:
+  # ⚠ El seed tiene que DEJAR LA CONFIGURACIÓN EN EL ESTADO INICIAL, o la segunda
+  # corrida arranca con el cambio ya aplicado y la demo no muestra nada.
+  seed: ./seeds/<slug>.mjs
+  assert:
+    - <la configuración está en su valor por defecto>
+    - hay datos suficientes para que la métrica no dé cero
+
+hide: ["nextjs-portal", "[data-nextjs-toast]", "#crisp-chatbox"]
+redact: ['[data-testid="user-email"]']
+
+scenes:
+  - id: metrica
+    title: "<El número que no cierra>"
+    proves: <Panel con las métricas que le importan al negocio.>
+    watch: Arranca por el problema, no por el menú.
+    beats:
+      - as: admin
+        go: /<ruta-dashboard>
+        awaits: kpi-principal
+        say: <Qué muestra el número y por qué es un problema.>
+      - highlight: kpi-principal
+
+  - id: drill
+    title: "<Y de dónde sale>"
+    proves: <Drill-down de la métrica al caso concreto.>
+    watch: Se puede llegar del número al caso, sin exportar a Excel.
+    beats:
+      - click: kpi-principal
+        awaits: listado-detalle
+        say: <El número se abre en los casos que lo componen.>
+
+  - id: config
+    title: "<Se cambia la regla desde acá>"
+    proves: <Configuración de negocio editable por un no-técnico.>
+    watch: No hay JSON, ni variables de entorno, ni un deploy.
+    beats:
+      - go: /<ruta-configuracion>
+        awaits: campo-config
+      - select: { target: campo-config, value: "<nuevo valor>" }
+      - click: guardar-config
+        awaits: confirmacion-guardado
+        say: <Cambia la regla en dos clics. Sin ticket y sin deploy.>
+
+  # ── EL MOMENTO: se ve del otro lado. ───────────────────────────────────────
+  - id: efecto
+    title: "<Y el usuario lo ve en el acto>"
+    proves: <El cambio de configuración impacta al usuario final sin redeploy.>
+    watch: Es la MISMA pantalla de antes, con el comportamiento nuevo.
+    beats:
+      - as: usuario
+        go: /<ruta-del-usuario>
+        awaits: elemento-afectado
+        say: <Qué cambió para quien usa el producto, en concreto.>
+
+  - id: auditoria
+    title: "<Y queda registrado quién lo cambió>"
+    objection: true
+    proves: <Traza de auditoría de los cambios de configuración.>
+    watch: Nombre, fecha y valor anterior. No hay cambios anónimos.
+    hold: 3s
+    beats:
+      - as: admin
+        go: /<ruta-auditoria>
+        awaits: fila-auditoria
+        say: <Quién lo cambió, cuándo y qué valor tenía antes.>

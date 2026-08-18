@@ -1,0 +1,127 @@
+# yaml-language-server: $schema=./demo.schema.json
+#
+# Ejemplo completo y REAL (Civis, el producto de sitios municipales). A
+# diferencia de los arquetipos —que son esqueletos con <placeholders>— este pasa
+# el lint tal cual está. Sirve para ver cómo se lee un guion terminado.
+#
+# Leelo de arriba abajo: la historia se entiende sin abrir selectors.yml, que es
+# exactamente el objetivo del formato de dos capas.
+
+id: reclamo-end-to-end
+product: Civis
+archetype: crud
+title: De un bache a un reclamo resuelto, sin pisar el municipio
+promise: >
+  Un vecino reporta un problema desde el sillón y el municipio lo cierra con
+  constancia. Dos minutos, cero papel.
+
+viewport: desktop
+locale: es-AR
+timezone: America/Argentina/Buenos_Aires
+freezeTime: 2026-03-10T14:30:00-03:00
+brandColor: "#0369a1"
+
+cast:
+  - as: vecina
+    name: Lucía Fernández
+    context: 34 años, San Jorge. Trabaja todo el día y no puede ir al municipio.
+    auth: { via: api, email: "${CIVIS_DEMO_CITIZEN}", password: "${CIVIS_DEMO_CITIZEN_PW}" }
+
+  - as: empleado
+    name: Rubén Ortiz
+    context: Mesa de Entradas del municipio de San Jorge.
+    curtain: "Ahora, del otro lado del mostrador"
+    auth: { via: api, email: "${CIVIS_DEMO_ADMIN}", password: "${CIVIS_DEMO_ADMIN_PW}" }
+
+  - as: empleado-otra-area
+    name: Marta Gil
+    context: Trabaja en Rentas. Este expediente no es de su área.
+    curtain: "Y alguien de otra área"
+    auth: { via: api, email: "${CIVIS_DEMO_OTHER}", password: "${CIVIS_DEMO_OTHER_PW}" }
+
+world:
+  seed: ./seeds/reclamo-end-to-end.mjs
+  assert:
+    - el tipo "Reclamo con Ubicación" está habilitado en san-jorge
+    - Lucía no tiene reclamos abiertos
+
+hide: ["nextjs-portal", "[data-nextjs-toast]", "#crisp-chatbox"]
+redact: ['[data-testid="user-email"]']
+
+scenes:
+  - id: alta
+    title: "El reclamo entra en 40 segundos"
+    proves: Formularios dinámicos por tipo de trámite, con ubicación en mapa.
+    covers: [reclamo-alta, reclamo-ubicacion-mapa]
+    watch: El formulario lo define el municipio desde el admin, no está hardcodeado.
+    beats:
+      - as: vecina
+        go: /portal/tramites
+        awaits: lista-propia
+        say: Lucía entra al portal del municipio desde el celular. No instaló nada.
+
+      - click: boton-nuevo
+      - click: opcion-tipo
+        awaits: campo-principal
+        say: El formulario lo arma el municipio desde su panel. Cambia según el trámite.
+
+      - type:
+          target: campo-principal
+          text: "Bache profundo sobre Belgrano al 700. Ya rompió dos ruedas."
+        say: Describe el problema con sus palabras, no con las del formulario.
+
+      - click: boton-enviar
+        awaits: identificador
+        say: Se lleva un número de seguimiento y el aviso le llega por mail.
+
+  - id: bandeja
+    title: "Del otro lado ya está en la bandeja correcta"
+    proves: Ruteo automático por área, con aislamiento por municipio.
+    covers: [bandeja-por-area]
+    watch: Es el MISMO número de reclamo. No es una pantalla de ejemplo.
+    beats:
+      - as: empleado
+        go: /admin/tramites?estado=PENDIENTE
+        awaits: fila-del-registro
+        say: Rubén lo ve entrar sin que nadie le avise.
+
+      - click: fila-del-registro
+        awaits: detalle
+        say: Abre y tiene la ubicación en el mapa y el historial del vecino.
+
+  - id: sin-permiso
+    title: "Nadie cierra lo que no le corresponde"
+    objection: true
+    proves: Permisos por área evaluados en la capa de datos, no escondidos en la UI.
+    covers: [permisos-por-rol]
+    watch: El botón no está gris — la acción directamente no existe para ese rol.
+    beats:
+      - as: empleado-otra-area
+        go: /admin/tramites
+        awaits: estado-vacio
+        say: Marta, de Rentas, ni siquiera ve el expediente.
+
+  - id: resolucion
+    title: "Se resuelve, y la vecina se entera sola"
+    proves: Cambio de estado con constancia, notificación automática y traza auditable.
+    covers: [cierre-con-constancia, notificacion-cambio-estado, reclamo-seguimiento]
+    watch: La vecina no tuvo que volver a preguntar — el estado le llegó solo.
+    hold: 3s
+    beats:
+      - as: empleado
+        go: /admin/tramites?estado=PENDIENTE
+        awaits: fila-del-registro
+      - click: fila-del-registro
+        awaits: detalle
+      - click: boton-resolver
+      - type:
+          target: nota-resolucion
+          text: "Bacheo ejecutado el 12/03. Cuadrilla 4."
+      - click: confirmar
+        awaits: badge-resuelto
+        say: Se cierra con la constancia y queda quién, cuándo y con qué.
+
+      - as: vecina
+        go: /portal/tramites
+        awaits: badge-resuelto
+        say: Todo el circuito, sin una sola hoja de papel.

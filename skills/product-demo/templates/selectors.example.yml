@@ -1,0 +1,41 @@
+# demos/selectors.yml — el ÚNICO archivo con selectores.
+#
+# Por qué está separado del guion: el guion tiene que poder revisarlo alguien que
+# no programa (es una discusión sobre el relato) y este archivo lo revisa un dev
+# (es mantenimiento). Un PR que toca sólo el guion es una cosa; uno que toca este
+# archivo es otra. Además, los targets con nombre son lo que hace que los
+# arquetipos se puedan instanciar en cualquier producto.
+#
+# Prioridad al elegir un selector:
+#   1. data-testid          estable, explícito, sobrevive a un rediseño
+#   2. role + name          semántico y accesible; se rompe si cambia el copy
+#   3. texto                último recurso
+#
+# PROHIBIDO nth-child y XPath: se rompen al primer cambio de markup y el lint los
+# rechaza. Si un elemento no tiene forma estable de seleccionarse, agregale un
+# data-testid al componente — es una mejora del producto, no un parche de la demo.
+
+targets:
+  # ── navegación y listados ──────────────────────────────────────────────────
+  lista-propia:        '[data-testid="mis-registros"]'
+  fila-del-registro:   '[data-testid="fila"]:has-text("Belgrano al 700")'
+  detalle:             '[data-testid="detalle"]'
+  estado-vacio:        '[data-testid="empty-state"]'
+  contador-total:      '[data-testid="total-count"]'
+
+  # ── acciones ───────────────────────────────────────────────────────────────
+  boton-nuevo:         'role=button[name="Nuevo trámite"]'
+  boton-enviar:        'role=button[name="Enviar"]'
+  boton-resolver:      'role=button[name="Resolver"]'
+  confirmar:           'role=button[name="Confirmar"]'
+
+  # ── formulario ─────────────────────────────────────────────────────────────
+  opcion-tipo:         'role=option[name=/Reclamo con Ubicación/i]'
+  campo-principal:     'textarea[name="detalle"]'
+  nota-resolucion:     'textarea[name="notaResolucion"]'
+  buscador:            '[data-testid="search-input"]'
+  filtro-estado:       'select[name="estado"]'
+
+  # ── estados y resultados ───────────────────────────────────────────────────
+  identificador:       '[data-testid="numero"]'
+  badge-resuelto:      '[data-testid="estado-badge"]:has-text("Resuelto")'

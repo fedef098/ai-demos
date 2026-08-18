@@ -8,9 +8,9 @@
       "name": "demo-recording",
       "displayName": "AI Demo Recorder",
       "source": ".",
-      "description": "Record narrated, subtitled product demo videos of the live app, with a visible cursor and synced narration.",
+      "description": "Record narrated, subtitled product demo videos of the live app from a versioned script, with a visible cursor, narration the pacing is built around, and a catalog of what is still not covered.",
       "category": "automation",
-      "tags": ["demo", "recording", "video", "screencast"]
+      "tags": ["demo", "recording", "video", "screencast", "storytelling", "coverage"]
     }
   ]
 }
