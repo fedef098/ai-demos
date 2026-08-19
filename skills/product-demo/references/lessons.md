@@ -62,6 +62,37 @@ adentro.
 Relacionado: entre secciones de un editor, `scroll` al tope primero, o el click
 siguiente cae fuera del viewport y en el video no se ve qué se tocó.
 
+## No digas lo que todavía no está en pantalla
+
+La falla más común y la más difícil de ver escribiendo: la frase anuncia algo que
+está más abajo y el ojo no lo encuentra. "Y abajo de todo, el muro de tributos,
+que es el corazón de la página" mientras en pantalla se ven las donaciones — el
+que mira se pasa esos tres segundos buscando un muro que no está.
+
+La regla es literal: **cada `say` tiene que ser verdad de lo que se ve en ese
+instante**. Si lo que vas a nombrar está más abajo, el beat scrollea primero y lo
+dice después; si está en otra sección, es otro beat. Vale también al revés: no
+narres algo que ya se fue de pantalla.
+
+## No narres una funcionalidad sobre su estado vacío
+
+"Una galería de fotos, los momentos que una familia más quiere conservar" sobre un
+recuadro punteado que dice "todavía no hay fotos" prueba justo lo contrario de lo
+que dice. Igual con una bandeja de moderación: si la frase es "nada se publica sin
+que la familia lo apruebe", en pantalla tiene que estar el tributo **pendiente**;
+si el panel todavía está cargando, la escena no probó nada.
+
+Dos arreglos, en orden: sembrar el dato, o mover la frase al beat donde el dato ya
+está. Nunca dejarla colgada sobre el vacío.
+
+## Los widgets de terceros en modo test se ven
+
+Un captcha en modo prueba pinta un cartel de "For testing only — report to site
+owner" arriba del formulario. En una demo que mira un cliente, eso es peor que el
+captcha real. Todo lo de terceros —captcha, pagos sandbox, chat widgets, banner de
+cookies— va a `hide:` desde el primer borrador, no cuando alguien lo nota en el
+video terminado.
+
 ## Datos: ni vacío ni acumulado
 
 - **Ni vacío**: gráficos y embudos sin datos no muestran nada. El seed tiene que

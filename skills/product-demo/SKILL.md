@@ -9,6 +9,8 @@ description: >
   catálogo de qué capacidad del producto está demoable y cuál no, y publica los
   videos en S3 (en git no queda ningún binario). Trae cinco arquetipos de demo
   listos para copiar (onboarding, CRUD, búsqueda, panel admin, checkout).
+  Arranca SIEMPRE reconociendo la sección en el código y entrevistando sobre
+  alcance, audiencia y datos, y muestra el guion para aprobación antes de grabar.
   Usala cuando pidan una demo para un cliente o una release, cuando haya que
   actualizar una demo existente, cuando quieran grabar un flujo de la app, o
   cuando pregunten qué está cubierto por una demo y qué no.
@@ -39,23 +41,64 @@ Grabar es el último paso, no el primero. En orden:
 
 0. **Mirá el catálogo** (`demo.sh --catalog`): puede que la capacidad que te
    piden ya esté cubierta, o que convenga cubrir de paso otra del mismo hueco.
-1. **Definí la promesa.** Una frase sobre qué cambia *para el que mira*. Si no
+1. **Reconocé la sección y entrevistá.** Obligatorio, y va antes de escribir
+   nada — el detalle está en la sección siguiente.
+2. **Definí la promesa.** Una frase sobre qué cambia *para el que mira*. Si no
    la podés escribir, la demo todavía no existe.
-2. **Elegí el arquetipo** de `archetypes/` que más se parezca y **copialo** a
+3. **Elegí el arquetipo** de `archetypes/` que más se parezca y **copialo** a
    `demos/<slug>.demo.yml`. Se copian, no se heredan.
-3. **Escribí el guion** completo, con la persona, las escenas y los subtítulos.
+4. **Escribí el guion** completo, con la persona, las escenas y los subtítulos.
    Sin selectores todavía: sólo la historia. Cada escena declara qué capacidades
    del inventario cubre (`covers:`).
-4. **Mapeá los targets** en `demos/selectors.yml`.
-5. **Escribí el seed** idempotente.
-6. **Iterá con `--check`** (no graba, ~20 s) hasta que resuelvan todos los targets.
-7. **Abrí el PR con el guion.** La discusión sobre el relato pasa acá, en texto,
+5. **Mostrá el guion y esperá el sí.** Sin aprobación explícita no se graba.
+6. **Mapeá los targets** en `demos/selectors.yml`.
+7. **Escribí el seed** idempotente.
+8. **Iterá con `--check`** (no graba, ~20 s) hasta que resuelvan todos los targets.
+9. **Abrí el PR con el guion.** La discusión sobre el relato pasa acá, en texto,
    no mirando un video de tres minutos.
-8. **Escuchá la locución** (`narrate.mjs`, no graba) y arreglá lo que el TTS
-   pronuncie mal con `voice:`.
-9. **Recién ahí, grabá.**
-10. **Mirá el video entero antes de publicarlo.** Ningún lint ve píxeles ni oye
+10. **Escuchá la locución** (`narrate.mjs`, no graba) y arreglá lo que el TTS
+    pronuncie mal con `voice:`.
+11. **Recién ahí, grabá.**
+12. **Mirá el video entero antes de publicarlo.** Ningún lint ve píxeles ni oye
     audio.
+
+## Antes de escribir el guion: reconocer y preguntar
+
+**Cuando te piden una demo de algo, no empieces a escribir el guion.** Nadie pide
+"una demo de la sección X" y quiere toda la sección X: quiere un recorte, para
+alguien, con un objetivo — y casi nunca lo tiene explícito todavía. La secuencia
+es siempre la misma, sin saltos.
+
+**A. Reconocé la sección primero.** Leé el código **antes** de preguntar nada, o
+las preguntas salen genéricas y las respuestas también. Anotá: las rutas y pasos
+del flujo (son las escenas candidatas), los estados vacíos, qué es premium o
+gated, qué necesita datos para verse, qué acciones persisten o son destructivas,
+qué widgets de terceros van a estorbar, y qué cubren ya otros guiones. De ahí sale
+un inventario en tres montones: **lo que se muestra bien**, **lo que necesita
+datos o una cuenta especial**, y **lo que conviene dejar afuera** (con el porqué).
+
+**B. Preguntá con ese inventario en la mano**, en tandas de hasta cuatro y con
+opciones concretas. Lo que ya te dijeron en el pedido no se vuelve a preguntar:
+
+1. **Quién mira y qué tiene que pasar después.** Un cliente evaluando, un usuario
+   que ya compró, un inversor, el equipo interno. Define el vocabulario, qué se
+   da por sabido y cuál es el final.
+2. **Qué entra y qué queda afuera**, ofreciendo el inventario del paso A como
+   opciones. Es la pregunta que más tiempo ahorra: nadie termina una demo de
+   cuatro minutos con doce pantallas, y quien la pidió tiene tres que le importan.
+3. **Cuál es el momento que prueba** —el "mirá esto" que justifica el video— y
+   **qué objeción** hay que enfrentar. De ahí sale la escena `objection: true`.
+4. **Contra qué se graba**: entorno (nunca un dev server), con qué usuario, qué se
+   puede sembrar y qué **no** se puede tocar.
+5. **Forma**: duración objetivo, idioma, con voz o muda.
+
+**C. Mostrá el guion y esperá el sí.** El `.demo.yml` completo, con los subtítulos
+tal cual se van a escuchar, la duración que estima el lint y las capacidades que
+cubre. Corregir una frase en el YAML es gratis; descubrirla en el video son
+cuatro minutos de grabación más la locución entera y otra vuelta de revisión.
+
+El detalle —qué buscar en el código, y por qué cada paso saltado se paga en el
+siguiente— está en `references/intake.md`.
 
 ### Instalar el motor en un proyecto
 
@@ -357,6 +400,7 @@ barrera de seguridad. Los mismos checks tienen que correr en el PR.
 | `references/storytelling.md` | Antes de escribir el primer guion. La doctrina completa, con antipatrones y cómo migrar un `DEMO_SCRIPT.md` manual. |
 | `references/pacing.md` | Si el video se siente apurado o eterno. La fórmula del ritmo y por qué nada de `networkidle`. |
 | `references/determinism.md` | Si la demo sale distinta cada vez. Seed vs fixtures, congelar el reloj, `hide`/`redact`. |
+| `references/intake.md` | **Apenas te piden una demo.** Qué reconocer en el código y qué preguntar antes de escribir una línea de guion. |
 | `references/setup.md` | Al instalar el motor en un proyecto nuevo, o al configurar la voz. |
 | `references/lessons.md` | Antes de grabar algo con debounce, un asistente que streamea, o un editor por secciones. Fallas reales y su regla. |
 | `references/storage.md` | Al configurar el bucket, o para recuperar el video de una demo vieja. |
@@ -364,7 +408,11 @@ barrera de seguridad. Los mismos checks tienen que correr en el PR.
 
 ## Checklist antes de publicar una demo
 
+- [ ] Hubo entrevista antes del guion, y el guion se aprobó antes de grabar.
 - [ ] La promesa se puede decir en una frase, y está en la placa de apertura.
+- [ ] Ningún `say` habla de algo que todavía no está en pantalla: si está más
+      abajo, el beat scrollea **antes** de decirlo.
+- [ ] Ninguna frase narra una funcionalidad sobre su estado vacío.
 - [ ] La persona tiene nombre, rol y contexto concretos.
 - [ ] Hay una escena con `objection: true` que muestra lo difícil.
 - [ ] Ningún subtítulo describe un click; todos dicen la consecuencia.
