@@ -180,3 +180,21 @@ Un dominio propio (`demos.adavance.com` vía CloudFront + CNAME en Cloudflare) e
 opcional y se agrega después sin migrar nada: se setea `DEMO_PUBLIC_URL` y las
 publicaciones nuevas salen con ese host. Como las claves son inmutables, nunca
 hace falta invalidar la cache.
+
+---
+
+## Estado: creado y verificado (2026-08-20)
+
+Bucket `adavance-demos` en us-east-1, cuenta 396633054847, usuario
+`demo-publisher`. Perfil local: `adavance-demos`.
+
+| Chequeo | Resultado |
+|---|---|
+| Objeto público por URL directa | HTTP 200 |
+| Listar el bucket sin credenciales | `AccessDenied` |
+| Borrar un objeto con `demo-publisher` | `AccessDenied` (el `Deny` explícito) |
+| HTML servido como `text/html` | sí — se renderiza, no se descarga |
+
+Quedan dos sondas que **no se pueden borrar** con este usuario (es a propósito):
+`demos/_probe.txt` y `_selftest/probe.html`. Para limpiarlas hace falta el perfil
+admin de la cuenta.
