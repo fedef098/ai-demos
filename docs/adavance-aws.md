@@ -6,6 +6,53 @@ Estos comandos los tiene que correr alguien con admin en esa cuenta: las
 credenciales que hay hoy (`wig-backups-uploader`) están scopeadas a backups y
 `s3:CreateBucket` les da `AccessDenied`.
 
+**Ese usuario NO se amplía.** Sus claves viven en el Secret `backup-s3` del
+cluster y corren los CronJobs de backup de Postgres. Sumarle permisos de demos
+une dos cosas que no tienen por qué compartir radio de explosión: una filtración
+de las claves del backup pasaría a alcanzar las demos, y al revés.
+
+## 0 · Alternativa: un usuario que se arranca solo
+
+Si preferís tocar la consola una sola vez, creá `demo-publisher` con esta policy
+en lugar de correr los pasos 1–4 vos. `s3:CreateBucket` acepta restricción por
+ARN, así que el permiso de bootstrap alcanza a **un solo nombre de bucket** — con
+otro nombre, este usuario no puede hacer nada.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "BootstrapDemosBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:PutBucketPolicy", "s3:GetBucketPolicy",
+        "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketLocation", "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::adavance-demos" },
+    { "Sid": "PublishDemos",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject"],
+      "Resource": "arn:aws:s3:::adavance-demos/*" }
+  ]
+}
+```
+
+Por consola: **IAM → Users → Create user** (`demo-publisher`, sin acceso a la
+consola) → **Attach policies directly → Create inline policy → JSON**, pegás eso
+→ y después **Security credentials → Create access key** (caso de uso: *CLI*).
+
+Sigue sin tener `Delete*`: publicar es aditivo, y borrar un video que alguien ya
+compartió por link no debería poder pasar por accidente.
+
+### Cómo pasar la access key
+
+**No la pegues en un chat.** Escribila directo en `~/.aws/credentials` como el
+perfil `adavance-demos` (formato en el paso 5). Una clave que pasa por una
+conversación queda en el historial y hay que rotarla después — ya nos pasó con
+`wig-backups-admin`.
+
 > Si `create-bucket` responde `BucketAlreadyExists`, el nombre lo tomó otra
 > cuenta de AWS (son globales). Probá `adavance-product-demos` y cambiá el nombre
 > en todo lo que sigue.
