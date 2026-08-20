@@ -5,6 +5,7 @@
 //
 //   node .runner/publish.mjs demos/<slug>              # lee run.json de ahí
 //   node .runner/publish.mjs demos/<slug> --dry-run    # imprime, no sube
+//   node .runner/publish.mjs --catalog demos/          # sube el sitio HTML
 //
 // Las tres decisiones no obvias:
 //
@@ -25,9 +26,10 @@
 //    local de la demo. Se mergea por `id` en vez de appendear, para que
 //    regrabar no deje dos entradas de la misma demo.
 
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, existsSync, statSync, readdirSync, copyFileSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { join, resolve, extname, basename } from "node:path";
+import { join, resolve, relative, extname, basename } from "node:path";
+import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 
 const CONTENT_TYPES = {
@@ -35,8 +37,12 @@ const CONTENT_TYPES = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
-  ".vtt": "text/vtt",     // los .vtt NO se suben (son texto y van a git); está acá
-  ".json": "application/json", //  por si alguna vez se publica un bundle completo.
+  ".vtt": "text/vtt",     // se suben junto al HTML del catálogo (los tracks del
+  ".json": "application/json", // <video> se piden por ruta relativa) además de ir a git.
+  // Sin esto S3 sirve el HTML como application/octet-stream y el browser lo
+  // DESCARGA en vez de mostrarlo: el catálogo entero parecería roto.
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css",
 };
 
 /** El contenido de una clave content-addressed nunca cambia: cachear para siempre. */
@@ -99,6 +105,66 @@ export async function publish(outDir, run) {
   return { video: videoUrl, poster: posterUrl, manifest: manifestUrl };
 }
 
+/**
+ * Publica el sitio del catálogo: la galería, la página de cada demo y los
+ * sidecars que ese HTML referencia (poster + subtítulos).
+ *
+ * Se arma en un directorio temporal y NO en `demos/`, porque el HTML de git
+ * tiene que seguir apuntando al mp4 local — es lo que te deja revisar una demo
+ * recién grabada sin red. El de S3 apunta a la URL publicada. Mismo generador,
+ * dos destinos.
+ *
+ * @param {string} demosDir Raíz de las demos (la que tiene un subdir por demo).
+ * @returns {string|null} URL del índice, o `null` si no hay bucket configurado.
+ */
+export function publishCatalog(demosDir) {
+  const cfg = config();
+  if (!cfg) {
+    warnNoBucket(demosDir);
+    return null;
+  }
+  requireAwsCli();
+  if (!existsSync(demosDir)) die(`No existe ${demosDir}`);
+
+  const staging = join(tmpdir(), `demo-site-${process.pid}`);
+  rmSync(staging, { recursive: true, force: true });
+  execFileSync(process.execPath, [PAGE_SCRIPT, demosDir, "--remote", "--out", staging], {
+    stdio: "inherit",
+  });
+
+  // El HTML referencia poster.jpg y los .vtt por ruta relativa, así que van al
+  // lado. El poster se sube dos veces (acá y content-addressed junto al mp4):
+  // son 30 KB y a cambio cada página queda autocontenida.
+  for (const slug of readdirSync(staging, { withFileTypes: true }).filter((d) => d.isDirectory())) {
+    for (const asset of ["poster.jpg", "demo.vtt", "demo.chapters.vtt"]) {
+      const from = join(demosDir, slug.name, asset);
+      if (existsSync(from)) copyFileSync(from, join(staging, slug.name, asset));
+    }
+  }
+
+  // `force`: a diferencia de los binarios, estas claves NO son
+  // content-addressed — el índice cambia en cada publicación y saltear la
+  // subida porque "la clave ya existe" dejaría el catálogo congelado.
+  const files = walk(staging);
+  for (const file of files) {
+    putObject(cfg, file, `${cfg.catalogPrefix}/${relative(staging, file)}`, CACHE_MANIFEST, true);
+  }
+  rmSync(staging, { recursive: true, force: true });
+
+  const url = publicUrl(cfg, `${cfg.catalogPrefix}/index.html`);
+  console.log(`✓ catálogo publicado · ${files.length} archivo(s) · ${url}`);
+  return url;
+}
+
+const PAGE_SCRIPT = new URL("./page.mjs", import.meta.url).pathname;
+
+/** Todos los archivos bajo `dir`, recursivo. */
+function walk(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((d) =>
+    d.isDirectory() ? walk(join(dir, d.name)) : [join(dir, d.name)],
+  );
+}
+
 // ── Config ───────────────────────────────────────────────────────────────────
 
 /** Devuelve la config de publicación, o null si no hay bucket (caso "sólo local"). */
@@ -108,6 +174,14 @@ function config() {
   return {
     bucket,
     prefix: (process.env.DEMO_S3_PREFIX ?? "demos").replace(/^\/+|\/+$/g, ""),
+    // El catálogo (index.json + el sitio HTML) puede ir en OTRO prefijo que los
+    // videos, porque enumera todo: features sin anunciar, para qué cliente se
+    // grabó cada demo. Un mp4 lleva el sha en la clave y no se adivina; un
+    // índice en una ruta obvia sí. Con un prefijo impredecible el catálogo
+    // sigue siendo un link que se comparte, pero deja de ser algo que se
+    // encuentra. Default: el mismo prefijo que los videos (todo junto).
+    catalogPrefix: (process.env.DEMO_CATALOG_PREFIX ?? process.env.DEMO_S3_PREFIX ?? "demos")
+      .replace(/^\/+|\/+$/g, ""),
     // La región se pasa SIEMPRE explícita al CLI: `AWS_REGION` la lee el CLI v2
     // pero el v1 sólo mira `AWS_DEFAULT_REGION`, y ese desajuste da un error
     // ("you must specify a region") que no se parece en nada a su causa.
@@ -144,8 +218,8 @@ function requireAwsCli() {
 
 // ── S3 ───────────────────────────────────────────────────────────────────────
 
-/** Sube un archivo si no está ya. Devuelve la URL pública. */
-function putObject(cfg, file, key, cacheControl) {
+/** Sube un archivo si no está ya (`force` lo sube igual). Devuelve la URL pública. */
+function putObject(cfg, file, key, cacheControl, force = false) {
   const url = publicUrl(cfg, key);
   const label = basename(file);
 
@@ -156,7 +230,7 @@ function putObject(cfg, file, key, cacheControl) {
 
   // Idempotencia: la clave lleva el sha del contenido, así que si el objeto ya
   // existe es BIT A BIT el mismo. Re-subir sólo gastaría ancho de banda.
-  if (headObject(cfg, key)) {
+  if (!force && headObject(cfg, key)) {
     console.log(`· ${label} ya publicado · ${url}`);
     return url;
   }
@@ -188,7 +262,7 @@ function headObject(cfg, key) {
  * (que ya está subido bajo su propia clave inmutable).
  */
 function updateManifest(cfg, entry) {
-  const key = `${cfg.prefix}/index.json`;
+  const key = `${cfg.catalogPrefix}/index.json`;
   const url = publicUrl(cfg, key);
 
   if (cfg.dryRun) {
@@ -272,8 +346,15 @@ function die(msg) {
 // uno que quedó `pending`) no debería obligar a regrabar la demo entera.
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
   const outDir = process.argv[2];
-  if (!outDir) die("Uso: node .runner/publish.mjs <outDir> [--dry-run]");
-  const runPath = join(outDir, "run.json");
-  if (!existsSync(runPath)) die(`No encontré ${runPath}. Corré build.mjs antes de publicar.`);
-  publish(outDir, JSON.parse(readFileSync(runPath, "utf8"))).catch((e) => die(e.stack ?? e.message));
+  if (!outDir)
+    die("Uso: node .runner/publish.mjs <outDir> [--dry-run]\n" +
+        "       node .runner/publish.mjs --catalog <demosDir>");
+
+  if (outDir === "--catalog") {
+    publishCatalog(process.argv[3] ?? "demos");
+  } else {
+    const runPath = join(outDir, "run.json");
+    if (!existsSync(runPath)) die(`No encontré ${runPath}. Corré build.mjs antes de publicar.`);
+    publish(outDir, JSON.parse(readFileSync(runPath, "utf8"))).catch((e) => die(e.stack ?? e.message));
+  }
 }

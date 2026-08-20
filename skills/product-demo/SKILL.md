@@ -14,7 +14,7 @@ description: >
   Usala cuando pidan una demo para un cliente o una release, cuando haya que
   actualizar una demo existente, cuando quieran grabar un flujo de la app, o
   cuando pregunten qué está cubierto por una demo y qué no.
-allowed-tools: Read, Edit, Write, Glob, Grep, Bash(node *), Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(ffmpeg *), Bash(ffprobe *), Bash(./demos/*)
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash(node *), Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(ffmpeg *), Bash(ffprobe *), Bash(./demos/*), Bash(aws s3 *), Bash(aws s3api *), Bash(aws sts get-caller-identity)
 argument-hint: [qué demo hay que grabar o actualizar]
 ---
 

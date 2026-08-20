@@ -5,12 +5,19 @@
 // compartida no se puede correr un bundler.
 //
 //   node .runner/page.mjs demos/            # regenera todo lo que encuentre
+//   node .runner/page.mjs demos/ --remote --out .demo-site   # versión para S3
 //
 // La galería incluye la sección "Cobertura", que sale del catálogo
 // (catalog.mjs) y contesta la pregunta que se hace antes de una reunión: qué
 // está demoable y qué no.
+//
+// `--remote` apunta el <video> a la URL publicada en vez del mp4 de al lado, y
+// deja afuera las demos sin publicar (no hay nada que reproducir). `--out`
+// escribe el árbol en otro directorio en lugar de pisar el de git: el HTML
+// local tiene que seguir prefiriendo el archivo local, que es lo que te deja
+// mirar la demo recién grabada sin red.
 
-import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync, statSync, mkdirSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { execFileSync } from "node:child_process";
 import { formatVttTime } from "./pacing.mjs";
@@ -19,10 +26,15 @@ import { saveCatalog, groupByArea } from "./catalog.mjs";
 const TEMPLATE = new URL("./page.template.html", import.meta.url).pathname;
 
 function main() {
-  const demosDir = process.argv[2] ?? "demos";
+  const argv = process.argv.slice(2);
+  const remote = argv.includes("--remote");
+  const outAt = argv.indexOf("--out");
+  const outRoot = outAt >= 0 ? argv[outAt + 1] : null;
+  if (outAt >= 0 && !outRoot) die("--out necesita un directorio destino.");
+  const demosDir = argv.find((a, i) => !a.startsWith("--") && i !== outAt + 1) ?? "demos";
   if (!existsSync(demosDir)) die(`No existe ${demosDir}`);
 
-  const runs = readdirSync(demosDir, { withFileTypes: true })
+  let runs = readdirSync(demosDir, { withFileTypes: true })
     .filter((d) => d.isDirectory() && !d.name.startsWith("."))
     .map((d) => join(demosDir, d.name, "run.json"))
     .filter(existsSync)
@@ -30,24 +42,36 @@ function main() {
 
   if (!runs.length) die(`No encontré ningún run.json bajo ${demosDir}. Grabá una demo primero.`);
 
+  if (remote) {
+    const unpublished = runs.filter((r) => !r.run.video?.url);
+    for (const r of unpublished)
+      console.warn(`  ⚠ ${basename(r.dir)} no está publicada todavía: queda fuera del sitio.`);
+    runs = runs.filter((r) => r.run.video?.url);
+    if (!runs.length) die("Ninguna demo está publicada: no hay sitio remoto que armar.");
+  }
+
   // El catálogo se recalcula acá para que `demo.sh --page` deje catalog.json al
   // día sin un paso extra que alguien se pueda olvidar de correr.
   const catalog = saveCatalog(demosDir);
   const bySlug = new Map(catalog.demos.map((d) => [d.slug, d]));
+  const galleryDir = outRoot ?? demosDir;
 
   for (const r of runs) {
-    writeFileSync(join(r.dir, "index.html"), renderDemo(r.run, r.dir, bySlug.get(basename(r.dir))));
-    console.log(`· ${join(r.dir, "index.html")}`);
+    const dest = outRoot ? join(outRoot, basename(r.dir)) : r.dir;
+    mkdirSync(dest, { recursive: true });
+    writeFileSync(join(dest, "index.html"), renderDemo(r.run, r.dir, bySlug.get(basename(r.dir)), remote));
+    console.log(`· ${join(dest, "index.html")}`);
   }
-  writeFileSync(join(demosDir, "index.html"), renderGallery(runs, demosDir, catalog));
-  console.log(`· ${join(demosDir, "index.html")}  (${runs.length} demo(s))`);
+  mkdirSync(galleryDir, { recursive: true });
+  writeFileSync(join(galleryDir, "index.html"), renderGallery(runs, demosDir, catalog));
+  console.log(`· ${join(galleryDir, "index.html")}  (${runs.length} demo(s))`);
   console.log(`· ${join(demosDir, "catalog.json")}  (${catalog.summary.porcentajeCubierto}% de cobertura)`);
 }
 
-function renderDemo(run, dir, entry) {
+function renderDemo(run, dir, entry, remote = false) {
   const cues = parseVtt(join(dir, "demo.vtt"));
   // El video local gana si existe: así la ves mientras la grabás, sin red.
-  const src = existsSync(join(dir, "demo.mp4")) ? "demo.mp4" : run.video.url;
+  const src = !remote && existsSync(join(dir, "demo.mp4")) ? "demo.mp4" : run.video.url;
   // Que el guion haya cambiado después de grabar es una señal mucho más fuerte
   // que contar commits del proyecto entero; el conteo queda de respaldo.
   const stale = entry?.staleReason ?? staleness(run);

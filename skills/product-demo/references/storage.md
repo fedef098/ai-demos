@@ -17,7 +17,8 @@ A git van el guion, `selectors.yml`, los seeds, los `.vtt`, `narration.md`,
 | Variable | Obligatoria | Para qué |
 |---|---|---|
 | `DEMO_S3_BUCKET` | **sí** (para publicar) | Bucket destino. Sin ella no se publica: el mp4 queda local y `run.json` lo marca `pending`. |
-| `DEMO_S3_PREFIX` | no | Prefijo raíz. Default `demos`. |
+| `DEMO_S3_PREFIX` | no | Prefijo de los videos. Default `demos`. |
+| `DEMO_CATALOG_PREFIX` | no | Prefijo del catálogo (`index.json` + el sitio HTML). Default: el mismo que los videos. |
 | `AWS_REGION` | no | Región del bucket. Default `us-east-1`. Se pasa explícita al CLI. |
 | `DEMO_PUBLIC_URL` | no | Base pública (CloudFront). Sin ella se usa `https://<bucket>.s3.<region>.amazonaws.com`. |
 
@@ -33,10 +34,51 @@ lectura pública** no toma efecto (el bucket es sólo para demos, nada más aden
     "Effect": "Allow",
     "Principal": "*",
     "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::demos-miempresa/demos/*"
+    "Resource": "arn:aws:s3:::demos-miempresa/*"
   }]
 }
 ```
+
+**`s3:GetObject` sí, `s3:ListBucket` nunca.** Es la diferencia entre "quien tiene
+el link mira el video" y "cualquiera se baja el inventario completo". Sin
+`ListBucket` público el bucket no se puede recorrer: hay que saber la clave, y
+las claves llevan el sha del contenido.
+
+## Por qué el catálogo va en otro prefijo
+
+Los mp4 no se adivinan (`…/<demo-id>/<sha8>/demo.mp4`), pero el catálogo enumera
+**todo**: features que todavía no anunciaste, para qué cliente grabaste cada
+demo, y la sección de cobertura que dice qué le falta al producto. Un
+`demos/index.html` es una ruta que alguien prueba.
+
+Por eso `DEMO_CATALOG_PREFIX` puede llevar un token impredecible:
+
+```bash
+export DEMO_S3_PREFIX=demos                       # los videos
+export DEMO_CATALOG_PREFIX=c/$(openssl rand -hex 8)   # el índice
+```
+
+Sigue siendo un link que le pasás a quien quieras — deja de ser algo que se
+encuentra. Si el catálogo es público a propósito, no la definas y todo queda
+junto.
+
+## Publicar el sitio del catálogo
+
+```bash
+node .runner/publish.mjs demos/<slug>     # el video de UNA demo
+node .runner/publish.mjs --catalog demos/ # la galería + la página de cada demo
+```
+
+`--catalog` regenera el HTML en un temporal con `page.mjs --remote` (el `<video>`
+apunta a la URL publicada), le copia al lado el `poster.jpg` y los `.vtt` que
+referencia, y sube todo. **No toca el HTML de `demos/`**: ese tiene que seguir
+prefiriendo el mp4 local, que es lo que te deja mirar una demo recién grabada sin
+red. Una demo sin publicar queda fuera del sitio con un warning — no hay nada que
+reproducir.
+
+A diferencia de los binarios, estas claves se re-suben siempre: el índice cambia
+en cada publicación, y saltearlas porque "la clave ya existe" dejaría el catálogo
+congelado.
 
 CloudFront es opcional (dominio propio + latencia): origen = el bucket y
 `DEMO_PUBLIC_URL=https://cdn.miempresa.com`. Como las claves son inmutables,
