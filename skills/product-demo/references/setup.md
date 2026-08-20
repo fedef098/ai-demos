@@ -55,15 +55,46 @@ DEMO_BROWSER=chromium ./demos/.runner/demo.sh <slug>
 | `DEMO_*_EMAIL` / `DEMO_*_PW` | sí | Las credenciales que el guion referencia como `${VAR}`. Los nombres los elige cada guion. |
 | `DEMO_S3_BUCKET` | para publicar | Bucket donde termina el mp4. Sin ella el video queda local y `run.json` lo marca `pending`. Ver [storage.md](storage.md). |
 | `DEMO_S3_PREFIX` | no | Prefijo raíz en el bucket. Default `demos`. |
+| `DEMO_CATALOG_PREFIX` | no | Prefijo del catálogo (`index.json` + sitio HTML). Default: el mismo que los videos. |
 | `AWS_REGION` | no | Región del bucket. Default `us-east-1`. |
+| `DEMO_AWS_PROFILE` | no | Perfil de `~/.aws/credentials` para publicar. No uses `AWS_PROFILE`: esa la mira todo comando `aws` de la máquina. |
 | `DEMO_PUBLIC_URL` | no | Base pública (CloudFront) con la que el HTML referencia el video. |
 | `DEMO_TTS_VOICE` | no | Voz del TTS. Default `ef_dora`. Se puede fijar por guion con `narration.voice`. |
 | `DEMO_TTS_PROVIDER` | no | `kokoro` (default) o `espeak` para un smoke test. |
 | `DEMO_VOICE_VENV` | no | Dónde vive el venv de Kokoro. Default `~/.cache/demo-voice-venv`. |
 | `DEMO_BROWSER` | no | `chromium` para no usar el Chrome del sistema. |
 
-Conviene un `demos/.env.example` versionado con los nombres (nunca los valores) y
-un `.env` local gitignoreado.
+### Dónde setearlas
+
+**El runner no lee ningún `.env`**: toma variables del entorno y aborta si falta
+alguna que el guion referencia. Se probó lo otro y salió caro — un `.env`
+sourceado como shell con un valor sin comillas dejaba la credencial vacía, y el
+video entero terminaba siendo la pantalla de login (ver [lessons.md](lessons.md)).
+Un `demos/.env.example` versionado sirve para **documentar los nombres** — nunca
+los valores, y no se sourcea.
+
+Dos lugares, según la variable:
+
+| Qué | Dónde | Por qué |
+|---|---|---|
+| Destino: `DEMO_S3_BUCKET`, `DEMO_S3_PREFIX`, `DEMO_CATALOG_PREFIX`, `AWS_REGION`, `DEMO_AWS_PROFILE` | bloque `env` de `~/.claude/settings.json` | No son secretos y no cambian por proyecto. Ahí las hereda **todo comando que corre la skill**, sin depender de que alguien se acuerde de exportarlas en la terminal correcta. |
+| Secretos: claves AWS, `DEMO_*_EMAIL` / `DEMO_*_PW` | `~/.aws/credentials` y el keychain/shell, nunca en `settings.json` | `settings.json` se comparte y se commitea en algunos setups; las claves AWS ya tienen su archivo propio, y las credenciales de la app son por proyecto. |
+
+```json
+// ~/.claude/settings.json
+{
+  "env": {
+    "DEMO_AWS_PROFILE": "adavance-demos",
+    "DEMO_S3_BUCKET": "adavance-demos",
+    "DEMO_S3_PREFIX": "demos",
+    "DEMO_CATALOG_PREFIX": "c/<token>",
+    "AWS_REGION": "us-east-1"
+  }
+}
+```
+
+Los cambios en `settings.json` toman efecto en una **sesión nueva**. Para probar
+en la sesión actual, exportalas a mano en el comando.
 
 ## Por qué nunca contra un dev server
 

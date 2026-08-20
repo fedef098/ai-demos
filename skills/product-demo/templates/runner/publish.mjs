@@ -186,6 +186,11 @@ function config() {
     // pero el v1 sólo mira `AWS_DEFAULT_REGION`, y ese desajuste da un error
     // ("you must specify a region") que no se parece en nada a su causa.
     region: process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION ?? "us-east-1",
+    // Perfil propio en vez de exportar `AWS_PROFILE`: esa variable la mira TODO
+    // comando `aws` de la máquina, así que fijarla para publicar demos también
+    // reapunta cualquier otra tarea de AWS que corra en la misma sesión. Con
+    // `DEMO_AWS_PROFILE` el perfil sólo aplica a estas subidas.
+    profile: process.env.DEMO_AWS_PROFILE || null,
     // Base pública opcional (CloudFront). Sin ella se arma la URL directa de S3,
     // que sirve igual pero sin CDN ni dominio propio.
     publicBase: (process.env.DEMO_PUBLIC_URL ?? "").replace(/\/+$/, "") || null,
@@ -308,7 +313,8 @@ function fetchManifest(cfg, key) {
 }
 
 function aws(cfg, args, stdio = "pipe", input) {
-  return execFileSync("aws", [...args, "--region", cfg.region], {
+  const profileArgs = cfg.profile ? ["--profile", cfg.profile] : [];
+  return execFileSync("aws", [...args, "--region", cfg.region, ...profileArgs], {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
     stdio: stdio === "ignore" ? "ignore" : ["pipe", "pipe", "pipe"],

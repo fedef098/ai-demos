@@ -20,9 +20,15 @@ A git van el guion, `selectors.yml`, los seeds, los `.vtt`, `narration.md`,
 | `DEMO_S3_PREFIX` | no | Prefijo de los videos. Default `demos`. |
 | `DEMO_CATALOG_PREFIX` | no | Prefijo del catálogo (`index.json` + el sitio HTML). Default: el mismo que los videos. |
 | `AWS_REGION` | no | Región del bucket. Default `us-east-1`. Se pasa explícita al CLI. |
+| `DEMO_AWS_PROFILE` | no | Perfil de `~/.aws/credentials` a usar **sólo para publicar**. Sin ella se usan las credenciales por default del CLI. |
 | `DEMO_PUBLIC_URL` | no | Base pública (CloudFront). Sin ella se usa `https://<bucket>.s3.<region>.amazonaws.com`. |
 
 Credenciales: las del AWS CLI (`aws sts get-caller-identity` tiene que andar).
+Si el bucket vive en una cuenta distinta de la default, usá `DEMO_AWS_PROFILE` y
+no `AWS_PROFILE`: la segunda la mira **todo** comando `aws` de la máquina, así que
+dejarla exportada para publicar demos reapunta cualquier otra tarea de AWS de esa
+misma sesión. `DEMO_AWS_PROFILE` se traduce a un `--profile` en estas subidas y
+en ningún otro lado.
 Destildá `BlockPublicPolicy` / `RestrictPublicBuckets` o esta policy de **sólo
 lectura pública** no toma efecto (el bucket es sólo para demos, nada más adentro):
 

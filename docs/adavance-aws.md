@@ -141,15 +141,31 @@ aws_access_key_id = AKIA...
 aws_secret_access_key = ...
 ```
 
-Y las variables que lee el runner:
+Y las variables que lee el runner. Van en el bloque `env` de
+`~/.claude/settings.json` — no son secretas (el secreto está arriba, en
+`~/.aws/credentials`) y así las hereda todo comando que corre la skill, sin
+depender de que alguien las exporte en la terminal correcta:
 
-```bash
-export AWS_PROFILE=adavance-demos
-export AWS_REGION=us-east-1
-export DEMO_S3_BUCKET=adavance-demos
-export DEMO_S3_PREFIX=demos                    # los videos
-export DEMO_CATALOG_PREFIX=c/eBKGMNYwAjEY1F8Z  # el índice, en ruta impredecible
+```json
+// ~/.claude/settings.json
+{
+  "env": {
+    "DEMO_AWS_PROFILE": "adavance-demos",
+    "DEMO_S3_BUCKET": "adavance-demos",
+    "DEMO_S3_PREFIX": "demos",
+    "DEMO_CATALOG_PREFIX": "c/eBKGMNYwAjEY1F8Z",
+    "AWS_REGION": "us-east-1"
+  }
+}
 ```
+
+**`DEMO_AWS_PROFILE`, no `AWS_PROFILE`.** La segunda la mira *todo* comando `aws`
+de la máquina: dejarla fija para publicar demos reapunta silenciosamente
+cualquier otra tarea de AWS de esa sesión — los backups de WIG viven en otra
+cuenta. `DEMO_AWS_PROFILE` se traduce a un `--profile` que sólo aplica a estas
+subidas.
+
+Los cambios en `settings.json` toman efecto en una **sesión nueva**.
 
 El token del catálogo no es un secreto criptográfico: es lo que evita que
 `/demos/index.html` sea una ruta que alguien prueba. El índice lista features sin
