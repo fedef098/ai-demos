@@ -191,6 +191,12 @@ function config() {
     // reapunta cualquier otra tarea de AWS que corra en la misma sesión. Con
     // `DEMO_AWS_PROFILE` el perfil sólo aplica a estas subidas.
     profile: process.env.DEMO_AWS_PROFILE || null,
+    // Archivo de credenciales propio, sólo para el `aws` que publica. Permite
+    // que un equipo comparta UNA credencial legible por grupo (640 root:grupo)
+    // en vez de copiarla al home de cada persona: rotarla es escribir un
+    // archivo, no perseguir seis. Se pasa por el env del hijo, así que el
+    // `~/.aws/credentials` de quien corre esto sigue intacto para todo lo demás.
+    credentialsFile: process.env.DEMO_AWS_CREDENTIALS_FILE || null,
     // Base pública opcional (CloudFront). Sin ella se arma la URL directa de S3,
     // que sirve igual pero sin CDN ni dominio propio.
     publicBase: (process.env.DEMO_PUBLIC_URL ?? "").replace(/\/+$/, "") || null,
@@ -319,6 +325,9 @@ function aws(cfg, args, stdio = "pipe", input) {
     maxBuffer: 64 * 1024 * 1024,
     stdio: stdio === "ignore" ? "ignore" : ["pipe", "pipe", "pipe"],
     input,
+    env: cfg.credentialsFile
+      ? { ...process.env, AWS_SHARED_CREDENTIALS_FILE: cfg.credentialsFile }
+      : process.env,
   });
 }
 

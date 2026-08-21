@@ -21,6 +21,7 @@ A git van el guion, `selectors.yml`, los seeds, los `.vtt`, `narration.md`,
 | `DEMO_CATALOG_PREFIX` | no | Prefijo del catálogo (`index.json` + el sitio HTML). Default: el mismo que los videos. |
 | `AWS_REGION` | no | Región del bucket. Default `us-east-1`. Se pasa explícita al CLI. |
 | `DEMO_AWS_PROFILE` | no | Perfil de `~/.aws/credentials` a usar **sólo para publicar**. Sin ella se usan las credenciales por default del CLI. |
+| `DEMO_AWS_CREDENTIALS_FILE` | no | Archivo de credenciales alternativo para esa subida. Para compartir **una** credencial en un equipo sin copiarla a cada home. |
 | `DEMO_PUBLIC_URL` | no | Base pública (CloudFront). Sin ella se usa `https://<bucket>.s3.<region>.amazonaws.com`. |
 
 Credenciales: las del AWS CLI (`aws sts get-caller-identity` tiene que andar).
@@ -29,6 +30,26 @@ no `AWS_PROFILE`: la segunda la mira **todo** comando `aws` de la máquina, así
 dejarla exportada para publicar demos reapunta cualquier otra tarea de AWS de esa
 misma sesión. `DEMO_AWS_PROFILE` se traduce a un `--profile` en estas subidas y
 en ningún otro lado.
+
+### Una credencial para todo un equipo
+
+Si varias personas publican desde la misma máquina, `DEMO_AWS_CREDENTIALS_FILE`
+evita repartir copias de la clave por los homes:
+
+```bash
+# root, una sola vez — legible por el grupo, no por el mundo
+install -m 640 -g <grupo> /dev/null /etc/<org>/aws-demos-credentials
+export DEMO_AWS_CREDENTIALS_FILE=/etc/<org>/aws-demos-credentials
+```
+
+El valor se pasa como `AWS_SHARED_CREDENTIALS_FILE` **al proceso hijo** que sube,
+así que ese archivo sólo lo ve el `aws` de la publicación: el
+`~/.aws/credentials` de cada persona sigue gobernando todo lo demás. Y rotar la
+clave pasa a ser escribir **un** archivo en vez de perseguir seis — que es la
+razón real por la que las copias son mala idea, no el trabajo de copiarlas.
+
+Nunca en git: un repo público con un `AKIA…` lo detectan bots en minutos y AWS
+pone la clave en cuarentena. `git rm` no la saca del historial.
 Destildá `BlockPublicPolicy` / `RestrictPublicBuckets` o esta policy de **sólo
 lectura pública** no toma efecto (el bucket es sólo para demos, nada más adentro):
 
