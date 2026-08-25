@@ -1,0 +1,19 @@
+{
+  "name": "ai-demos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The demo-recording plugin and the demo scripts of every product.",
+  "scripts": {
+    "demo": "skills/product-demo/templates/runner/demo.sh",
+    "test": "node --test skills/product-demo/templates/runner/*.test.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "yaml": "2.9.0"
+  },
+  "overrides": {
+    "playwright": "1.61.1",
+    "playwright-core": "1.61.1"
+  }
+}

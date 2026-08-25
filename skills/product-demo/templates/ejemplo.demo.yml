@@ -30,13 +30,11 @@ cast:
   - as: empleado
     name: Rubén Ortiz
     context: Mesa de Entradas del municipio de San Jorge.
-    curtain: "Ahora, del otro lado del mostrador"
     auth: { via: api, email: "${CIVIS_DEMO_ADMIN}", password: "${CIVIS_DEMO_ADMIN_PW}" }
 
   - as: empleado-otra-area
     name: Marta Gil
     context: Trabaja en Rentas. Este expediente no es de su área.
-    curtain: "Y alguien de otra área"
     auth: { via: api, email: "${CIVIS_DEMO_OTHER}", password: "${CIVIS_DEMO_OTHER_PW}" }
 
 world:
@@ -108,9 +106,12 @@ scenes:
     watch: La vecina no tuvo que volver a preguntar — el estado le llegó solo.
     hold: 3s
     beats:
+      # Cada vez que entra otra persona, el 'say' de ese beat es quien la
+      # presenta: no hay placa que lo haga.
       - as: empleado
         go: /admin/tramites?estado=PENDIENTE
         awaits: fila-del-registro
+        say: Dos días después, Rubén vuelve a la bandeja con el bache ya tapado.
       - click: fila-del-registro
         awaits: detalle
       - click: boton-resolver

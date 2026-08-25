@@ -99,6 +99,11 @@ export function lint(demo, selectors, capabilities = null) {
   if (!cast.size) e("'cast' no puede estar vacío: la demo necesita al menos una persona con nombre.");
   for (const c of demo.cast ?? []) {
     if (!c.context) w(`El personaje '${c.as}' no tiene 'context'. Sin rol ni situación se lee como "usuario A".`);
+    if (c.curtain)
+      e(
+        `El personaje '${c.as}' declara 'curtain'. Esa placa ya no existe: tapaba el producto entero ` +
+          `para escribir un nombre. Movelo al 'say' del beat donde entra y borrá el campo.`,
+      );
     if (c.auth?.password && !/^\$\{[A-Z0-9_]+\}$/.test(c.auth.password))
       e(`La password de '${c.as}' está hardcodeada. Usá \${VAR_DE_ENTORNO}.`);
     if (c.auth?.email && !/^\$\{[A-Z0-9_]+\}$/.test(c.auth.email))
@@ -121,6 +126,9 @@ export function lint(demo, selectors, capabilities = null) {
 
   const ids = new Set();
   let usedTargets = new Set();
+  // record.mjs autentica al primer personaje del cast detrás del cover de
+  // apertura, así que ese no es un cambio de identidad: ya estaba.
+  let activeAs = demo.cast?.[0]?.as ?? null;
   // 'covers' se valida contra el inventario sólo si el inventario existe.
   const knownCapabilities = capabilities ? capabilities.map((c) => c?.id).filter(Boolean) : null;
 
@@ -162,6 +170,19 @@ export function lint(demo, selectors, capabilities = null) {
       const bat = `${at}, beat ${j + 1}`;
 
       if (beat.as && !cast.has(beat.as)) e(`${bat}: '${beat.as}' no está en 'cast'.`);
+
+      // El cambio de persona ya no pinta una placa con el nombre encima del
+      // producto: la pantalla se tapa lo justo para esconder el reload. Si el
+      // beat tampoco narra, la sesión cambia sin que nadie diga que ahora es otro.
+      // La primera persona no cuenta: entra con el video, no reemplaza a nadie.
+      if (beat.as && beat.as !== activeAs) {
+        if (!beat.say)
+          e(
+            `${bat}: entra '${beat.as}' en lugar de '${activeAs}' y el beat no dice nada. Quién entra ` +
+              `ahora lo explica la locución, no una placa: escribí el 'say' que lo presenta.`,
+          );
+        activeAs = beat.as;
+      }
 
       if (beat.say) {
         if (beat.say.length > MAX_CAPTION_CHARS)

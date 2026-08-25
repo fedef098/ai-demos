@@ -22,6 +22,7 @@
   if (window.__demo) return; // ya instalado en este documento
 
   const CUE_KEY = "__demo_cue__";
+  const COVER_KEY = "__demo_cover__";
   const HOST_TAG = "demo-overlay";
 
   let root = null;   // el shadow root cerrado
@@ -112,8 +113,15 @@
     // aria-hidden lo saca de getByRole/getByText; pointer-events:none evita que
     // intercepte un click destinado a la app.
     host.setAttribute("aria-hidden", "true");
+    // `all:initial` va PRIMERO. Es una declaración como cualquier otra: puesta al
+    // final pisaba a las de antes y dejaba al host en `position:static` con
+    // `z-index:auto`, o sea sin contexto de apilado propio. El overlay seguía
+    // viéndose —sus hijos son `position:fixed`— pero se pintaba por orden de DOM,
+    // así que cualquier elemento posicionado de la app quedaba ENCIMA del cover,
+    // y bastaba que la app tocara el body para que el MutationObserver re-anexara
+    // el host y el orden se diera vuelta a mitad del video.
     host.style.cssText =
-      "position:fixed;inset:0;z-index:2147483647;pointer-events:none;all:initial;";
+      "all:initial;position:fixed;inset:0;z-index:2147483647;pointer-events:none;";
 
     root = host.attachShadow({ mode: "closed" });
     root.innerHTML = `
@@ -142,6 +150,7 @@
       pulse: root.querySelector(".pulse"),
     };
 
+    restoreCover();
     document.body.appendChild(host);
 
     // Un SPA puede vaciar el body al hidratar. Si nos borra, volvemos.
@@ -152,15 +161,74 @@
     restoreCue();
   }
 
-  // A document-start `document.body` todavía no existe.
-  function boot() {
-    if (document.body) return build();
+  // A document-start el documento está VACÍO: no hay `<body>`, y tampoco `<head>`
+  // ni `<html>`. Por eso se observa `document` y no `document.documentElement` —
+  // observar el segundo era pasarle `null` a `observe()`, que tira. Corría dentro
+  // de la misma pasada que la máscara, así que la excepción se llevaba puestas a
+  // las dos.
+  function whenNodeExists(get, use) {
+    const now = get();
+    if (now) return use(now);
     new MutationObserver((_, obs) => {
-      if (document.body) {
+      const node = get();
+      if (node) {
         obs.disconnect();
-        build();
+        use(node);
       }
-    }).observe(document.documentElement, { childList: true, subtree: true });
+    }).observe(document, { childList: true, subtree: true });
+  }
+
+  // `!important` no alcanza para tapar algo: ante dos declaraciones important de
+  // la misma especificidad gana la que va después, y la hoja de la app siempre va
+  // después de la nuestra. El banner de cookies de WIG se quedaba en cámara así,
+  // con un `.cc-window{display:flex!important}` propio contra nuestro
+  // `.cc-window{display:none!important}`.
+  //
+  // `:not(#\9)` suma la especificidad de un id sin poder matchear nada (es el id
+  // formado por un tab), así que el selector del guion le gana a cualquier regla
+  // de clases/atributos sin que haya que escribirlo más específico a mano. No se
+  // aplica a selectores con pseudo-elemento, donde `:not()` iría después de `::`
+  // y sería sintaxis inválida.
+  function outrank(selectors) {
+    return selectors
+      .map((s) => (s.includes("::") ? s : `${s}:not(#\\9)`))
+      .join(",");
+  }
+
+  function attachWhenPossible(node) {
+    whenNodeExists(
+      () => document.head || document.documentElement,
+      // Entre el diferido y ahora el runner pudo haber re-aplicado la máscara por
+      // evaluate(): sin este chequeo quedarían dos <style> con el mismo id y
+      // `unmask()` sacaría uno solo.
+      (root) => { if (!document.getElementById(node.id)) root.appendChild(node); },
+    );
+  }
+
+  function boot() {
+    whenNodeExists(() => document.body, build);
+  }
+
+  // El cover arranca NEGRO en cada documento nuevo, y eso sólo es correcto en el
+  // PRIMERO. En una navegación de un beat el runner ya lo había bajado, así que
+  // sin esto la pantalla quedaba negra desde el `go:` hasta el próximo cover()
+  // —o hasta el final del video—. Se persiste igual que el cue: el estado
+  // sobrevive al documento y se aplica ANTES del primer pintado, así que una
+  // cortina de marca sigue siendo de marca del otro lado del reload.
+  function restoreCover() {
+    try {
+      const raw = sessionStorage.getItem(COVER_KEY);
+      if (!raw) return;   // primer documento: el negro de fábrica es el correcto
+      const { shown, background } = JSON.parse(raw);
+      if (background) els.cover.style.background = background;
+      els.cover.setAttribute("data-state", shown ? "shown" : "hidden");
+    } catch {}
+  }
+
+  function persistCover(shown, background) {
+    try {
+      sessionStorage.setItem(COVER_KEY, JSON.stringify({ shown, background }));
+    } catch {}
   }
 
   // Una navegación dura pierde el estado JS. Persistimos el cue y lo restauramos
@@ -252,15 +320,26 @@
         els.cover.style.background = color || "#0369a1";
         els.cover.setAttribute("data-state", "shown");
         els.cover.style.opacity = "1";
+        persistCover(true, els.cover.style.background);
       } else if (state === "flash") {
+        // El flash no se persiste: dura 200 ms y siempre lo sigue otro estado.
+        // Guardarlo dejaría el documento siguiente arrancando en blanco puro.
         els.cover.setAttribute("data-state", "flash");
         els.cover.style.opacity = "1";
       } else if (state === "hidden") {
         els.cover.setAttribute("data-state", "hidden");
+        // Borrar el opacity INLINE, no ponerlo en 0: los otros estados lo
+        // escriben en el elemento y un inline le gana siempre a la regla
+        // `[data-state="hidden"]{opacity:0}` de la hoja. Sin esta línea "hidden"
+        // no ocultaba nada — el cover quedaba opaco desde la claqueta hasta el
+        // final. Vaciándolo vuelve a mandar la hoja y la transición corre.
+        els.cover.style.opacity = "";
+        persistCover(false, els.cover.style.background);
       } else {
         els.cover.style.background = "#000";
         els.cover.setAttribute("data-state", "shown");
         els.cover.style.opacity = "1";
+        persistCover(true, "#000");
       }
     },
 
@@ -288,11 +367,11 @@
       const style = document.createElement("style");
       style.id = id;
       const rules = [];
-      if (hide.length) rules.push(`${hide.join(",")}{display:none!important}`);
+      if (hide.length) rules.push(`${outrank(hide)}{display:none!important}`);
       if (redact.length)
-        rules.push(`${redact.join(",")}{filter:blur(7px)!important;user-select:none!important}`);
+        rules.push(`${outrank(redact)}{filter:blur(7px)!important;user-select:none!important}`);
       style.textContent = rules.join("\n");
-      (document.head || document.documentElement).appendChild(style);
+      attachWhenPossible(style);
     },
 
     unmask() {
@@ -305,6 +384,13 @@
   };
 
   window.__demo = api;
+
+  // La máscara se re-aplica en cada documento. Inyectada una sola vez por
+  // evaluate() duraba hasta la primera navegación de un beat: el <style> se iba
+  // con el documento viejo y volvían a cámara el banner de cookies y el chat que
+  // el guion había mandado a ocultar — tarde, encima, porque los inyecta un CDN
+  // unos segundos después de cargar.
+  if (window.__demoMask) api.mask(window.__demoMask.hide, window.__demoMask.redact);
 
   // El cursor sigue al mouse real de Playwright. En captura, para ganarle a una
   // app que haga stopPropagation. El driver además empuja la posición por

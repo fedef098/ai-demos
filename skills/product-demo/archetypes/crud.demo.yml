@@ -41,13 +41,11 @@ cast:
   - as: staff
     name: <Nombre Apellido>
     context: <su rol del otro lado del mostrador>
-    curtain: "Ahora, del otro lado del mostrador"
     auth: { via: api, email: "${DEMO_STAFF_EMAIL}", password: "${DEMO_STAFF_PW}" }
 
   - as: staff-sin-permiso
     name: <Nombre Apellido>
     context: <alguien de otra área, que NO debería ver esto>
-    curtain: "Y alguien de otra área"
     auth: { via: api, email: "${DEMO_OTHER_EMAIL}", password: "${DEMO_OTHER_PW}" }
 
 world:
@@ -115,8 +113,11 @@ scenes:
     proves: <Cambio de estado con constancia y traza auditable.>
     hold: 3s
     beats:
+      # Cada vez que entra otra persona, el 'say' de ese beat es quien la
+      # presenta: no hay placa que lo haga.
       - as: staff
         click: boton-resolver
+        say: <Del otro lado del mostrador, <Nombre> lo cierra.>
       - type: { target: nota-resolucion, text: "<nota realista>" }
       - click: confirmar
         awaits: badge-resuelto

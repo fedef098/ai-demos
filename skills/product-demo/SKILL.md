@@ -14,7 +14,7 @@ description: >
   Usala cuando pidan una demo para un cliente o una release, cuando haya que
   actualizar una demo existente, cuando quieran grabar un flujo de la app, o
   cuando pregunten qué está cubierto por una demo y qué no.
-allowed-tools: Read, Edit, Write, Glob, Grep, Bash(node *), Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(ffmpeg *), Bash(ffprobe *), Bash(./demos/*), Bash(aws s3 *), Bash(aws s3api *), Bash(aws sts get-caller-identity)
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash(node *), Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(ffmpeg *), Bash(ffprobe *), Bash(./demos/*), Bash(skills/product-demo/templates/runner/*), Bash(aws s3 *), Bash(aws s3api *), Bash(aws sts get-caller-identity)
 argument-hint: [qué demo hay que grabar o actualizar]
 ---
 
@@ -100,26 +100,47 @@ cuatro minutos de grabación más la locución entera y otra vuelta de revisión
 El detalle —qué buscar en el código, y por qué cada paso saltado se paga en el
 siguiente— está en `references/intake.md`.
 
-### Instalar el motor en un proyecto
+### Dónde vive el guion: en el repo de la herramienta, no en el del producto
+
+**Los guiones de todos los productos viven juntos**, uno por directorio, en el
+repo de la herramienta (`fedef098/ai-demos`) bajo `demos/<producto>/`. **No van
+en el repo del producto.** La demo es de la empresa —por eso el video se publica
+en el bucket de la empresa— y el producto es un consumidor más.
+
+Y no hace falta que estén ahí: **grabar nunca lee el checkout de la app**. Se
+graba contra una URL desplegada y el seed habla HTTP. Vendorear el motor en cada
+proyecto (`demos/.runner/`, 18 archivos por app sincronizados a mano) era
+exactamente el mirror mantenido a mano que siempre driftea.
+
+Un producto nuevo es un directorio, no una instalación:
 
 ```bash
-mkdir -p demos/.runner demos/seeds
-cp -r <skill>/templates/runner/* demos/.runner/
-cp <skill>/templates/demos.README.md demos/README.md
-cp <skill>/templates/selectors.example.yml demos/selectors.yml
-cp <skill>/templates/capabilities.example.yml demos/capabilities.yml
-cat <skill>/templates/demos.gitignore >> .gitignore
-chmod +x demos/.runner/demo.sh demos/.runner/setup-voice.sh
-npm i -D yaml @playwright/test
+TPL=skills/product-demo/templates
+mkdir -p demos/<producto>/seeds demos/<producto>/assets
+cp "$TPL/selectors.example.yml"    demos/<producto>/selectors.yml
+cp "$TPL/capabilities.example.yml" demos/<producto>/capabilities.yml
+```
+
+Una vez por máquina, en el repo de la herramienta:
+
+```bash
+npm audit && npm ci
 npx playwright install ffmpeg      # ⚠ imprescindible, ver "Trampas"
-./demos/.runner/setup-voice.sh     # una vez por máquina: el venv de la voz
+skills/product-demo/templates/runner/setup-voice.sh   # el venv de la voz
 ```
 
+`DEMOS_DIR` es lo que apunta el único motor al workspace del producto:
+
 ```bash
-DEMO_BASE_URL=https://qa.ejemplo.com ./demos/.runner/demo.sh <slug> --check
-DEMO_BASE_URL=https://qa.ejemplo.com ./demos/.runner/demo.sh <slug>
-./demos/.runner/demo.sh --catalog          # qué está demoable y qué no
+R=skills/product-demo/templates/runner
+DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com "$R/demo.sh" <slug> --check
+DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com "$R/demo.sh" <slug>
+DEMOS_DIR=demos/<producto> "$R/demo.sh" --catalog     # qué está demoable y qué no
 ```
+
+Sin `DEMOS_DIR`, `demo.sh` se comporta como siempre —el workspace es el directorio
+que lo contiene—, así que una instalación vendoreada vieja sigue andando sin
+tocarla.
 
 ---
 
@@ -131,9 +152,18 @@ Detalle completo, con ejemplos y antipatrones, en
 
 **Cinco partes:**
 
-1. **La promesa** — qué cambia para el que mira. Va en la placa de apertura.
+1. **La promesa** — qué cambia para el que mira.
    *"Un vecino reporta un bache desde el sillón y el municipio lo cierra con
    constancia. Dos minutos."* No: *"gestión integral de reclamos"*.
+
+   Por default se muestra en la **placa de apertura**, y por default eso está
+   mal salvo que la promesa sea de una línea: tres líneas sobre negro no se
+   terminan de leer en los 3 s que dura la placa, y lo primero que ve el que
+   mira deja de ser el producto. **`titleCard: false` la saltea** y el video
+   abre directo sobre la aplicación; la promesa se sigue leyendo —con tiempo—
+   en la página de la demo, el catálogo y el `run.json`. Lo que no es opcional
+   es la placa negra en sí (sin ella el video abre con el FOUT y el skeleton)
+   ni el flash de calibración que la precede.
 2. **El protagonista y el estado del mundo** — nombre, rol y contexto concretos,
    y qué existe ya cuando arranca el video. Esto **es** la fixture, y se escribe
    antes que los pasos.
@@ -354,8 +384,7 @@ subtítulos que se cortan antes de poder leerse — algo que sólo se nota miran
 video, que es tarde.
 
 ```bash
-node --test demos/.runner/          # sin dependencias
-npx vitest run demos/.runner/       # si el proyecto ya tiene Vitest
+npm test                            # = node --test skills/product-demo/templates/runner/
 ```
 
 `templates/runner/pacing.test.mjs` cubre las funciones **puras** (lectura, ritmo,
@@ -409,7 +438,10 @@ barrera de seguridad. Los mismos checks tienen que correr en el PR.
 ## Checklist antes de publicar una demo
 
 - [ ] Hubo entrevista antes del guion, y el guion se aprobó antes de grabar.
-- [ ] La promesa se puede decir en una frase, y está en la placa de apertura.
+- [ ] La promesa se puede decir en una frase. Si no entra en una, la placa de
+      apertura no la salva: `titleCard: false` y que el video abra en el producto.
+- [ ] Ningún widget de terceros quedó en cámara (cookies, chat, encuestas). Ojo:
+      declarar `hide:` **reemplaza** la lista por defecto, no la extiende.
 - [ ] Ningún `say` habla de algo que todavía no está en pantalla: si está más
       abajo, el beat scrollea **antes** de decirlo.
 - [ ] Ninguna frase narra una funcionalidad sobre su estado vacío.
@@ -427,4 +459,4 @@ barrera de seguridad. Los mismos checks tienen que correr en el PR.
 - [ ] **Miraste el video entero**, con los subtítulos y el audio, antes de publicarlo.
 - [ ] `run.json` no quedó en `pending`: el video se subió al bucket.
 - [ ] Si usa `fixtures:`, la página lo declara y estás de acuerdo con eso.
-- [ ] El hook `pre-push` está instalado y `node --test demos/.runner/` pasa.
+- [ ] El hook `pre-push` está instalado y `npm test` pasa.

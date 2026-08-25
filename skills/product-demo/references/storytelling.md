@@ -44,7 +44,11 @@ La diferencia: la primera describe **lo que le pasa a una persona**; la segunda
 describe **lo que hace el software**. Nadie mira un video de tres minutos para
 enterarse de lo segundo.
 
-Va en `promise:` y se muestra en la placa de apertura.
+Va en `promise:`, y por default se muestra en la placa de apertura. Si no entra
+cómoda en una línea, esa placa juega en contra: tres líneas sobre negro no se
+leen en 3 s, y el video arranca con texto en vez de con el producto. Ahí va
+`titleCard: false` — la promesa sigue publicada en la página de la demo, en el
+catálogo y en el `run.json`, que es donde alguien la lee sin reloj en contra.
 
 ### 2. El protagonista y el estado del mundo
 

@@ -6,7 +6,12 @@ interactive cursor, neural TTS narration that the pacing is built around,
 one-line subtitles that pass by phrase-by-phrase, and one command to publish to
 your own S3 bucket. Built on Playwright + Kokoro TTS + ffmpeg.
 
-This repo is a self-contained Claude Code **plugin** you can enable/disable.
+This repo is a self-contained Claude Code **plugin** you can enable/disable — and
+it is also where **the demo scripts of every product** live, one workspace per
+product under `demos/`. They do not live in the product's own repo: the tool
+belongs to the company, and a product is one consumer of it. Recording never
+needs the app's checkout anyway — it runs against a deployed URL and the seed
+talks HTTP.
 
 ## What's inside
 
@@ -20,7 +25,15 @@ skills/
     archetypes/        # five demo shapes ready to copy
     references/        # storytelling, pacing, determinism, storage, lessons
     templates/
-      runner/          # the engine (copied into <project>/demos per project)
+      runner/          # the engine — ONE copy, shared by every workspace
+demos/
+  <product>/           # one workspace per product
+    <slug>.demo.yml    # the story
+    selectors.yml      # named target → selector, for that product
+    capabilities.yml   # what that product does, for the coverage catalog
+    seeds/<slug>.mjs   # idempotent setup, over HTTP
+    assets/            # images a script feeds the product (inputs, not output)
+    <slug>/run.json    # duration, chapters, commit, sha256 and public video URL
 ```
 
 ## Install (as a plugin you can toggle)
@@ -43,30 +56,42 @@ Enable / disable it anytime:
 When enabled, ask Claude to "record a demo of \<feature\>" and it will follow
 `SKILL.md`.
 
-## Use (per project)
+## Use
 
-The engine is vendored into the target project so each app pins its own
-Playwright:
+One-time, in this repo:
 
 ```bash
-cd <project>
-TPL="${CLAUDE_PLUGIN_ROOT}/skills/product-demo/templates"
-mkdir -p demos/.runner demos/seeds
-cp -r "$TPL/runner/"* demos/.runner/
-cp "$TPL/demos.README.md"           demos/README.md
-cp "$TPL/selectors.example.yml"     demos/selectors.yml
-cp "$TPL/capabilities.example.yml"  demos/capabilities.yml
-cat "$TPL/demos.gitignore" >> .gitignore
-chmod +x demos/.runner/demo.sh demos/.runner/setup-voice.sh
-
-npm audit && npm i -D yaml @playwright/test
-npx playwright install ffmpeg        # NOT the system ffmpeg — without it there is simply no video
-./demos/.runner/setup-voice.sh       # one-time Kokoro venv, outside the repo
-
-DEMO_BASE_URL=https://qa.example.com ./demos/.runner/demo.sh <slug> --check   # ~20s, no recording
-DEMO_BASE_URL=https://qa.example.com ./demos/.runner/demo.sh <slug>           # record + publish
-./demos/.runner/demo.sh --catalog                                            # what is not covered yet
+npm audit && npm ci
+npx playwright install ffmpeg      # NOT the system ffmpeg — without it there is simply no video
+skills/product-demo/templates/runner/setup-voice.sh   # one-time Kokoro venv, outside the repo
 ```
+
+Then work on a product's workspace. `DEMOS_DIR` is what points the single engine
+at it:
+
+```bash
+R=skills/product-demo/templates/runner
+
+DEMOS_DIR=demos/wig DEMO_BASE_URL=https://qa.example.com "$R/demo.sh" <slug> --check  # ~20s, no recording
+DEMOS_DIR=demos/wig DEMO_BASE_URL=https://qa.example.com "$R/demo.sh" <slug>          # record + publish
+DEMOS_DIR=demos/wig "$R/demo.sh" --catalog                                           # what is not covered yet
+```
+
+A new product is a new directory — nothing to install:
+
+```bash
+TPL=skills/product-demo/templates
+mkdir -p demos/<product>/seeds demos/<product>/assets
+cp "$TPL/selectors.example.yml"    demos/<product>/selectors.yml
+cp "$TPL/capabilities.example.yml" demos/<product>/capabilities.yml
+```
+
+**Why not vendor the engine into each project.** It used to be copied into
+`<project>/demos/.runner/` — 18 files per app, kept in sync by hand, which is the
+mirror antipattern: it drifts. Nothing about recording needs the app's source
+tree, so there is no reason for the copies to exist. `demo.sh` still defaults to
+"the workspace is my parent directory", so an old vendored install keeps working
+untouched; `DEMOS_DIR` is what lets one engine serve many workspaces.
 
 ## How it works
 

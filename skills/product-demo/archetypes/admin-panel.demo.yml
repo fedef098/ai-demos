@@ -37,7 +37,6 @@ cast:
   - as: usuario
     name: <Nombre Apellido>
     context: <quien sufre o disfruta el cambio>
-    curtain: "Y del lado de quien lo usa"
     auth: { via: api, email: "${DEMO_USER_EMAIL}", password: "${DEMO_USER_PW}" }
 
 world:

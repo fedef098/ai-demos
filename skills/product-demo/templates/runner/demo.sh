@@ -14,11 +14,22 @@
 # `narrate` va ANTES de `record` a propósito: sintetiza toda la locución primero
 # para que la grabación pueda darle a cada beat el tiempo que la voz necesita.
 # Ver references/pacing.md.
+#
+# `DEMOS_DIR` permite que UN motor sirva a VARIOS workspaces:
+#
+#   DEMOS_DIR=demos/wig <ruta-al-runner>/demo.sh memorial-pages
+#
+# Sin la variable se sigue comportando igual que siempre —el workspace es el
+# directorio que contiene al runner—, así que un proyecto con el motor
+# vendoreado en `demos/.runner/` no se entera. Con ella, los guiones de cada
+# producto viven juntos en un repo aparte y no hay una copia del motor por
+# proyecto que se vaya desincronizando. La grabación no necesita el checkout de
+# la app: se graba contra una URL desplegada y el seed habla HTTP.
 
 set -euo pipefail
 
 RUNNER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEMOS_DIR="$(dirname "$RUNNER_DIR")"
+DEMOS_DIR="$(cd "${DEMOS_DIR:-$(dirname "$RUNNER_DIR")}" && pwd)"
 TMP_ROOT="${TMPDIR:-/tmp}"
 
 red()  { printf '\033[31m%s\033[0m\n' "$*" >&2; }

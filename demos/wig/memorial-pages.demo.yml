@@ -1,0 +1,229 @@
+# yaml-language-server: $schema=./.runner/demo.schema.json
+
+id: memorial-pages
+product: When I Go
+archetype: crud
+title: The memorial page she already wrote, without writing it twice
+promise: >
+  Everything Marion put in her plan — her life story, her photographs, her song —
+  becomes a published memorial page anyone can open, and nothing lands on it that
+  she did not accept.
+
+viewport: desktop
+locale: en-US
+timezone: America/New_York
+brandColor: "#8CA1E3"
+
+# El video abre directo sobre la aplicación. La placa de apertura ponía tres
+# líneas de promesa sobre negro durante 3s: nadie las termina de leer, y lo que
+# se ve primero deja de ser el producto. El título y la promesa se leen con
+# tiempo donde corresponde — la página de la demo, el catálogo y el run.json.
+titleCard: false
+
+# Sin `freezeTime`, a propósito. El formulario de tributos está detrás de
+# Turnstile, que no emite token con el reloj de la página corrido: congelarlo
+# rompe la escena 5 y encima sólo en la grabación, porque `--check` no congela
+# nada. Ninguna fecha en pantalla sale del reloj del navegador — el cumpleaños
+# de Marion viene del plan — así que congelarlo no compraba determinismo.
+
+narration:
+  voice: af_heart
+  lang: a
+
+cast:
+  - as: owner
+    name: Marion Ellis
+    context: 71, Savannah. Planning her own funeral, and her own memorial page.
+    auth: { via: storageState, file: ./.auth/owner.json }
+
+  - as: visitor
+    name: Tom Brennan
+    context: A neighbour of thirty years. Got the link, has no account and wants none.
+    auth: { via: none }
+
+world:
+  seed: ./seeds/memorial-pages.mjs
+  assert:
+    - Marion's account is a +test account with an active subscription
+    - Her plan already holds her life story, her Memorial page photo and her Memorial page song
+    - She has no memorial page yet, so the address marion-ellis is free
+
+hide:
+  - "nextjs-portal"
+  - "[data-nextjs-toast]"
+  - "[data-testid='april-chat-popup']"
+  - "#clarity-widget"
+  # El banner de consentimiento lo inyecta cookieconsent v3 desde un CDN, así que
+  # no hay testid nuestro que apuntar: `.cc-window` es su clase raíz. Sin esto se
+  # come la franja de abajo del video entero, justo donde van los subtítulos.
+  - ".cc-window"
+  # Turnstile corre con la sitekey de prueba, que pinta un cartel amarillo "For
+  # testing only — report to site owner" arriba del formulario de tributos. El
+  # widget vive entero adentro del iframe de Cloudflare y el wrapper nuestro no
+  # tiene testid, así que se apunta al iframe. Sigue ejecutando oculto (la
+  # sitekey de prueba resuelve sola): si algún día dejara de hacerlo, la corrida
+  # falla fuerte en el `awaits: tribute-pending-notice` del beat de enviar.
+  - "iframe[src*='challenges.cloudflare.com']"
+
+scenes:
+  - id: from-her-plan
+    title: "The page starts from what she already wrote"
+    proves: >
+      Creating your own memorial page while alive, seeded from the plan you have
+      been keeping — name, dates, life story, photos and song, already there.
+    covers: [memorial-create-own, memorial-prefill-from-plan]
+    watch: Nothing is typed into the page here. The plan is what fills it.
+    beats:
+      - as: owner
+        go: /memorials
+        awaits: memorial-create-button
+        say: Marion is seventy-one and has been planning her own funeral for months.
+
+      - click: memorial-create-button
+        awaits: memorial-create-modal
+        say: Her memorial page is the part of that plan strangers will actually read.
+
+      - click: memorial-subject-self
+      - highlight: memorial-subject-prefill
+        say: Start from my plan — her story, her photos and her song come across as they are.
+
+      - click: memorial-create-confirm
+        awaits: theme-step-loaded
+        say: The page exists, and it already knows who it is about.
+
+  - id: looks-like-her
+    title: "A design that looks like a person, not a form"
+    proves: >
+      Dozens of memorial designs, and the details the page carries: her name, her
+      dates, and a headline in her own words.
+    covers: [memorial-themes, memorial-details, memorial-plan-sync-auto]
+    watch: The name and the dates were never typed — they came from the plan.
+    beats:
+      - click: theme-sky-purple
+        awaits: theme-sky-purple-selected
+        say: Dozens of designs, and the one she picks is the one her family will recognise.
+
+      - click: step-details
+        awaits: full-name-input
+        say: Her name and her dates are already here, exactly as her plan holds them.
+
+      - type:
+          target: headline-input
+          text: "Teacher, gardener, and the loudest laugh on Jones Street"
+        say: The headline is the one thing only she could write.
+
+      - highlight: plan-sync-auto-card
+        say: From here the page follows the plan — she edits once, in one place.
+
+  - id: already-there
+    title: "Everything she wrote is already on the page"
+    proves: >
+      Life story, Memorial page photos and the Memorial page song arrive from the
+      plan's own sections, with no second round of writing or uploading.
+    covers: [memorial-life-story, memorial-photos-group, memorial-song]
+    watch: Photos and songs only cross over from the Memorial page group of the plan.
+    beats:
+      - click: step-story
+        awaits: biography-editor
+        say: The life story she wrote in her plan is here, as text she can still rewrite.
+
+      # La pestaña "On this page" cuenta sólo lo subido acá, así que con la foto
+      # llegando del plan dice "(0)" sobre un recuadro punteado vacío: narrar la
+      # sincronía ahí la desmentía. La foto se ve en la pestaña del plan, donde
+      # además queda marcada "On this page".
+      - click: step-photos
+        awaits: photos-tab-gallery
+      - click: photos-tab-plan
+        awaits: plan-photo-added
+        say: The photo she filed under Memorial page is already on it, and still hers in the plan.
+
+      - click: step-song
+        awaits: songs-tab-page
+        say: And the song she chose for this page, not the one meant for the service.
+
+  - id: published
+    title: "One link, and no account to open it"
+    proves: >
+      Publishing mints a public address that renders the chosen design with the
+      life story, her photograph and the song, open to anyone holding the link.
+    covers: [memorial-publish, memorial-public-page]
+    watch: The address is minted from her name on the first publish, not chosen by hand.
+    beats:
+      - click: step-publish
+        awaits: publish-button
+      - click: publish-button
+        awaits: unpublish-button
+        say: Published — and from here it is a link, not an app anyone has to install.
+
+      # La foto que archivó para la página es la que corona el encabezado, y ahí
+      # es donde se narra. La galería de más abajo queda vacía A PROPÓSITO cuando
+      # esa es la única foto: `galleryPhotos` descarta la que ya está de portada
+      # para no dibujarla dos veces (`memorialPublicDisplay.ts`). Scrollear hasta
+      # ahí para hablar de la foto la narraba sobre su estado vacío.
+      - go: /memorial/marion-ellis
+        awaits: public-hero
+        say: This is what her family opens, her photograph over the design she chose.
+
+      - scroll: public-songs
+        say: And her song, on the page she built while she still could.
+
+  - id: tribute
+    title: "A neighbour writes to her, with no account"
+    proves: Anyone holding the link can leave a tribute without signing up for anything.
+    covers: [memorial-tribute-post]
+    watch: No signup, no password, no app — a name, a message, and that is all.
+    beats:
+      - as: visitor
+        go: /memorial/marion-ellis
+        awaits: tribute-open
+        say: Tom lived across the street for thirty years. He was sent the link.
+
+      - click: tribute-open
+        awaits: tribute-name-input
+      - type:
+          target: tribute-name-input
+          text: "Tom Brennan"
+      - select:
+          target: tribute-type-select
+          value: condolence
+      - type:
+          target: tribute-message-input
+          text: "She taught half this street to drive, mine included. Badly, and with great patience."
+      - click: tribute-submit
+        awaits: tribute-pending-notice
+        say: His message is taken, and the page does not move. Nothing posts itself here.
+
+  - id: moderation
+    title: "Nothing reaches her page until she accepts it"
+    objection: true
+    proves: >
+      Tributes are held for review: approval is the permission that publishes
+      them, and the public page shows nothing before it is given.
+    covers: [memorial-tribute-moderation]
+    watch: The same tribute, absent a moment ago, appears only after approval.
+    hold: 3s
+    beats:
+      # Quien entra ahora lo dice esta frase, no una placa: el motor sólo tapa la
+      # pantalla lo justo para que no se vea el reload.
+      - as: owner
+        go: /memorials
+        awaits: memorial-card-link
+        say: Back in Marion's plan, where Tom's message is waiting for her.
+      - click: memorial-card-link
+        awaits: theme-step-loaded
+      - click: step-tributes
+        awaits: tribute-approve
+        say: Every tribute waits in a queue, whoever wrote it and however kind it is.
+
+      - click: tribute-approve
+        awaits: tributes-empty-bucket
+        say: She decides, one by one, what her page is going to carry.
+
+      # `awaits` sólo prueba que la tarjeta existe en el DOM, y el muro de tributos
+      # está al pie: la página abre arriba. Sin este scroll el remate de la demo
+      # —el mensaje de Tom apareciendo recién ahora— se narraba sobre el
+      # encabezado, con la tarjeta fuera de cámara.
+      - go: /memorial/marion-ellis
+        awaits: public-tribute-card
+      - scroll: public-tribute-card
+        say: Accepted, and only now is Tom's message part of the page.

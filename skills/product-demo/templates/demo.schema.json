@@ -75,7 +75,6 @@
           "as": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
           "name": { "type": "string" },
           "context": { "type": "string", "description": "Rol, edad, situación. Por qué le importa." },
-          "curtain": { "type": "string", "description": "Texto de la cortina al cambiar a esta persona." },
           "auth": {
             "type": "object",
             "required": ["via"],

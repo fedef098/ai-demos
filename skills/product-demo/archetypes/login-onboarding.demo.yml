@@ -39,7 +39,6 @@ cast:
   - as: companero
     name: <Nombre Apellido>
     context: <a quién invita al final>
-    curtain: "Y del lado de quien recibe la invitación"
     auth: { via: api, email: "${DEMO_MATE_EMAIL}", password: "${DEMO_MATE_PW}" }
 
 world:
@@ -109,9 +108,12 @@ scenes:
     proves: <Invitación de miembros y permisos por rol.>
     hold: 3s
     beats:
+      # Cada vez que entra otra persona, el 'say' de ese beat es quien la
+      # presenta: no hay placa que lo haga.
       - as: nuevo
         go: /<ruta-equipo>
         awaits: boton-invitar
+        say: <Nombre> vuelve a su cuenta para sumar a quien trabaja con ella.
       - click: boton-invitar
       - type: { target: campo-invitado, text: "<mail del compañero>" }
       - click: confirmar-invitacion

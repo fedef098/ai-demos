@@ -33,11 +33,26 @@ export const TIMING = {
   // que build.mjs lo encuentre aunque el encoder tire alguno. Con 120 ms no
   // sobrevivía a la compresión y la claqueta no se detectaba.
   clapFlash: 200,
-  curtain: 700,           // cortina al cambiar de identidad
+  // Cambio de identidad: se tapa la pantalla lo justo para que no se vea el
+  // reload ni el borrado de cookies. No lleva texto — quién entra ahora lo dice
+  // la locución, que es la que puede explicarlo sin sacar al producto de cámara.
+  identitySwap: 500,
   fade: 400,
+  // Scroll animado. Un salto instantáneo deja al ojo sin saber de dónde a dónde
+  // se fue ni qué había en el medio; el techo evita que una sección lejana se
+  // arrastre. La velocidad está calibrada para poder leer los títulos al pasar.
+  scrollSpeed: 1500,      // px por segundo
+  scrollMin: 350,
+  scrollMax: 2000,
+  scrollSettle: 400,      // frena antes del cue
   clickPulse: 250,        // anillo de feedback del click
   awaitTimeout: 6000,     // waitFor de una consecuencia declarada
   actionTimeout: 5000,    // fail fast: una demo rota no quema 30 s por click
+  // Pausa entre las dos esperas de apertura. En una app que hidrata, el shell
+  // servido ya trae el elemento y el cliente lo desmonta un instante después:
+  // esperarlo una sola vez devuelve el control sobre una pantalla que está por
+  // vaciarse. Corre antes de la claqueta, así que no cuesta un frame de video.
+  openingSettle: 1200,
 };
 
 /**
@@ -66,10 +81,19 @@ export function actionCost(beat) {
   if (beat.go) return 1200;
   if (beat.click) return t.cursorSteps * 20 + t.dwellBeforeClick + t.afterClick;
   if (beat.type) return typeCost(beat.type.text ?? "") + t.afterClick;
-  if (beat.scroll) return 900;
   if (beat.hover) return t.cursorSteps * 20 + 400;
   if (beat.wait) return parseDuration(beat.wait);
   return 0;
+}
+
+/**
+ * El scroll NO entra en `actionCost`: se suma aparte porque ocurre **antes** del
+ * subtítulo, no dentro de él. Si la sección está más abajo, la locución tiene que
+ * caer sobre ella ya en cuadro — narrarla mientras viaja es hablar de algo que
+ * todavía no se ve.
+ */
+export function scrollCost(beat) {
+  return beat.scroll ? TIMING.scrollMax / 2 + TIMING.scrollSettle : 0;
 }
 
 /** Tipear entero es lento; de 60 chars para arriba se llena el 80% de una y se
@@ -90,13 +114,14 @@ export function splitForTyping(text) {
 /** Estimación de la duración total, en ms. La usa el lint para avisar que la
  *  demo se fue de largo antes de gastar una grabación. */
 export function estimateDuration(demo) {
-  let total = TIMING.clapFlash + TIMING.coverHold + TIMING.fade + TIMING.outroHold;
+  let total = TIMING.clapFlash + TIMING.fade + TIMING.outroHold;
+  if (demo.titleCard !== false) total += TIMING.coverHold;
   for (const scene of demo.scenes ?? []) {
     total += TIMING.betweenScenes;
     if (scene.hold) total += parseDuration(scene.hold);
     for (const beat of scene.beats ?? []) {
-      total += beatDuration({ caption: beat.say, actionMs: actionCost(beat) });
-      if (beat.as) total += TIMING.curtain;
+      total += scrollCost(beat) + beatDuration({ caption: beat.say, actionMs: actionCost(beat) });
+      if (beat.as) total += TIMING.identitySwap;
     }
   }
   return total;

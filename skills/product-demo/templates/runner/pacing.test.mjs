@@ -89,6 +89,17 @@ test("estimateDuration crece con las escenas y da valores plausibles", () => {
   assert.ok(una > 5_000 && una < 30_000, `duración implausible para una escena: ${una}`);
 });
 
+test("titleCard: false descuenta exactamente la placa de portada", () => {
+  const scenes = [{ id: "a", beats: [{ click: "x", say: "Una frase de subtítulo normal." }] }];
+  const con = estimateDuration({ scenes });
+  const sin = estimateDuration({ scenes, titleCard: false });
+
+  // Exacto, no aproximado: si la estimación no descuenta lo mismo que el
+  // grabador saltea, el lint mide una demo que no es la que se graba.
+  assert.equal(con - sin, TIMING.coverHold);
+  assert.equal(estimateDuration({ scenes, titleCard: true }), con, "cualquier valor que no sea false deja la placa");
+});
+
 test("una frase corta no se parte y ninguna frase excede el ancho de la línea", () => {
   assert.deepEqual(splitIntoPhrases("El reclamo queda asignado."), ["El reclamo queda asignado."]);
   assert.deepEqual(splitIntoPhrases("   espacios   de   más   "), ["espacios de más"]);

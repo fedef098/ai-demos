@@ -1,24 +1,39 @@
 # Setup
 
-## Instalar el motor en un proyecto
+## Una vez por máquina, en el repo de la herramienta
+
+El motor es **uno solo** y vive acá; no se copia a ningún proyecto. Grabar no lee
+el checkout de la app: se graba contra una URL desplegada y el seed habla HTTP.
 
 ```bash
-mkdir -p demos/.runner demos/seeds
-cp -r <ruta-a-la-skill>/templates/runner/* demos/.runner/
-cp <ruta-a-la-skill>/templates/demos.README.md demos/README.md
-cp <ruta-a-la-skill>/templates/selectors.example.yml demos/selectors.yml
-cp <ruta-a-la-skill>/templates/capabilities.example.yml demos/capabilities.yml
-cat <ruta-a-la-skill>/templates/demos.gitignore >> .gitignore
-chmod +x demos/.runner/demo.sh demos/.runner/setup-voice.sh
-
-npm i -D yaml @playwright/test     # corré `npm audit` antes, es política del repo
+npm audit && npm ci                # es política del repo: audit ANTES de instalar
 npx playwright install ffmpeg
-./demos/.runner/setup-voice.sh     # una vez por máquina, para la voz en off
+skills/product-demo/templates/runner/setup-voice.sh   # el venv de la voz en off
+```
+
+## Abrir el workspace de un producto nuevo
+
+```bash
+TPL=skills/product-demo/templates
+mkdir -p demos/<producto>/seeds demos/<producto>/assets
+cp "$TPL/selectors.example.yml"    demos/<producto>/selectors.yml
+cp "$TPL/capabilities.example.yml" demos/<producto>/capabilities.yml
 ```
 
 `capabilities.yml` es opcional pero conviene desde el día uno: es el inventario de
 lo que el producto sabe hacer, y sin él el catálogo puede decir qué está cubierto
 pero no **qué falta**. Ver la sección "Cobertura" de SKILL.md.
+
+`DEMOS_DIR` apunta el motor al workspace:
+
+```bash
+R=skills/product-demo/templates/runner
+DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com "$R/demo.sh" <slug> --check
+```
+
+Sin la variable, `demo.sh` toma como workspace el directorio que lo contiene —así
+que una instalación vieja con el motor vendoreado en `demos/.runner/` sigue
+funcionando sin cambios.
 
 ### ⚠ `npx playwright install ffmpeg` no es opcional
 
@@ -44,7 +59,7 @@ nueva respecto del Playwright del proyecto):
 
 ```bash
 npx playwright install chromium
-DEMO_BROWSER=chromium ./demos/.runner/demo.sh <slug>
+DEMO_BROWSER=chromium DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug>
 ```
 
 ## Variables de entorno
@@ -124,8 +139,8 @@ uso. `setup-voice.sh` arma el venv una sola vez (baja ~700 MB de torch y, en la
 primera síntesis, ~350 MB de pesos) fuera del repo, en `~/.cache/demo-voice-venv`.
 
 ```bash
-./demos/.runner/setup-voice.sh                     # una vez por máquina
-node demos/.runner/narrate.mjs demos/<slug>.demo.yml   # escuchar antes de grabar
+"$R/setup-voice.sh"                                    # una vez por máquina
+node "$R/narrate.mjs" demos/<producto>/<slug>.demo.yml  # escuchar antes de grabar
 ```
 
 La voz se sintetiza **antes** de grabar y cada beat dura al menos lo que dura su

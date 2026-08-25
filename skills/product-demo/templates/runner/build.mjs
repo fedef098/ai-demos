@@ -48,11 +48,33 @@ async function main() {
   // ── 1. Transcodificar ──────────────────────────────────────────────────────
   // Queda sin audio y en el temporal: recién después de calibrar sabemos en qué
   // milisegundo va cada clip de voz, y el mux final es un `-c:v copy` gratis.
+  // El video empieza a grabarse cuando se crea la página, y antes de la claqueta
+  // pasa todo el arranque: la navegación, las fuentes, la doble espera del
+  // `awaits` de apertura. Eso queda grabado como cover, dura lo que tarde la app
+  // ese día —medimos 0,4 s, 2,4 s y 4,6 s en tres corridas del mismo guion— y es
+  // lo primero que ve quien abre el video. Así que se corta.
+  //
+  // El corte va donde la app queda a la vista, ni un cuadro antes. Se llega en
+  // dos pasos porque cada uno resuelve lo que el otro no puede: la luminancia
+  // ubica el INICIO del flash —el instante más brillante del video, imposible de
+  // confundir— y eso ancla el reloj de `record.mjs` contra el video; el resto lo
+  // aporta el propio grabador en `openAt`, que sabe cuándo terminó el fundido
+  // porque lo acaba de hacer él.
+  //
+  // Buscar el final del fundido por luminancia fue el intento anterior y falló
+  // dos veces: sumarle `clapFlash` al inicio abría en blanco, y tomar el primer
+  // cuadro por debajo del umbral abría en un gris plano. **El final de un fundido
+  // no tiene un umbral: es una rampa.** El inicio del flash sí es un borde.
+  const clapAt = findClapStart(tl.webm);
+  const trimAt = clapAt + (tl.openAt ?? 0);
+
   const mp4 = join(outDir, "demo.mp4");
   const silent = join(tmpDir, "video-only.mp4");
   console.log("· transcodificando a mp4 (faststart, seekable)…");
   sh("nice", [
-    "-n", "10", "ffmpeg", "-y", "-i", tl.webm,
+    // `-ss` antes de `-i` con re-encode: ffmpeg decodifica desde el keyframe
+    // previo y descarta, así que el corte es exacto al cuadro, no al keyframe.
+    "-n", "10", "ffmpeg", "-y", "-ss", (trimAt / 1000).toFixed(3), "-i", tl.webm,
     "-c:v", "libx264", "-crf", "24", "-preset", "veryfast",
     "-pix_fmt", "yuv420p", "-g", "50",
     "-movflags", "+faststart",   // el índice al principio: permite seek sin bajar todo
@@ -65,9 +87,13 @@ async function main() {
   ) * 1000;
 
   // ── 2. Calibrar ────────────────────────────────────────────────────────────
-  const clapAt = findClap(silent);
+  // `t = 0` del timeline es el INICIO del flash (`t0` en record.mjs) y el corte
+  // se llevó todo eso, así que el origen del video ya cortado queda en negativo:
+  // no hay que volver a buscarlo. Ningún cue cae ahí — el primero no puede
+  // empezar antes de que la app esté a la vista, que es justo donde se cortó.
+  const originAt = -(tl.openAt ?? 0);
   const measured = tl.tEnd;                 // duración medida en Node desde el clap
-  const real = duration - clapAt;           // duración real del contenido en el video
+  const real = duration - originAt;         // duración real del contenido en el video
   let scale = measured > 0 ? real / measured : 1;
 
   if (!Number.isFinite(scale) || Math.abs(scale - 1) > 0.02) {
@@ -76,10 +102,10 @@ async function main() {
     );
     scale = 1;
   }
-  const at = (t) => clapAt + t * scale;
+  const at = (t) => originAt + t * scale;
 
   console.log(
-    `· claqueta en ${clapAt.toFixed(0)}ms · duración ${(duration / 1000).toFixed(1)}s · escala ${scale.toFixed(4)}`,
+    `· recorte en ${(trimAt / 1000).toFixed(2)}s de arranque · duración ${(duration / 1000).toFixed(1)}s · escala ${scale.toFixed(4)}`,
   );
 
   // ── 3. Subtítulos y capítulos ──────────────────────────────────────────────
@@ -97,7 +123,7 @@ async function main() {
   const voiced = mixVoice({ silent, mp4, cues: tl.cues, at, durationMs: duration });
 
   // ── 5. Poster: un frame del primer capítulo, no de la placa negra ──────────
-  const posterAt = ((chapters[0]?.start ?? clapAt) + 1500) / 1000;
+  const posterAt = Math.max(0, (chapters[0]?.start ?? 0) + 1500) / 1000;
   sh("ffmpeg", ["-y", "-ss", String(posterAt), "-i", mp4, "-frames:v", "1", "-q:v", "3", join(outDir, "poster.jpg")]);
 
   // ── 6. Guion de locución, para que alguien lo grabe con su voz ─────────────
@@ -149,10 +175,17 @@ async function main() {
 }
 
 /**
- * Busca el flash blanco de la claqueta: el primer frame cuya luminancia media se
- * dispara. Escalamos a 2x2 para que sea barato — sólo nos importa el promedio.
+ * Dónde empieza el flash blanco de la claqueta, en ms de video. Escalamos a 2x2
+ * para que sea barato — sólo nos importa el promedio.
+ *
+ * Es lo único que hace falta buscar en la imagen, y a propósito: el flash es el
+ * instante más brillante del video y su INICIO es un borde, un cuadro oscuro
+ * seguido de uno blanco. Todo lo que viene después son fundidos, que son rampas
+ * sin umbral, y ahí es donde este mismo detector se equivocaba. El instante en
+ * que la app queda a la vista lo anota `record.mjs` en `openAt`, que no tiene
+ * que adivinarlo.
  */
-function findClap(mp4) {
+function findClapStart(mp4) {
   let out = "";
   try {
     out = execFileSync(

@@ -119,12 +119,18 @@ else skip "tests" "sin suite"; fi
 # ── 5. Guiones de demo ───────────────────────────────────────────────────────
 # Sólo el lint del guion: no abre browser ni graba, tarda menos de un segundo.
 # Grabar NUNCA bloquea un push.
-if [ -d demos ] && [ -f demos/.runner/lint.mjs ]; then
-  for guion in demos/*.demo.yml; do
+#
+# Dos layouts posibles: el repo de la herramienta (un motor, un workspace por
+# producto en demos/<producto>/) o una instalación vendoreada vieja
+# (demos/.runner/ y los guiones sueltos en demos/).
+for LINT in skills/product-demo/templates/runner/lint.mjs demos/.runner/lint.mjs; do
+  [ -f "$LINT" ] || continue
+  for guion in demos/*.demo.yml demos/*/*.demo.yml; do
     [ -e "$guion" ] || continue
-    run "demo:$(basename "$guion" .demo.yml)" node demos/.runner/lint.mjs "$guion"
+    run "demo:$(basename "$guion" .demo.yml)" node "$LINT" "$guion"
   done
-fi
+  break
+done
 
 # ── Resultado ────────────────────────────────────────────────────────────────
 TOTAL=$(( $(date +%s) - START_ALL ))

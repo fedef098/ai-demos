@@ -1,17 +1,36 @@
-# This repo holds the plugin only — recorded demos live in each target project.
+# This repo holds the plugin AND the demo scripts of every product — one
+# workspace per product under demos/<product>/. They do not live in the product's
+# own repo: the tool belongs to the company and a product is one consumer of it.
+# Recording never needs the app's checkout — it runs against a deployed URL and
+# the seed talks HTTP.
 
 **/node_modules/
 **/__pycache__/
 *.pyc
 
-# If you record from inside this repo while testing: no binaries in git.
-# (The rule shipped to target projects is skills/product-demo/templates/demos.gitignore.)
+# No binaries in git, no threshold. The mp4, the poster and the narration wavs go
+# to the demos bucket; run.json keeps the public URL and the sha256. Git does not
+# deltify H.264, so every re-recording would leave a permanent blob that `git rm`
+# cannot take back out.
 demos/**/*.mp4
 demos/**/*.webm
 demos/**/*.wav
 demos/**/*.jpg
 demos/**/*.png
+
+# Source images a script feeds to the product (a photo to upload, a logo) are
+# inputs, not output: without them the demo cannot be re-recorded.
+!demos/*/assets/**
+
+# Session state: these are credentials.
 demos/.auth/
+demos/*/.auth/
 demos/.voice-cache/
+demos/*/.voice-cache/
+demos/**/voice/
+
+# Rebuilt from the run.json files with `demo.sh --page`.
+demos/**/index.html
+demos/**/catalog.json
 
 .DS_Store
