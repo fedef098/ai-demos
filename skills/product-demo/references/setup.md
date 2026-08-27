@@ -9,7 +9,15 @@ el checkout de la app: se graba contra una URL desplegada y el seed habla HTTP.
 npm audit && npm ci                # es política del repo: audit ANTES de instalar
 npx playwright install ffmpeg
 skills/product-demo/templates/runner/setup-voice.sh   # el venv de la voz en off
+
+skills/product-demo/templates/runner/demo.sh --doctor  # ¿quedó todo?
 ```
+
+`--doctor` chequea node, las dependencias, ffmpeg del sistema, el helper ffmpeg
+de Playwright, Chrome, el venv de la voz, la RAM y el disco — **sin guion y sin
+`DEMO_BASE_URL`**, que es lo que hace falta cuando acabás de clonar el repo y
+todavía no tenés nada configurado. Es el mismo bloque que corre el preflight
+antes de cada grabación, así que no hay dos listas que se desincronicen.
 
 ## Abrir el workspace de un producto nuevo
 
@@ -67,7 +75,7 @@ DEMO_BROWSER=chromium DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug>
 | Variable | Obligatoria | Para qué |
 |---|---|---|
 | `DEMO_BASE_URL` | **sí** | La app **ya desplegada** (QA/staging). El grabador nunca levanta un dev server. |
-| `DEMO_*_EMAIL` / `DEMO_*_PW` | sí | Las credenciales que el guion referencia como `${VAR}`. Los nombres los elige cada guion. |
+| las del producto | sí | La API contra la que escribe el seed y las credenciales de su cuenta. **Los nombres los elige cada workspace** y están en su `demos/<producto>/.env.example` (WIG: `WIG_DEMO_API_URL`, `WIG_DEMO_EMAIL`, `WIG_DEMO_PASSWORD`). |
 | `DEMO_S3_BUCKET` | para publicar | Bucket donde termina el mp4. Sin ella el video queda local y `run.json` lo marca `pending`. Ver [storage.md](storage.md). |
 | `DEMO_S3_PREFIX` | no | Prefijo raíz en el bucket. Default `demos`. |
 | `DEMO_CATALOG_PREFIX` | no | Prefijo del catálogo (`index.json` + sitio HTML). Default: el mismo que los videos. |
@@ -85,15 +93,15 @@ DEMO_BROWSER=chromium DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug>
 alguna que el guion referencia. Se probó lo otro y salió caro — un `.env`
 sourceado como shell con un valor sin comillas dejaba la credencial vacía, y el
 video entero terminaba siendo la pantalla de login (ver [lessons.md](lessons.md)).
-Un `demos/.env.example` versionado sirve para **documentar los nombres** — nunca
-los valores, y no se sourcea.
+El `demos/<producto>/.env.example` versionado sirve para **documentar los
+nombres** — nunca los valores, y no se sourcea.
 
 Dos lugares, según la variable:
 
 | Qué | Dónde | Por qué |
 |---|---|---|
 | Destino: `DEMO_S3_BUCKET`, `DEMO_S3_PREFIX`, `DEMO_CATALOG_PREFIX`, `AWS_REGION`, `DEMO_AWS_PROFILE` | bloque `env` de `~/.claude/settings.json` | No son secretos y no cambian por proyecto. Ahí las hereda **todo comando que corre la skill**, sin depender de que alguien se acuerde de exportarlas en la terminal correcta. |
-| Secretos: claves AWS, `DEMO_*_EMAIL` / `DEMO_*_PW` | `~/.aws/credentials` y el keychain/shell, nunca en `settings.json` | `settings.json` se comparte y se commitea en algunos setups; las claves AWS ya tienen su archivo propio, y las credenciales de la app son por proyecto. |
+| Secretos y lo que cambia por producto: claves AWS, la URL de la API y las credenciales de la cuenta de cada demo | `~/.aws/credentials` y el keychain/shell, nunca en `settings.json` | `settings.json` se comparte y se commitea en algunos setups; las claves AWS ya tienen su archivo propio, y las credenciales de la app son por proyecto. |
 
 ```json
 // ~/.claude/settings.json
@@ -162,9 +170,15 @@ prefiere locutarla con su voz.
 
 ## Actualizar el motor
 
-`.runner/` está **vendorizado** a propósito: corre con el `@playwright/test` del
-proyecto, y las versiones difieren entre repos (1.59 a 1.62 en los nuestros).
+**No hay nada que copiar**: el motor es uno solo y vive en este repo, así que
+actualizarlo es un `git pull`. Corre con el `@playwright/test` de acá —pinneado
+en `package.json`— y no con el de ningún proyecto.
 
-Cada archivo declara `RUNNER_VERSION` en la cabecera. Para actualizar: copiá
-`templates/runner/` encima y corré `--check` sobre **cada** demo antes de dar la
-actualización por buena.
+Antes se vendorizaba a `<proyecto>/demos/.runner/`, 18 archivos por app
+sincronizados a mano. El argumento era usar el Playwright del repo que lo
+hospedaba; el costo era un mirror que driftea. Cada archivo todavía declara
+`RUNNER_VERSION` en la cabecera, que es lo que permite reconocer una instalación
+vieja si aparece una.
+
+Después de tocar el motor, corré `npm test` y `--check` sobre **cada** guion
+antes de darlo por bueno: `--check` no graba y tarda ~20 s.

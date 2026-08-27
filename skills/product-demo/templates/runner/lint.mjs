@@ -4,7 +4,7 @@
 // huérfanos. Corre en menos de un segundo, así que es lo único que conviene
 // meter en CI. Grabar nunca bloquea un PR; lintear sí.
 //
-//   node .runner/lint.mjs demos/<slug>.demo.yml
+//   node <runner>/lint.mjs demos/<producto>/<slug>.demo.yml
 //
 // demo.schema.json existe para el autocompletado del editor; las reglas de
 // verdad están acá, porque la mitad son narrativas y un JSON Schema no las
@@ -39,13 +39,13 @@ const ARCHETYPE_EXPECTS = {
 export function loadYaml(path) {
   let YAML;
   try {
-    // Resuelto desde el proyecto, no desde el plugin: el runner está vendorizado
-    // en demos/.runner/ y usa las dependencias del repo que lo hospeda.
+    // Resuelto con createRequire desde el propio runner: el motor es uno solo y
+    // usa las dependencias instaladas en este repo.
     YAML = require("yaml");
   } catch {
     fail(
       "No pude importar el paquete 'yaml'.\n" +
-        "  Instalalo en el proyecto:  npm i -D yaml   (o pnpm add -D yaml)",
+        "  Faltan las dependencias del repo:  npm audit && npm ci   (desde la raíz)",
     );
   }
   try {
@@ -273,7 +273,7 @@ function fail(msg) {
 // ── CLI ──────────────────────────────────────────────────────────────────────
 if (import.meta.url === `file://${process.argv[1]}`) {
   const path = process.argv[2];
-  if (!path) fail("Uso: node .runner/lint.mjs demos/<slug>.demo.yml");
+  if (!path) fail("Uso: node <runner>/lint.mjs demos/<producto>/<slug>.demo.yml");
   if (!existsSync(path)) fail(`No existe: ${path}`);
 
   const { demo, selectors, capabilities } = loadDemo(path);

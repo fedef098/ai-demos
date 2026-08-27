@@ -4,7 +4,7 @@
 // Tarda 15-20 s y es el loop de iteración: mientras escribís el guion, esto te
 // dice qué selector no existe antes de gastar una grabación.
 //
-//   node .runner/preflight.mjs demos/<slug>.demo.yml
+//   node <runner>/preflight.mjs demos/<producto>/<slug>.demo.yml
 //
 // Es la respuesta directa al comentario que dejó el runner de Mira:
 //   "a broken demo shouldn't burn 30s per click (that produced 4-minute videos
@@ -33,7 +33,7 @@ const TARGET_TIMEOUT = 4000;
 
 async function main() {
   const demoPath = process.argv[2];
-  if (!demoPath) die("Uso: node .runner/preflight.mjs demos/<slug>.demo.yml");
+  if (!demoPath) die("Uso: node <runner>/preflight.mjs demos/<producto>/<slug>.demo.yml");
 
   const { demo, selectors, capabilities } = loadDemo(demoPath);
   const { errors, warnings } = lint(demo, selectors, capabilities);

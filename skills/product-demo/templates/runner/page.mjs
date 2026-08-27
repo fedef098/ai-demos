@@ -31,7 +31,11 @@ function main() {
   const outAt = argv.indexOf("--out");
   const outRoot = outAt >= 0 ? argv[outAt + 1] : null;
   if (outAt >= 0 && !outRoot) die("--out necesita un directorio destino.");
-  const demosDir = argv.find((a, i) => !a.startsWith("--") && i !== outAt + 1) ?? "demos";
+  // El posicional es el workspace. Ojo con `outAt + 1` cuando no hay `--out`:
+  // outAt vale -1, así que la comparación descartaba el índice 0 — justo donde
+  // viene el único argumento posicional— y el workspace caía siempre al default.
+  const demosDir =
+    argv.find((a, i) => !a.startsWith("--") && !(outAt >= 0 && i === outAt + 1)) ?? "demos";
   if (!existsSync(demosDir)) die(`No existe ${demosDir}`);
 
   let runs = readdirSync(demosDir, { withFileTypes: true })

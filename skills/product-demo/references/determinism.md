@@ -124,8 +124,11 @@ tener), nombres de otros clientes y cualquier identificador de otro tenant.
 Grabá dos veces seguidas y compará `run.json`:
 
 ```bash
-./demos/.runner/demo.sh <slug> && cp demos/<slug>/run.json /tmp/a.json
-./demos/.runner/demo.sh <slug> && cp demos/<slug>/run.json /tmp/b.json
+R=skills/product-demo/templates/runner        # desde la raíz del repo
+D=demos/<producto>
+
+DEMOS_DIR=$D "$R/demo.sh" <slug> && cp $D/<slug>/run.json /tmp/a.json
+DEMOS_DIR=$D "$R/demo.sh" <slug> && cp $D/<slug>/run.json /tmp/b.json
 diff <(jq '.scenes[].startMs' /tmp/a.json) <(jq '.scenes[].startMs' /tmp/b.json)
 ```
 

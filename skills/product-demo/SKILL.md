@@ -112,7 +112,10 @@ graba contra una URL desplegada y el seed habla HTTP. Vendorear el motor en cada
 proyecto (`demos/.runner/`, 18 archivos por app sincronizados a mano) era
 exactamente el mirror mantenido a mano que siempre driftea.
 
-Un producto nuevo es un directorio, no una instalación:
+Un producto nuevo es un directorio, no una instalación. Además de los dos YAML,
+**escribí su `README.md` y su `.env.example`**: contra qué entorno se graba, con
+qué cuenta y cómo se llaman sus variables. Eso no se deduce del código y es lo
+primero que frena a alguien que clona el repo.
 
 ```bash
 TPL=skills/product-demo/templates
@@ -127,6 +130,8 @@ Una vez por máquina, en el repo de la herramienta:
 npm audit && npm ci
 npx playwright install ffmpeg      # ⚠ imprescindible, ver "Trampas"
 skills/product-demo/templates/runner/setup-voice.sh   # el venv de la voz
+
+npm run doctor                     # ¿quedó todo? no necesita guion ni DEMO_BASE_URL
 ```
 
 `DEMOS_DIR` es lo que apunta el único motor al workspace del producto:

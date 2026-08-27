@@ -28,6 +28,8 @@ skills/
       runner/          # the engine — ONE copy, shared by every workspace
 demos/
   <product>/           # one workspace per product
+    README.md          # which environment and which account this product records against
+    .env.example       # the NAMES of that product's variables — never the values
     <slug>.demo.yml    # the story
     selectors.yml      # named target → selector, for that product
     capabilities.yml   # what that product does, for the coverage catalog
@@ -64,10 +66,13 @@ One-time, in this repo:
 npm audit && npm ci
 npx playwright install ffmpeg      # NOT the system ffmpeg — without it there is simply no video
 skills/product-demo/templates/runner/setup-voice.sh   # one-time Kokoro venv, outside the repo
+
+npm run doctor                     # did all of that land? needs no script and no URL
 ```
 
 Then work on a product's workspace. `DEMOS_DIR` is what points the single engine
-at it:
+at it, and **each workspace's README says which URL and which account it records
+against** — those differ per product and are not guessable:
 
 ```bash
 R=skills/product-demo/templates/runner
@@ -75,6 +80,7 @@ R=skills/product-demo/templates/runner
 DEMOS_DIR=demos/wig DEMO_BASE_URL=https://qa.example.com "$R/demo.sh" <slug> --check  # ~20s, no recording
 DEMOS_DIR=demos/wig DEMO_BASE_URL=https://qa.example.com "$R/demo.sh" <slug>          # record + publish
 DEMOS_DIR=demos/wig "$R/demo.sh" --catalog                                           # what is not covered yet
+DEMOS_DIR=demos/wig "$R/demo.sh" --page                                              # rebuild the HTML only
 ```
 
 A new product is a new directory — nothing to install:

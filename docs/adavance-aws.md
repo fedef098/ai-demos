@@ -188,8 +188,10 @@ borrala con el perfil admin.
 ## Después
 
 ```bash
-node .runner/publish.mjs demos/<slug>      # sube el mp4 + poster
-node .runner/publish.mjs --catalog demos/  # sube la galería HTML
+R=skills/product-demo/templates/runner        # desde la raíz del repo
+
+node "$R/publish.mjs" demos/<producto>/<slug>     # sube el mp4 + poster
+node "$R/publish.mjs" --catalog demos/<producto>  # sube la galería HTML
 ```
 
 Un dominio propio (`demos.adavance.com` vía CloudFront + CNAME en Cloudflare) es

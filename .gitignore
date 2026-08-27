@@ -23,6 +23,10 @@ demos/**/*.png
 !demos/*/assets/**
 
 # Session state: these are credentials.
+.env
+.env.*
+!.env.example
+!demos/*/.env.example
 demos/.auth/
 demos/*/.auth/
 demos/.voice-cache/

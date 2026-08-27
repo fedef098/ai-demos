@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=./.runner/demo.schema.json
+# yaml-language-server: $schema=../../skills/product-demo/templates/demo.schema.json
 
 id: memorial-pages
 product: When I Go

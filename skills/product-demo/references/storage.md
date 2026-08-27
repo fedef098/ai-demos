@@ -92,13 +92,15 @@ junto.
 ## Publicar el sitio del catálogo
 
 ```bash
-node .runner/publish.mjs demos/<slug>     # el video de UNA demo
-node .runner/publish.mjs --catalog demos/ # la galería + la página de cada demo
+R=skills/product-demo/templates/runner        # desde la raíz del repo
+
+node "$R/publish.mjs" demos/<producto>/<slug>     # el video de UNA demo
+node "$R/publish.mjs" --catalog demos/<producto>  # la galería + la página de cada demo
 ```
 
 `--catalog` regenera el HTML en un temporal con `page.mjs --remote` (el `<video>`
 apunta a la URL publicada), le copia al lado el `poster.jpg` y los `.vtt` que
-referencia, y sube todo. **No toca el HTML de `demos/`**: ese tiene que seguir
+referencia, y sube todo. **No toca el HTML de `demos/<producto>/`**: ese tiene que seguir
 prefiriendo el mp4 local, que es lo que te deja mirar una demo recién grabada sin
 red. Una demo sin publicar queda fuera del sitio con un warning — no hay nada que
 reproducir.

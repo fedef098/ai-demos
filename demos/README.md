@@ -18,6 +18,8 @@ La doctrina (cómo se cuenta la historia, el ritmo, el determinismo) está en
 ```
 demos/
 └── <producto>/
+    ├── README.md              contra qué entorno se graba y con qué cuenta
+    ├── .env.example           los NOMBRES de las variables del producto (nunca los valores)
     ├── selectors.yml           el ÚNICO archivo con selectores
     ├── capabilities.yml        qué sabe hacer el producto (para medir cobertura)
     ├── <slug>.demo.yml         la historia; se revisa en el PR
@@ -42,13 +44,17 @@ es lo que lo apunta al workspace:
 ```bash
 R=skills/product-demo/templates/runner        # desde la raíz del repo
 
+"$R/demo.sh" --doctor                               # ¿la máquina está lista? (no necesita guion ni URL)
 DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com "$R/demo.sh" <slug> --check
 DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com "$R/demo.sh" <slug>
 DEMOS_DIR=demos/<producto> "$R/demo.sh" --catalog   # qué NO tenemos para mostrar
 DEMOS_DIR=demos/<producto> "$R/demo.sh" --page      # sólo regenerar el HTML
 ```
 
-Setup por máquina y variables de entorno: `../skills/product-demo/references/setup.md`.
+Setup por máquina y variables comunes a todos los productos:
+`../skills/product-demo/references/setup.md`. **Las de un producto —su URL, su
+API, su cuenta— están en el README y el `.env.example` de su workspace**, porque
+son distintas en cada uno y nadie las adivina.
 
 ## Escribir una demo
 

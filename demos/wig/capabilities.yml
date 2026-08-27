@@ -1,10 +1,10 @@
 # demos/capabilities.yml — el inventario de lo que el producto SABE hacer.
 #
 # No describe demos: describe capacidades. El catálogo
-# (`node demos/.runner/catalog.mjs demos/`) cruza esta lista contra los guiones
-# (`covers:`) y las grabaciones, y clasifica cada capacidad en cubierta /
-# guionada / sin cubrir. Los ids son estables: son lo que referencian los
-# guiones.
+# (`node skills/product-demo/templates/runner/catalog.mjs demos/wig`) cruza esta
+# lista contra los guiones (`covers:`) y las grabaciones, y clasifica cada
+# capacidad en cubierta / guionada / sin cubrir. Los ids son estables: son lo
+# que referencian los guiones.
 #
 # Alcance de este archivo: Memorial Pages. Cuando se guionen otras secciones de
 # When I Go (plan builder, trusted contacts, documentos, April), sus capacidades

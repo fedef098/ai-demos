@@ -3,9 +3,9 @@
 // Publicación: sube los binarios de una demo (demo.mp4 + poster.jpg) a S3 y
 // mantiene un manifiesto acumulativo con todas las demos publicadas.
 //
-//   node .runner/publish.mjs demos/<slug>              # lee run.json de ahí
-//   node .runner/publish.mjs demos/<slug> --dry-run    # imprime, no sube
-//   node .runner/publish.mjs --catalog demos/          # sube el sitio HTML
+//   node <runner>/publish.mjs demos/<producto>/<slug>            # lee run.json de ahí
+//   node <runner>/publish.mjs demos/<producto>/<slug> --dry-run  # imprime, no sube
+//   node <runner>/publish.mjs --catalog demos/<producto>         # sube el sitio HTML
 //
 // Las tres decisiones no obvias:
 //
@@ -207,10 +207,10 @@ function config() {
 function warnNoBucket(outDir) {
   console.warn(
     `\n  ⚠ No hay DEMO_S3_BUCKET: el video queda SÓLO en ${outDir} y NO se commitea.\n` +
-      "    Ningún binario entra a git (ver demos/.gitignore), así que este mp4 no\n" +
+      "    Ningún binario entra a git (ver .gitignore en la raíz), así que este mp4 no\n" +
       "    existe para nadie más que vos y se pierde al limpiar el working tree.\n" +
       "    Para publicarlo: export DEMO_S3_BUCKET=<bucket> [DEMO_S3_PREFIX] [AWS_REGION]\n" +
-      "    [DEMO_PUBLIC_URL] y volvé a correr `node .runner/publish.mjs <dir>`.\n",
+      "    [DEMO_PUBLIC_URL] y volvé a correr `node <runner>/publish.mjs <dir>`.\n",
   );
 }
 
@@ -362,8 +362,8 @@ function die(msg) {
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
   const outDir = process.argv[2];
   if (!outDir)
-    die("Uso: node .runner/publish.mjs <outDir> [--dry-run]\n" +
-        "       node .runner/publish.mjs --catalog <demosDir>");
+    die("Uso: node <runner>/publish.mjs <outDir> [--dry-run]\n" +
+        "       node <runner>/publish.mjs --catalog <demosDir>");
 
   if (outDir === "--catalog") {
     publishCatalog(process.argv[3] ?? "demos");

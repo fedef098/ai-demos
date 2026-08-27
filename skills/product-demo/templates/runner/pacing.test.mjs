@@ -4,7 +4,7 @@
 // con `vitest run` si el proyecto ya lo tiene — la API de `node:test` y la de
 // Vitest coinciden en lo que se usa acá.
 //
-//     node --test demos/.runner/
+//     node --test skills/product-demo/templates/runner/
 //
 // Se testean `pacing.mjs` y `subtitles.mjs` y no el grabador entero a propósito:
 // son las funciones PURAS del motor, las que deciden cuánto dura cada cosa y

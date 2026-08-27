@@ -2,15 +2,15 @@
 //
 // El inventario: qué capacidad del producto está demoable y cuál no.
 //
-//   node .runner/catalog.mjs demos/
+//   node <runner>/catalog.mjs demos/<producto>
 //
 // La tabla de cobertura de cada demo contesta "qué muestra este video". Ésta
 // contesta la pregunta que importa antes de una reunión: "¿qué NO tenemos para
 // mostrar?". Para eso cruza tres cosas:
 //
-//   demos/capabilities.yml   lo que el producto sabe hacer   (opcional)
-//   demos/*.demo.yml         lo que está guionado            (covers: [id, ...])
-//   demos/<slug>/run.json    lo que está efectivamente grabado
+//   demos/<producto>/capabilities.yml   lo que el producto sabe hacer (opcional)
+//   demos/<producto>/*.demo.yml         lo que está guionado (covers: [id, ...])
+//   demos/<producto>/<slug>/run.json    lo que está efectivamente grabado
 //
 // De ahí salen los tres estados: cubierta (hay video, con link al segundo
 // exacto), guionada (el guion existe, falta grabar) y sin cubrir (nadie la

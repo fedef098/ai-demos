@@ -4,8 +4,9 @@
 # no haya ni un video grabado, y no se toca cuando se graba uno. Es la respuesta
 # a "¿qué podemos mostrar?" — la de "¿qué mostramos hoy?" la da el catálogo.
 #
-# El catálogo (`node demos/.runner/catalog.mjs demos/`) cruza esta lista contra
-# los guiones y las grabaciones que encuentra, y clasifica cada capacidad en:
+# El catálogo (`node skills/product-demo/templates/runner/catalog.mjs
+# demos/<producto>`) cruza esta lista contra los guiones y las grabaciones que
+# encuentra, y clasifica cada capacidad en:
 #
 #   cubierta   hay una escena GRABADA que la cubre  → link al timestamp exacto
 #   guionada   la escena existe en un .demo.yml pero todavía no se grabó

@@ -3,7 +3,7 @@
 // Pasada 1 de la narración: sintetiza TODOS los cues ANTES de grabar y deja
 // voices.json con la duración real de cada uno.
 //
-//   node .runner/narrate.mjs demos/<slug>.demo.yml
+//   node <runner>/narrate.mjs demos/<producto>/<slug>.demo.yml
 //
 // ── Por qué antes y no después ───────────────────────────────────────────────
 // El audio dicta el tiempo, no al revés. Si se sintetiza después de grabar, la
@@ -89,7 +89,7 @@ export function narrate(demoPath) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const demoPath = process.argv[2];
   if (!demoPath) {
-    console.error("\n✖ Uso: node .runner/narrate.mjs demos/<slug>.demo.yml\n");
+    console.error("\n✖ Uso: node <runner>/narrate.mjs demos/<producto>/<slug>.demo.yml\n");
     process.exit(1);
   }
   try {

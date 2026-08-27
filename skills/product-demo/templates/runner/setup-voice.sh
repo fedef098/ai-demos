@@ -3,7 +3,7 @@
 #
 # Crea, una sola vez por máquina, el venv de Kokoro que usa voice.mjs.
 #
-#   ./demos/.runner/setup-voice.sh
+#   skills/product-demo/templates/runner/setup-voice.sh
 #
 # Baja torch (~700 MB) y, en la primera síntesis, los pesos del modelo (~350 MB).
 # Después queda cacheado y grabar no vuelve a tocar la red.
@@ -53,4 +53,4 @@ KPipeline(lang_code="e")
 print("ok")
 PY
 
-printf '\n✓ Voz lista. Probala:  node demos/.runner/narrate.mjs demos/<slug>.demo.yml\n\n'
+printf '\n✓ Voz lista. Probala:  node skills/product-demo/templates/runner/narrate.mjs demos/<producto>/<slug>.demo.yml\n\n'

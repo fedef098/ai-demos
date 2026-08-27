@@ -2,7 +2,7 @@
 //
 // El driver: toma el guion y produce demo.webm + timeline.json.
 //
-//   node .runner/record.mjs demos/<slug>.demo.yml
+//   node <runner>/record.mjs demos/<producto>/<slug>.demo.yml
 //
 // Decisiones que están acá y no son negociables (el porqué, en cada sitio):
 //   - UN solo BrowserContext y UNA sola página: recordVideo produce un archivo
@@ -36,7 +36,7 @@ const now = () => Number(process.hrtime.bigint() / 1000n) / 1000;
 
 async function main() {
   const demoPath = process.argv[2];
-  if (!demoPath) die("Uso: node .runner/record.mjs demos/<slug>.demo.yml");
+  if (!demoPath) die("Uso: node <runner>/record.mjs demos/<producto>/<slug>.demo.yml");
 
   const { demo, selectors, capabilities } = loadDemo(demoPath);
   const { errors } = lint(demo, selectors, capabilities);

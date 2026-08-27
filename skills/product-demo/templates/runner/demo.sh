@@ -3,10 +3,13 @@
 #
 # Orquesta el pipeline completo.
 #
-#   ./demos/.runner/demo.sh <slug>            graba, monta, publica y arma la página
-#   ./demos/.runner/demo.sh <slug> --check    sólo lint + targets (sin grabar, ~20 s)
-#   ./demos/.runner/demo.sh --page            sólo regenera el HTML desde los run.json
-#   ./demos/.runner/demo.sh --catalog         sólo el inventario de cobertura
+#   R=skills/product-demo/templates/runner
+#
+#   DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug>            graba, monta, publica y arma la página
+#   DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug> --check    sólo lint + targets (sin grabar, ~20 s)
+#   DEMOS_DIR=demos/<producto> "$R/demo.sh" --page            sólo regenera el HTML desde los run.json
+#   DEMOS_DIR=demos/<producto> "$R/demo.sh" --catalog         sólo el inventario de cobertura
+#                              "$R/demo.sh" --doctor          chequea la máquina, sin guion ni URL
 #
 # Etapas: preflight → lint → targets → narrate → seed → record → build → catalog → page
 # Si una falla, corta y limpia. Nunca queda medio video.
@@ -37,7 +40,81 @@ dim()  { printf '\033[2m%s\033[0m\n' "$*"; }
 die()  { red "✖ $*"; exit 1; }
 step() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 
+# ── Chequeos de la máquina ───────────────────────────────────────────────────
+# Separados del resto del preflight a propósito: `--doctor` los corre solos, sin
+# guion y sin DEMO_BASE_URL. Es lo primero que quiere alguien que acaba de
+# clonar el repo y todavía no sabe si le falta algo, y antes había que inventar
+# una URL para llegar a enterarse.
+check_machine() {
+  MACHINE_WARNINGS=0
+  NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
+  [ "$NODE_MAJOR" -ge 20 ] || die "Node $NODE_MAJOR: el motor necesita 20 o más."
+  dim "  node: $(node -v)"
+
+  node -e "require('node:module').createRequire('$RUNNER_DIR/x').resolve('yaml')" >/dev/null 2>&1 \
+    || die "Falta la dependencia 'yaml'. Corré 'npm audit && npm ci' en la raíz del repo."
+  dim "  dependencias del repo: ok"
+
+  command -v ffmpeg  >/dev/null || die "Falta ffmpeg."
+  command -v ffprobe >/dev/null || die "Falta ffprobe."
+  dim "  ffmpeg/ffprobe del sistema: ok"
+
+  if [ "${DEMO_BROWSER:-}" != "chromium" ]; then
+    command -v google-chrome >/dev/null || die "No encontré google-chrome. Instalalo, o usá DEMO_BROWSER=chromium (baja ~170 MB)."
+    dim "  google-chrome: ok"
+  fi
+
+  # ⚠ LA TRAMPA Nº1. El ffmpeg que Playwright usa para grabar NO es el del
+  # sistema: es un helper propio que se instala aparte del browser. Sin él,
+  # recordVideo no produce NINGÚN archivo y no avisa: la corrida "funciona" y no
+  # hay video al final.
+  PW_CACHE="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
+  if ! ls "$PW_CACHE" 2>/dev/null | grep -qi '^ffmpeg'; then
+    die "Falta el helper ffmpeg de Playwright: sin él recordVideo no graba nada y falla en silencio.
+    Instalalo:  npx playwright install ffmpeg"
+  fi
+  dim "  helper ffmpeg de Playwright: ok"
+
+  # No es fatal: una demo con `narration: false` graba igual. Pero la narración
+  # está prendida por default, así que sin el venv la corrida muere en `narrate`
+  # — después de que ya invertiste el rato de escribir el guion.
+  VOICE_VENV="${DEMO_VOICE_VENV:-$HOME/.cache/demo-voice-venv}"
+  if [ -x "$VOICE_VENV/bin/python" ]; then
+    dim "  voz (Kokoro): ok"
+  else
+    MACHINE_WARNINGS=$((MACHINE_WARNINGS + 1))
+    red "  ⚠ voz (Kokoro): NO instalada en $VOICE_VENV"
+    red "    Cualquier demo con narración va a fallar en 'narrate'. Instalala:"
+    red "    $RUNNER_DIR/setup-voice.sh"
+  fi
+
+  # Esta VPS es compartida. Un proceso pesado dispara el OOM killer y se lleva
+  # servicios de otra gente.
+  AVAIL_MB=$(free -m | awk '/^Mem:/ {print $7}')
+  if [ "$AVAIL_MB" -lt 3000 ]; then
+    die "Sólo ${AVAIL_MB} MB de RAM disponible (mínimo 3000). Grabar ahora puede tirar servicios de otros en esta VPS compartida."
+  fi
+  dim "  RAM disponible: ${AVAIL_MB} MB"
+
+  DISK_AVAIL_MB=$(df -Pm "$TMP_ROOT" | awk 'NR==2 {print $4}')
+  if [ "$DISK_AVAIL_MB" -lt 2000 ]; then
+    die "Sólo ${DISK_AVAIL_MB} MB libres en $TMP_ROOT (mínimo 2000)."
+  fi
+  dim "  disco en $TMP_ROOT: ${DISK_AVAIL_MB} MB"
+}
+
 # ── Atajos que no graban nada ────────────────────────────────────────────────
+if [ "${1:-}" = "--doctor" ]; then
+  step "doctor"
+  check_machine
+  if [ "$MACHINE_WARNINGS" -gt 0 ]; then
+    printf '\n✓ Se puede grabar, con %s advertencia(s) arriba.\n\n' "$MACHINE_WARNINGS"
+  else
+    printf '\n✓ La máquina está lista para grabar.\n\n'
+  fi
+  exit 0
+fi
+
 if [ "${1:-}" = "--page" ]; then
   node "$RUNNER_DIR/catalog.mjs" "$DEMOS_DIR"
   node "$RUNNER_DIR/page.mjs" "$DEMOS_DIR"
@@ -62,37 +139,7 @@ step "preflight"
 
 [ -n "${DEMO_BASE_URL:-}" ] || die "Falta DEMO_BASE_URL. La app tiene que estar desplegada: el grabador NUNCA levanta un dev server."
 
-# Esta VPS es compartida. Un proceso pesado dispara el OOM killer y se lleva
-# servicios de otra gente — ver mira/CLAUDE.local.md.
-AVAIL_MB=$(free -m | awk '/^Mem:/ {print $7}')
-if [ "$AVAIL_MB" -lt 3000 ]; then
-  die "Sólo ${AVAIL_MB} MB de RAM disponible (mínimo 3000). Grabar ahora puede tirar servicios de otros en esta VPS compartida."
-fi
-dim "  RAM disponible: ${AVAIL_MB} MB"
-
-DISK_AVAIL_MB=$(df -Pm "$TMP_ROOT" | awk 'NR==2 {print $4}')
-if [ "$DISK_AVAIL_MB" -lt 2000 ]; then
-  die "Sólo ${DISK_AVAIL_MB} MB libres en $TMP_ROOT (mínimo 2000)."
-fi
-dim "  disco en $TMP_ROOT: ${DISK_AVAIL_MB} MB"
-
-command -v ffmpeg  >/dev/null || die "Falta ffmpeg."
-command -v ffprobe >/dev/null || die "Falta ffprobe."
-
-if [ "${DEMO_BROWSER:-}" != "chromium" ]; then
-  command -v google-chrome >/dev/null || die "No encontré google-chrome. Instalalo, o usá DEMO_BROWSER=chromium (baja ~170 MB)."
-fi
-
-# ⚠ LA TRAMPA Nº1. El ffmpeg que Playwright usa para grabar NO es el del
-# sistema: es un helper propio que se instala aparte del browser. Sin él,
-# recordVideo no produce NINGÚN archivo y no avisa: la corrida "funciona" y no
-# hay video al final.
-PW_CACHE="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
-if ! ls "$PW_CACHE" 2>/dev/null | grep -qi '^ffmpeg'; then
-  die "Falta el helper ffmpeg de Playwright: sin él recordVideo no graba nada y falla en silencio.
-    Instalalo:  npx playwright install ffmpeg"
-fi
-dim "  helper ffmpeg de Playwright: ok"
+check_machine
 
 if ! curl -fsS -o /dev/null --max-time 15 "$DEMO_BASE_URL"; then
   die "$DEMO_BASE_URL no responde."

@@ -3,7 +3,7 @@
 // Post-proceso: webm crudo + timeline → demo.mp4, demo.vtt, demo.chapters.vtt,
 // poster.jpg, narration.md y run.json.
 //
-//   node .runner/build.mjs /tmp/demo-<slug>-<pid>/timeline.json
+//   node <runner>/build.mjs /tmp/demo-<slug>-<pid>/timeline.json
 //
 // Las dos cosas no obvias que pasan acá:
 //
@@ -37,7 +37,7 @@ function sh(cmd, args) {
 
 async function main() {
   const timelinePath = process.argv[2];
-  if (!timelinePath) die("Uso: node .runner/build.mjs <timeline.json>");
+  if (!timelinePath) die("Uso: node <runner>/build.mjs <timeline.json>");
 
   const tl = JSON.parse(readFileSync(timelinePath, "utf8"));
   const { demo } = loadDemo(tl.demoPath);

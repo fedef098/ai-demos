@@ -73,7 +73,6 @@ targets:
 
   # ── página pública ─────────────────────────────────────────────────────────
   public-hero:                 '[data-testid="memorial-hero"]'
-  public-gallery:              '[data-testid="memorial-public-gallery"]'
   public-songs:                '[data-testid="memorial-public-songs"]'
   public-tribute-card:         '[data-testid="memorial-tribute-card"]'
 

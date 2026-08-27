@@ -81,7 +81,8 @@ No debería: el overlay se inyecta con `addInitScript`, que corre en cada
 documento nuevo. Si pasa:
 
 - El motor está **desactualizado** — una versión vieja usaba `addStyleTag`, que
-  se pierde en cada navegación. Verificá `RUNNER_VERSION` en `.runner/overlay.js`.
+  se pierde en cada navegación. Verificá `RUNNER_VERSION` en
+  `skills/product-demo/templates/runner/overlay.js`.
 - La app **reemplaza `document.body`** de una forma que el `MutationObserver` no
   cubre. Abrí un issue con el caso; es un bug del overlay.
 
@@ -124,7 +125,8 @@ tiene credenciales (`aws sts get-caller-identity` tiene que andar). El mp4 está
 local y no se pierde nada; cuando el bucket esté configurado, subilo sin regrabar:
 
 ```bash
-node demos/.runner/publish.mjs demos/<slug>
+R=skills/product-demo/templates/runner        # desde la raíz del repo
+node "$R/publish.mjs" demos/<producto>/<slug>
 ```
 
 ## La voz no coincide con lo que muestra la pantalla
@@ -154,7 +156,13 @@ grabación, y la página estampa el commit con el que se grabó:
 > ⚠ el guion cambió después de la grabación (reclamos.demo.yml, 2026-08-18 23:00
 > vs. grabada el 2026-08-18 14:42)
 
-Regenerar es `./demos/.runner/demo.sh <slug>`. Si los selectores cambiaron,
-`--check` te dice cuáles en 20 segundos.
+Regenerar es:
 
-Para verlas todas de una: `./demos/.runner/demo.sh --catalog`.
+```bash
+R=skills/product-demo/templates/runner        # desde la raíz del repo
+DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug>
+```
+
+Si los selectores cambiaron, `--check` te dice cuáles en 20 segundos.
+
+Para verlas todas de una: `DEMOS_DIR=demos/<producto> "$R/demo.sh" --catalog`.
