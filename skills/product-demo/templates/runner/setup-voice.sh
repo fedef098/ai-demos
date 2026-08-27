@@ -44,6 +44,13 @@ else
 fi
 
 "$VENV/bin/pip" install --quiet --upgrade pip
+
+# torch va del índice CPU a propósito, y ANTES que kokoro. El wheel por defecto de
+# PyPI trae el runtime CUDA entero: suma nvidia/ (2,7 GB) y triton/ (691 MB) que en
+# una máquina sin GPU no se ejecutan nunca, y ninguna de las que graban demos tiene
+# GPU. Medido: el venv pasa de 5,2 GB a 1,5 GB. Kokoro no fija una versión de torch,
+# así que dejarlo satisfecho de antemano alcanza para que no baje el de CUDA.
+"$VENV/bin/pip" install --quiet --index-url https://download.pytorch.org/whl/cpu torch
 "$VENV/bin/pip" install --quiet "kokoro==0.9.4" soundfile numpy
 
 dim "Verificando que el modelo cargue…"
