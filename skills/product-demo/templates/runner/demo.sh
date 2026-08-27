@@ -75,17 +75,19 @@ check_machine() {
   fi
   dim "  helper ffmpeg de Playwright: ok"
 
-  # No es fatal: una demo con `narration: false` graba igual. Pero la narración
-  # está prendida por default, así que sin el venv la corrida muere en `narrate`
-  # — después de que ya invertiste el rato de escribir el guion.
+  # Advertencia, no error, y por una razón que conviene no olvidar: `synthAll`
+  # sólo invoca al venv para los cues que NO están en `.voice-cache/`. Regrabar
+  # un guion sin tocar el texto no sintetiza nada, así que sale bien sin venv.
+  # Falla recién cuando aparece una frase nueva — o sea, justo cuando estás
+  # iterando el guion.
   VOICE_VENV="${DEMO_VOICE_VENV:-$HOME/.cache/demo-voice-venv}"
   if [ -x "$VOICE_VENV/bin/python" ]; then
     dim "  voz (Kokoro): ok"
   else
     MACHINE_WARNINGS=$((MACHINE_WARNINGS + 1))
     red "  ⚠ voz (Kokoro): NO instalada en $VOICE_VENV"
-    red "    Cualquier demo con narración va a fallar en 'narrate'. Instalala:"
-    red "    $RUNNER_DIR/setup-voice.sh"
+    red "    Con la caché de voz caliente igual graba; cualquier cue nuevo muere"
+    red "    en 'narrate'. Instalala:  $RUNNER_DIR/setup-voice.sh"
   fi
 
   # Esta VPS es compartida. Un proceso pesado dispara el OOM killer y se lleva
