@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Encuentra el motor de demos y le pasa los argumentos.
+#
+# El motor NO vive en este repo: es el plugin `product-demo` del marketplace
+# `adavance-skills` (repo adavance-it/skills). Acá viven sólo los workspaces de
+# cada producto, bajo `demos/<producto>/`. Este wrapper existe para que la ruta
+# a la caché de plugins —que incluye el número de versión— no quede escrita a
+# mano en un README que envejece con cada release.
+#
+#   DEMOS_DIR=demos/wig bin/demo <slug> --check
+#   DEMOS_DIR=demos/wig bin/demo <slug>
+#   bin/demo --doctor
+#
+# Con el motor en otro lado (un checkout de adavance-it/skills, por ejemplo):
+#
+#   DEMO_RUNNER=<ruta>/plugins/product-demo/skills/product-demo/templates/runner bin/demo --doctor
+
+set -euo pipefail
+
+if [ -z "${DEMO_RUNNER:-}" ]; then
+  CACHE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/cache"
+  # La versión más alta, no la más nueva por mtime: reinstalar una vieja no
+  # debería degradar el motor sin que nadie se entere.
+  # El `|| true` no es decorativo: con `pipefail`, el `ls` que no matchea nada
+  # hace fallar todo el pipeline y `set -e` mataría el script antes de llegar al
+  # mensaje que explica qué instalar.
+  DEMO_RUNNER=$(
+    ls -d "$CACHE"/*/product-demo/*/skills/product-demo/templates/runner 2>/dev/null \
+      | sort -V | tail -1 || true
+  )
+fi
+
+if [ -z "${DEMO_RUNNER:-}" ] || [ ! -x "$DEMO_RUNNER/demo.sh" ]; then
+  printf '\033[31m✖ No encontré el motor de demos.\033[0m\n\n' >&2
+  cat >&2 <<'MSG'
+  Instalalo como plugin de Claude Code:
+
+    /plugin marketplace add adavance-it/skills
+    /plugin install product-demo@adavance-skills
+
+  O apuntá DEMO_RUNNER a un checkout de adavance-it/skills:
+
+    export DEMO_RUNNER=<repo>/plugins/product-demo/skills/product-demo/templates/runner
+MSG
+  exit 1
+fi
+
+exec "$DEMO_RUNNER/demo.sh" "$@"

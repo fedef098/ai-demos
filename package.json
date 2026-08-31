@@ -1,16 +1,15 @@
 {
   "name": "ai-demos",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "The demo-recording plugin and the demo scripts of every product.",
+  "description": "The demo scripts of every product, one workspace per product. The engine is the product-demo plugin, in adavance-it/skills.",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "demo": "skills/product-demo/templates/runner/demo.sh",
-    "doctor": "skills/product-demo/templates/runner/demo.sh --doctor",
-    "test": "node --test skills/product-demo/templates/runner/*.test.mjs"
+    "demo": "bin/demo",
+    "doctor": "bin/demo --doctor"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
