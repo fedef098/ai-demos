@@ -1,0 +1,19 @@
+{
+  "name": "demofed",
+  "description": "Graba demos de producto guionadas con Playwright: una historia de usuario en video, con locución neural local, subtítulos quemados y en .vtt, capítulos y una página HTML navegable. El video queda local — no se sube a ningún lado. Lleva un catálogo de cobertura y cinco arquetipos listos para copiar.",
+  "version": "1.0.0",
+  "author": {
+    "name": "fedef098"
+  },
+  "license": "MIT",
+  "keywords": [
+    "demo",
+    "playwright",
+    "video",
+    "subtitulos",
+    "vtt",
+    "storytelling",
+    "screencast",
+    "ffmpeg"
+  ]
+}

@@ -3,7 +3,7 @@
 #
 # Orquesta el pipeline completo.
 #
-#   R=engine/runner
+#   R=plugins/demofed/skills/demofed/runner
 #
 #   DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug>            graba, monta y arma la página
 #   DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug> --check    sólo lint + targets (sin grabar, ~20 s)

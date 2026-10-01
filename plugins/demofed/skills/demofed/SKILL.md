@@ -1,3 +1,19 @@
+---
+name: demofed
+description: >
+  Graba demos de producto guionadas con Playwright: una historia de usuario
+  contada en video, con locución neural local, subtítulos quemados y en .vtt,
+  capítulos y una página HTML navegable. El video queda local — no se sube a
+  ningún lado. Lleva un catálogo de qué está demoable y qué no, y cinco
+  arquetipos listos para copiar (onboarding, CRUD, búsqueda, panel admin,
+  checkout). Arranca SIEMPRE reconociendo la sección en el código y entrevistando
+  sobre alcance, audiencia y datos, y muestra el guion para aprobación antes de
+  grabar. Usala cuando pidan una demo de un flujo de la app, cuando haya que
+  actualizar una demo existente, o cuando pregunten qué cubre una demo y qué no.
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash(node *), Bash(npx *), Bash(npm *), Bash(ffmpeg *), Bash(ffprobe *), Bash(./bin/demo *), Bash(bin/demo *)
+argument-hint: [qué demo hay que grabar o actualizar]
+---
+
 # Demos de producto
 
 Una demo es **una historia contada en video**, no un recorrido por la interfaz.
@@ -118,10 +134,10 @@ qué cuenta y cómo se llaman sus variables. Eso no se deduce del código y es l
 primero que frena a alguien que clona el repo.
 
 ```bash
-R=engine/runner
+R=plugins/demofed/skills/demofed/runner
 mkdir -p demos/<producto>/seeds demos/<producto>/assets
-cp engine/templates/selectors.example.yml    demos/<producto>/selectors.yml
-cp engine/templates/capabilities.example.yml demos/<producto>/capabilities.yml
+cp plugins/demofed/skills/demofed/templates/selectors.example.yml    demos/<producto>/selectors.yml
+cp plugins/demofed/skills/demofed/templates/capabilities.example.yml demos/<producto>/capabilities.yml
 ```
 
 Una vez por máquina, en la raíz del repo (el motor no trae dependencias, las toma
@@ -392,7 +408,7 @@ subtítulos que se cortan antes de poder leerse — algo que sólo se nota miran
 video, que es tarde.
 
 ```bash
-npm test                            # = node --test engine/runner/
+npm test                            # = node --test plugins/demofed/skills/demofed/runner/
 ```
 
 `templates/runner/pacing.test.mjs` cubre las funciones **puras** (lectura, ritmo,
@@ -412,7 +428,7 @@ invariante, no un detalle, y está testeada como tal.
 
 ```bash
 mkdir -p .githooks
-cp engine/templates/pre-push .githooks/pre-push
+cp plugins/demofed/skills/demofed/templates/pre-push .githooks/pre-push
 chmod +x .githooks/pre-push
 git config core.hooksPath .githooks     # así el hook se versiona y lo tiene el equipo
 ```

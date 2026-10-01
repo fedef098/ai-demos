@@ -9,7 +9,8 @@
   },
   "scripts": {
     "demo": "bin/demo",
-    "doctor": "bin/demo --doctor"
+    "doctor": "bin/demo --doctor",
+    "setup-voice": "plugins/demofed/skills/demofed/runner/setup-voice.sh"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",

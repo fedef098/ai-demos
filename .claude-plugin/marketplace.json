@@ -1,0 +1,30 @@
+{
+  "name": "fedef-demos",
+  "id": "fedef-demos",
+  "owner": {
+    "name": "fedef098"
+  },
+  "metadata": {
+    "description": "Marketplace propio con la skill demofed para grabar demos de producto.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "demofed",
+      "source": "./plugins/demofed",
+      "description": "Graba demos de producto guionadas con Playwright; el video queda local, no se sube a ningún lado.",
+      "version": "1.0.0",
+      "author": {
+        "name": "fedef098"
+      },
+      "keywords": [
+        "demo",
+        "playwright",
+        "video",
+        "screencast"
+      ],
+      "category": "docs",
+      "strict": false
+    }
+  ]
+}

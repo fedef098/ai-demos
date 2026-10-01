@@ -4,7 +4,7 @@
 # no haya ni un video grabado, y no se toca cuando se graba uno. Es la respuesta
 # a "¿qué podemos mostrar?" — la de "¿qué mostramos hoy?" la da el catálogo.
 #
-# El catálogo (`node engine/runner/catalog.mjs
+# El catálogo (`node plugins/demofed/skills/demofed/runner/catalog.mjs
 # demos/<producto>`) cruza esta lista contra los guiones y las grabaciones que
 # encuentra, y clasifica cada capacidad en:
 #

@@ -82,7 +82,7 @@ documento nuevo. Si pasa:
 
 - El motor está **desactualizado** — una versión vieja usaba `addStyleTag`, que
   se pierde en cada navegación. Verificá `RUNNER_VERSION` en
-  `engine/runner/overlay.js`.
+  `plugins/demofed/skills/demofed/runner/overlay.js`.
 - La app **reemplaza `document.body`** de una forma que el `MutationObserver` no
   cubre. Abrí un issue con el caso; es un bug del overlay.
 
@@ -148,7 +148,7 @@ grabación, y la página estampa el commit con el que se grabó:
 Regenerar es:
 
 ```bash
-R=engine/runner        # desde la raíz del repo
+R=plugins/demofed/skills/demofed/runner        # desde la raíz del repo
 DEMOS_DIR=demos/<producto> "$R/demo.sh" <slug>
 ```
 

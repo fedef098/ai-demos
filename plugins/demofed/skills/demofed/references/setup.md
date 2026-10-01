@@ -2,15 +2,15 @@
 
 ## Una vez por máquina, en este repo
 
-El motor vive en `engine/`. Grabar no lee el checkout de la app: se graba contra
+El motor vive en `plugins/demofed/skills/demofed/`. Grabar no lee el checkout de la app: se graba contra
 una URL desplegada y el seed habla HTTP.
 
 **Sus dos dependencias externas se instalan en la raíz del repo.** El motor las
 busca —en este orden— en su propia ubicación, en `DEMOS_DIR` y en el cwd. Ver
-`engine/runner/deps.mjs`.
+`plugins/demofed/skills/demofed/runner/deps.mjs`.
 
 ```bash
-R=engine/runner
+R=plugins/demofed/skills/demofed/runner
 
 npm audit && npm i -D yaml @playwright/test   # audit ANTES de instalar, es política
 npx playwright install ffmpeg
@@ -29,8 +29,8 @@ antes de cada grabación, así que no hay dos listas que se desincronicen.
 
 ```bash
 mkdir -p demos/<producto>/seeds demos/<producto>/assets
-cp engine/templates/selectors.example.yml    demos/<producto>/selectors.yml
-cp engine/templates/capabilities.example.yml demos/<producto>/capabilities.yml
+cp plugins/demofed/skills/demofed/templates/selectors.example.yml    demos/<producto>/selectors.yml
+cp plugins/demofed/skills/demofed/templates/capabilities.example.yml demos/<producto>/capabilities.yml
 ```
 
 `capabilities.yml` es opcional pero conviene desde el día uno: es el inventario de
@@ -145,7 +145,7 @@ prefiere locutarla con su voz.
 
 ## Actualizar el motor
 
-El motor vive en `engine/` y corre con el `@playwright/test` de la raíz del repo,
+El motor vive en `plugins/demofed/skills/demofed/` y corre con el `@playwright/test` de la raíz del repo,
 que es el único lugar donde se instalan sus dependencias. Cada archivo del runner
 declara `RUNNER_VERSION` en la cabecera.
 

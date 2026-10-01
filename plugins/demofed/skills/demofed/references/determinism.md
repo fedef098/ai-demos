@@ -124,7 +124,7 @@ tener), nombres de otros clientes y cualquier identificador de otro tenant.
 Grabá dos veces seguidas y compará `run.json`:
 
 ```bash
-R=engine/runner        # desde la raíz del repo
+R=plugins/demofed/skills/demofed/runner        # desde la raíz del repo
 D=demos/<producto>
 
 DEMOS_DIR=$D "$R/demo.sh" <slug> && cp $D/<slug>/run.json /tmp/a.json

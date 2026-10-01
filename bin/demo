@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Encuentra el motor de demos y le pasa los argumentos.
 #
-# El motor vive en este repo, bajo `engine/`. Acá también viven los workspaces
-# de cada producto, bajo `demos/<producto>/`.
+# El motor viaja en el plugin `demofed`. Este wrapper lo busca —en este orden—
+# en DEMO_RUNNER, en la copia del repo (plugins/demofed/), y en el plugin
+# instalado (la versión más alta en la caché de Claude Code). Los workspaces de
+# cada producto viven en demos/<producto>/.
 #
-#   DEMOS_DIR=demos/wig bin/demo <slug> --check
-#   DEMOS_DIR=demos/wig bin/demo <slug>
+#   DEMOS_DIR=demos/<producto> bin/demo <slug> --check
+#   DEMOS_DIR=demos/<producto> bin/demo <slug>
 #   bin/demo --doctor
 #
 # Para usar un motor en otra ruta, exportá DEMO_RUNNER apuntando a su `runner/`.
@@ -13,14 +15,29 @@
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+REPO_RUNNER="$REPO_ROOT/plugins/demofed/skills/demofed/runner"
 
+# 1. Override explícito.
+# 2. La copia del repo gana: si estás trabajando dentro del repo, querés su motor,
+#    no una versión instalada que podría estar atrás.
+if [ -z "${DEMO_RUNNER:-}" ] && [ -x "$REPO_RUNNER/demo.sh" ]; then
+  DEMO_RUNNER="$REPO_RUNNER"
+fi
+
+# 3. El plugin instalado, para usarlo desde cualquier carpeta. La versión más
+#    alta, no la más nueva por mtime. El `|| true` evita que un `ls` sin matches
+#    mate el script por `pipefail` antes del mensaje de ayuda.
 if [ -z "${DEMO_RUNNER:-}" ]; then
-  DEMO_RUNNER="$REPO_ROOT/engine/runner"
+  CACHE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/cache"
+  DEMO_RUNNER=$(
+    ls -d "$CACHE"/*/demofed/*/skills/demofed/runner 2>/dev/null | sort -V | tail -1 || true
+  )
 fi
 
 if [ -z "${DEMO_RUNNER:-}" ] || [ ! -x "$DEMO_RUNNER/demo.sh" ]; then
-  printf '\033[31m✖ No encontré el motor de demos en %s.\033[0m\n' "$DEMO_RUNNER" >&2
-  printf 'Exportá DEMO_RUNNER apuntando al runner/ del motor.\n' >&2
+  printf '\033[31m✖ No encontré el motor de demos.\033[0m\n' >&2
+  printf 'Instalalo con:  /plugin marketplace add fedef098/ai-demos  &&  /plugin install demofed@fedef-demos\n' >&2
+  printf 'O exportá DEMO_RUNNER apuntando al runner/ del motor.\n' >&2
   exit 1
 fi
 

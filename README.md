@@ -1,51 +1,42 @@
-# ai-demos — los guiones de demo de cada producto
+# ai-demos — demos de producto guionadas
 
-Acá viven **las demos**, una carpeta por producto bajo `demos/`, y el **motor**
-que las graba, bajo `engine/`. Grabar no necesita el checkout de la app: se corre
-contra una URL desplegada y el seed habla HTTP.
+Este repo tiene dos cosas: la skill **demofed** (el motor que graba demos de
+producto con Playwright, bajo `plugins/demofed/`) y **las demos** de cada producto
+(bajo `demos/`, una carpeta por producto). Grabar no necesita el checkout de la
+app: se corre contra una URL desplegada y el seed habla HTTP. **El video queda
+local**, no se sube a ningún lado.
 
-## Qué hay
+## Instalar la skill (Claude Code)
 
 ```
-bin/demo               encuentra el motor y le pasa los argumentos
-engine/                el motor de grabación
-  runner/              el pipeline (lint → narrate → record → build → page)
-  templates/           ejemplos para arrancar un producto nuevo
-  archetypes/          cinco arquetipos de demo listos para copiar
-  references/          el detalle por tema (setup, storytelling, storage…)
-  GUIDE.md             cómo se escribe y se graba una demo
-demos/
-  <producto>/          un workspace por producto
-    README.md          contra qué entorno y con qué cuenta se graba este producto
-    .env.example       los NOMBRES de sus variables — nunca los valores
-    <slug>.demo.yml    la historia
-    selectors.yml      target con nombre → selector, de este producto
-    capabilities.yml   qué sabe hacer este producto, para el catálogo de cobertura
-    seeds/<slug>.mjs   preparación idempotente, por HTTP
-    assets/            imágenes que el guion le da al producto (entradas, no salida)
-    <slug>/run.json    duración, capítulos, commit, sha256 y URL pública del video
+/plugin marketplace add fedef098/ai-demos
+/plugin install demofed@fedef-demos
 ```
 
-## Setup
+Una vez instalada, pedile a Claude *"grabá una demo de \<lo que sea\>"* desde el
+repo del producto o desde este: la skill te entrevista, escribe el guion, lo
+muestra para aprobación y recién ahí graba.
 
-Una vez por máquina (el motor no trae dependencias: las toma de acá):
+> El repo también funciona sin instalar nada: `bin/demo` encuentra el motor en la
+> copia local de `plugins/demofed/`.
+
+## Setup de la máquina (una vez)
 
 ```bash
-npm audit && npm ci
+npm ci                             # instala yaml y @playwright/test
 npx playwright install ffmpeg      # NO es el ffmpeg del sistema — sin él no hay video, y no avisa
-engine/runner/setup-voice.sh       # el venv de la voz en off
+npm run setup-voice                # el venv de la voz en off (Kokoro)
 
-npm run doctor                     # ¿quedó todo? no necesita guion ni URL
+npm run doctor                     # ¿quedó todo? chequea node, ffmpeg, Chrome, voz, RAM
 ```
 
-`npm run doctor` también dice si falta el venv de la voz, y con qué comando se
-crea.
+`npm run doctor` te dice qué falta. Necesitás además Node ≥20, `ffmpeg`/`ffprobe`
+del sistema y Google Chrome.
 
 ## Grabar
 
-`DEMOS_DIR` es lo que apunta el motor al workspace de un producto. **El README de
-cada workspace dice contra qué URL y con qué cuenta se graba**: eso cambia por
-producto y no se adivina.
+`DEMOS_DIR` apunta el motor al workspace de un producto. **El README de cada
+workspace dice contra qué URL y con qué cuenta se graba.**
 
 ```bash
 DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com bin/demo <slug> --check  # ~20 s, no graba
@@ -54,23 +45,30 @@ DEMOS_DIR=demos/<producto> bin/demo --catalog                                   
 DEMOS_DIR=demos/<producto> bin/demo --page                                               # sólo regenerar el HTML
 ```
 
-Un producto nuevo es una carpeta, no una instalación: copiá
-`selectors.example.yml` y `capabilities.example.yml` desde `engine/templates/`, y
-escribile su `README.md` y su `.env.example`.
+El video queda en `demos/<producto>/<slug>/` (`demo.mp4` + `index.html`
+navegable). Un producto nuevo es una carpeta: ver `demos/README.md`.
+
+## Qué hay
+
+```
+bin/demo                           encuentra el motor y le pasa los argumentos
+plugins/demofed/                   la skill instalable
+  skills/demofed/
+    SKILL.md                       cómo se escribe y se graba una demo
+    runner/                        el pipeline (lint → narrate → record → build → page)
+    templates/ · archetypes/       plantillas y arquetipos para arrancar
+    references/                    el detalle por tema (setup, storytelling, determinismo…)
+demos/
+  <producto>/                      un workspace por producto (ver demos/README.md)
+```
 
 ## Cómo se escribe una demo
 
-El detalle está en `engine/GUIDE.md` y en `engine/references/`: reconocé la
-sección, entrevistá sobre alcance, audiencia y datos, y **mostrá el guion para
-aprobación antes de grabar nada**.
-
-Lo único que conviene saber de entrada:
+El detalle está en `plugins/demofed/skills/demofed/SKILL.md` y sus `references/`.
+Lo esencial:
 
 - **El guion es el artefacto.** `<slug>.demo.yml` cuenta la historia en lenguaje
-  llano y **no tiene selectores**; ésos viven una sola vez en `selectors.yml`. El
-  relato se revisa en el PR; los selectores los arregla un dev en 20 segundos
-  cuando la UI se mueve.
-- **El video queda local y no se sube a ningún lado.** El `demo.mp4`, el poster y
-  la página quedan en `demos/<producto>/<slug>/`, para mirarlos o bajarlos. En git
-  no va ningún binario (git no deltifica H.264); sí va el `run.json`.
+  llano y **no tiene selectores**; ésos viven una sola vez en `selectors.yml`.
+- **El video queda local y no se sube a ningún lado.** En git no va ningún binario
+  (git no deltifica H.264); sí va el `run.json`.
 - **Nunca contra un dev server.** Se graba contra una app desplegada.

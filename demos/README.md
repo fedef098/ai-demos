@@ -7,8 +7,8 @@ cuando la UI cambia.
 Grabar **no lee el checkout de la app**: se graba contra una URL desplegada y el
 seed habla HTTP, así que no hace falta tener el código al lado.
 
-La doctrina (cómo se cuenta la historia, el ritmo, el determinismo) está en
-`../engine/GUIDE.md` y `../engine/references/`. Acá está sólo lo operativo.
+La doctrina (cómo se cuenta la historia, el ritmo, el determinismo) está en la
+skill `demofed`, bajo `../plugins/demofed/skills/demofed/`. Acá está sólo lo operativo.
 
 ## Estructura
 
@@ -36,8 +36,8 @@ H.264: cada regrabación dejaría un blob permanente.
 
 ## Correr
 
-El motor es uno solo, en `../engine/runner/`, y `bin/demo` lo encuentra. `DEMOS_DIR`
-es lo que lo apunta al workspace:
+El motor lo encuentra `bin/demo` solo (en la copia del plugin o en el instalado).
+`DEMOS_DIR` es lo que lo apunta al workspace:
 
 ```bash
 bin/demo --doctor                                                        # ¿la máquina está lista?
@@ -47,13 +47,13 @@ DEMOS_DIR=demos/<producto> bin/demo --catalog                            # qué 
 DEMOS_DIR=demos/<producto> bin/demo --page                               # sólo regenerar el HTML
 ```
 
-Setup por máquina y variables comunes: `../engine/references/setup.md`. **Las de
-un producto —su URL, su API, su cuenta— están en el README y el `.env.example` de
-su workspace**, porque son distintas en cada uno y nadie las adivina.
+Setup por máquina: ver el `README.md` de la raíz. **Las variables de un producto
+—su URL, su API, su cuenta— están en el README y el `.env.example` de su
+workspace**, porque son distintas en cada uno y nadie las adivina.
 
 ## Escribir una demo
 
-1. **Copiá un arquetipo** de `../engine/archetypes/` a
+1. **Copiá un arquetipo** de `../plugins/demofed/skills/demofed/archetypes/` a
    `demos/<producto>/<slug>.demo.yml` y rellenalo. No se heredan ni se mergean: se
    copian, para que el PR muestre la historia completa.
 2. **Escribí el seed** en `demos/<producto>/seeds/<slug>.mjs`. Idempotente y por
