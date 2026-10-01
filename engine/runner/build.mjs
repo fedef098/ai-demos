@@ -1,0 +1,302 @@
+// RUNNER_VERSION 1
+//
+// Post-proceso: webm crudo + timeline → demo.mp4, demo.vtt, demo.chapters.vtt,
+// poster.jpg, narration.md y run.json.
+//
+//   node <runner>/build.mjs /tmp/demo-<slug>-<pid>/timeline.json
+//
+// Las dos cosas no obvias que pasan acá:
+//
+// 1. SIEMPRE se transcodifica. El .webm de Playwright se muxea en streaming y
+//    queda sin Duration en el header y sin cues: el browser no puede saltar a un
+//    capítulo y ffprobe tiene que escanear el archivo entero. Una página de demo
+//    donde no podés saltar a un capítulo no sirve. Además MP4/H.264 anda en
+//    Safari, iOS, Keynote y Slack; VP8 no siempre.
+//
+// 2. La línea de tiempo se CALIBRA contra el video real. Los cues se midieron con
+//    un reloj de Node; el video arrancó antes, en un instante que la API no
+//    expone. Buscamos el flash blanco de la claqueta dentro del video y aplicamos
+//    una corrección afín.
+//
+// 3. La locución se mezcla ACÁ, en el tiempo ya calibrado (pasada 3 de 3: la 1 es
+//    narrate.mjs, que sintetiza antes de grabar; la 2 es record.mjs, que le da a
+//    cada beat al menos lo que dura su voz). Cada wav se pega en at(cue.start),
+//    así que no hay deriva que corregir ni bucle de re-grabar hasta que sincronice.
+
+import { readFileSync, writeFileSync, mkdirSync, statSync, renameSync, existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { join, dirname, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { formatVttTime } from "./pacing.mjs";
+import { loadDemo } from "./lint.mjs";
+
+function sh(cmd, args) {
+  return execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
+}
+
+async function main() {
+  const timelinePath = process.argv[2];
+  if (!timelinePath) die("Uso: node <runner>/build.mjs <timeline.json>");
+
+  const tl = JSON.parse(readFileSync(timelinePath, "utf8"));
+  const { demo } = loadDemo(tl.demoPath);
+  const outDir = tl.outDir;
+  const tmpDir = dirname(resolve(timelinePath));
+  mkdirSync(outDir, { recursive: true });
+
+  // ── 1. Transcodificar ──────────────────────────────────────────────────────
+  // Queda sin audio y en el temporal: recién después de calibrar sabemos en qué
+  // milisegundo va cada clip de voz, y el mux final es un `-c:v copy` gratis.
+  // El video empieza a grabarse cuando se crea la página, y antes de la claqueta
+  // pasa todo el arranque: la navegación, las fuentes, la doble espera del
+  // `awaits` de apertura. Eso queda grabado como cover, dura lo que tarde la app
+  // ese día —medimos 0,4 s, 2,4 s y 4,6 s en tres corridas del mismo guion— y es
+  // lo primero que ve quien abre el video. Así que se corta.
+  //
+  // El corte va donde la app queda a la vista, ni un cuadro antes. Se llega en
+  // dos pasos porque cada uno resuelve lo que el otro no puede: la luminancia
+  // ubica el INICIO del flash —el instante más brillante del video, imposible de
+  // confundir— y eso ancla el reloj de `record.mjs` contra el video; el resto lo
+  // aporta el propio grabador en `openAt`, que sabe cuándo terminó el fundido
+  // porque lo acaba de hacer él.
+  //
+  // Buscar el final del fundido por luminancia fue el intento anterior y falló
+  // dos veces: sumarle `clapFlash` al inicio abría en blanco, y tomar el primer
+  // cuadro por debajo del umbral abría en un gris plano. **El final de un fundido
+  // no tiene un umbral: es una rampa.** El inicio del flash sí es un borde.
+  const clapAt = findClapStart(tl.webm);
+  const trimAt = clapAt + (tl.openAt ?? 0);
+
+  const mp4 = join(outDir, "demo.mp4");
+  const silent = join(tmpDir, "video-only.mp4");
+  console.log("· transcodificando a mp4 (faststart, seekable)…");
+  sh("nice", [
+    // `-ss` antes de `-i` con re-encode: ffmpeg decodifica desde el keyframe
+    // previo y descarta, así que el corte es exacto al cuadro, no al keyframe.
+    "-n", "10", "ffmpeg", "-y", "-ss", (trimAt / 1000).toFixed(3), "-i", tl.webm,
+    "-c:v", "libx264", "-crf", "24", "-preset", "veryfast",
+    "-pix_fmt", "yuv420p", "-g", "50",
+    "-movflags", "+faststart",   // el índice al principio: permite seek sin bajar todo
+    "-threads", "2",             // VPS compartida: no monopolizar
+    "-an", silent,
+  ]);
+
+  const duration = Number(
+    sh("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", silent]).trim(),
+  ) * 1000;
+
+  // ── 2. Calibrar ────────────────────────────────────────────────────────────
+  // `t = 0` del timeline es el INICIO del flash (`t0` en record.mjs) y el corte
+  // se llevó todo eso, así que el origen del video ya cortado queda en negativo:
+  // no hay que volver a buscarlo. Ningún cue cae ahí — el primero no puede
+  // empezar antes de que la app esté a la vista, que es justo donde se cortó.
+  const originAt = -(tl.openAt ?? 0);
+  const measured = tl.tEnd;                 // duración medida en Node desde el clap
+  const real = duration - originAt;         // duración real del contenido en el video
+  let scale = measured > 0 ? real / measured : 1;
+
+  if (!Number.isFinite(scale) || Math.abs(scale - 1) > 0.02) {
+    console.warn(
+      `  ⚠ factor de escala ${scale.toFixed(4)} fuera de [0.98, 1.02] — probablemente se dropearon frames. Uso 1.`,
+    );
+    scale = 1;
+  }
+  const at = (t) => originAt + t * scale;
+
+  console.log(
+    `· recorte en ${(trimAt / 1000).toFixed(2)}s de arranque · duración ${(duration / 1000).toFixed(1)}s · escala ${scale.toFixed(4)}`,
+  );
+
+  // ── 3. Subtítulos y capítulos ──────────────────────────────────────────────
+  const cues = pairCues(tl.cues, tl.tEnd);
+  writeFileSync(join(outDir, "demo.vtt"), toVtt(cues.map((c) => ({ ...c, start: at(c.start), end: at(c.end) }))));
+
+  const chapters = tl.chapters.map((c, i, arr) => ({
+    text: c.title,
+    start: at(c.t),
+    end: at(i + 1 < arr.length ? arr[i + 1].t : tl.tEnd),
+  }));
+  writeFileSync(join(outDir, "demo.chapters.vtt"), toVtt(chapters));
+
+  // ── 4. Locución: cada clip en su milisegundo calibrado ─────────────────────
+  const voiced = mixVoice({ silent, mp4, cues: tl.cues, at, durationMs: duration });
+
+  // ── 5. Poster: un frame del primer capítulo, no de la placa negra ──────────
+  const posterAt = Math.max(0, (chapters[0]?.start ?? 0) + 1500) / 1000;
+  sh("ffmpeg", ["-y", "-ss", String(posterAt), "-i", mp4, "-frames:v", "1", "-q:v", "3", join(outDir, "poster.jpg")]);
+
+  // ── 6. Guion de locución, para que alguien lo grabe con su voz ─────────────
+  writeFileSync(join(outDir, "narration.md"), toNarration(demo, tl, at));
+
+  // ── 7. Metadatos ─────────────────────────────────────────────────────────────
+  // El video queda local, junto al run.json, para mirarlo o bajarlo. En git no va
+  // NINGÚN binario, sin umbral: git no deltifica H.264, así que cada regrabación
+  // dejaría un blob permanente que ni `git rm` saca del historial.
+  const bytes = statSync(mp4).size;
+  const sha256 = createHash("sha256").update(readFileSync(mp4)).digest("hex");
+
+  const run = {
+    id: demo.id,
+    title: demo.title,
+    promise: demo.promise,
+    product: demo.product,
+    recordedAt: new Date().toISOString(),
+    commit: gitCommit(),
+    baseUrl: process.env.DEMO_BASE_URL ?? null,
+    durationMs: Math.round(duration),
+    // El mp4 y el poster quedan en este mismo directorio; la página los referencia
+    // por su nombre de archivo.
+    video: { file: "demo.mp4", poster: "poster.jpg", narrated: voiced, bytes, sha256 },
+    usedFixtures: (demo.fixtures ?? []).map((f) => f.route),
+    scenes: tl.chapters.map((c, i, arr) => ({
+      id: c.id,
+      title: c.title,
+      proves: c.proves,
+      watch: c.watch ?? null,
+      startMs: Math.round(at(c.t)),
+      endMs: Math.round(at(i + 1 < arr.length ? arr[i + 1].t : tl.tEnd)),
+    })),
+  };
+  const runPath = join(outDir, "run.json");
+  writeFileSync(runPath, `${JSON.stringify(run, null, 2)}\n`);
+
+  console.log(`✓ ${outDir}: demo.mp4 (${mb(bytes)}), demo.vtt, demo.chapters.vtt, poster.jpg, run.json`);
+  if (run.usedFixtures.length)
+    console.log(`  nota: la demo usa ${run.usedFixtures.length} fixture(s); la página lo va a declarar.`);
+}
+
+/**
+ * Dónde empieza el flash blanco de la claqueta, en ms de video. Escalamos a 2x2
+ * para que sea barato — sólo nos importa el promedio.
+ *
+ * Es lo único que hace falta buscar en la imagen, y a propósito: el flash es el
+ * instante más brillante del video y su INICIO es un borde, un cuadro oscuro
+ * seguido de uno blanco. Todo lo que viene después son fundidos, que son rampas
+ * sin umbral, y ahí es donde este mismo detector se equivocaba. El instante en
+ * que la app queda a la vista lo anota `record.mjs` en `openAt`, que no tiene
+ * que adivinarlo.
+ */
+function findClapStart(mp4) {
+  let out = "";
+  try {
+    out = execFileSync(
+      "ffmpeg",
+      ["-i", mp4, "-vf", "scale=2:2,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-", "-f", "null", "-"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], maxBuffer: 64 * 1024 * 1024 },
+    );
+  } catch {
+    return 0;
+  }
+  // frame:0 pts_time:0.04\nlavfi.signalstats.YAVG=16.0
+  const re = /pts_time:([\d.]+)[\s\S]*?YAVG=([\d.]+)/g;
+  let m;
+  while ((m = re.exec(out))) {
+    if (Number(m[2]) > 200) return Number(m[1]) * 1000;
+  }
+  console.warn("  ⚠ no encontré el flash de la claqueta; asumo que el video arranca en 0.");
+  return 0;
+}
+
+/** Los cues llegan como marcas de inicio/fin; los emparejamos en intervalos. */
+function pairCues(marks, tEnd) {
+  const out = [];
+  let open = null;
+  for (const m of marks) {
+    if (m.kind === "cue") {
+      if (open) { open.end = m.t; out.push(open); }
+      open = { text: m.text, start: m.t, end: null, sceneId: m.sceneId };
+    } else if (m.kind === "cue-end" && open) {
+      open.end = m.t;
+      out.push(open);
+      open = null;
+    }
+  }
+  if (open) { open.end = tEnd; out.push(open); }
+  return out.filter((c) => c.end > c.start);
+}
+
+function toVtt(cues) {
+  const body = cues
+    .map((c, i) => `${i + 1}\n${formatVttTime(c.start)} --> ${formatVttTime(c.end)}\n${c.text}`)
+    .join("\n\n");
+  return `WEBVTT\n\n${body}\n`;
+}
+
+function toNarration(demo, tl, at) {
+  const lines = [
+    `# ${demo.title}`,
+    "",
+    `> ${demo.promise ?? ""}`,
+    "",
+    "Texto para locutar. Los tiempos son del video ya montado — si lo grabás con",
+    "tu voz, respetalos o volvé a generar el video con `--voice` para que se ajuste.",
+    "",
+  ];
+  for (const scene of demo.scenes) {
+    const ch = tl.chapters.find((c) => c.id === scene.id);
+    lines.push(`## ${scene.title}  \`${formatVttTime(at(ch?.t ?? 0))}\``, "");
+    for (const beat of scene.beats) {
+      if (beat.voice || beat.say) lines.push(`- ${beat.voice ?? beat.say}`);
+    }
+    lines.push("");
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/**
+ * Pega cada clip de voz en su instante calibrado y muxea. Devuelve true si el
+ * mp4 final tiene locución.
+ *
+ * El único trabajo real acá es el `adelay` por clip: la duración ya la negoció
+ * record.mjs, que le dio a cada beat al menos lo que dura su voz. Por eso alcanza
+ * con un `-c:v copy` — el video no se vuelve a comprimir.
+ *
+ * `apad` + `-shortest` deja el audio exactamente del largo del video: sin apad,
+ * amix termina con el último clip y el mp4 quedaría cortado ahí.
+ */
+function mixVoice({ silent, mp4, cues, at, durationMs }) {
+  const clips = (cues ?? [])
+    .filter((c) => c.kind === "cue" && c.voice?.wav && existsSync(c.voice.wav))
+    .map((c) => ({ wav: c.voice.wav, delay: Math.max(0, Math.round(at(c.t))) }));
+
+  if (!clips.length) {
+    renameSync(silent, mp4);
+    return false;
+  }
+
+  const missing = (cues ?? []).filter((c) => c.kind === "cue" && c.voice?.wav && !existsSync(c.voice.wav)).length;
+  if (missing) console.warn(`  ⚠ ${missing} clip(s) de voz ya no existen en el caché; van sin locución.`);
+
+  const inputs = [];
+  const filters = [];
+  clips.forEach((c, i) => {
+    inputs.push("-i", c.wav);
+    // +1 porque la entrada 0 es el video.
+    filters.push(`[${i + 1}:a]adelay=${c.delay}:all=1[v${i}]`);
+  });
+  const mixed = clips.map((_, i) => `[v${i}]`).join("");
+  filters.push(`${mixed}amix=inputs=${clips.length}:normalize=0,apad[a]`);
+
+  console.log(`· mezclando ${clips.length} clips de voz sobre ${(durationMs / 1000).toFixed(1)}s de video…`);
+  sh("nice", [
+    "-n", "10", "ffmpeg", "-y", "-i", silent, ...inputs,
+    "-filter_complex", filters.join(";"),
+    "-map", "0:v", "-map", "[a]",
+    "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
+    "-movflags", "+faststart", "-shortest", mp4,
+  ]);
+  return true;
+}
+
+function gitCommit() {
+  try { return sh("git", ["rev-parse", "--short", "HEAD"]).trim(); } catch { return null; }
+}
+
+const mb = (b) => `${(b / 1024 / 1024).toFixed(1)} MB`;
+
+function die(msg) {
+  console.error(`\n✖ ${msg}\n`);
+  process.exit(1);
+}
+
+main().catch((e) => die(e.message));

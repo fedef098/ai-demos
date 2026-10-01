@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "The demo scripts of every product, one workspace per product. The engine is the product-demo plugin, in adavance-it/skills.",
+  "description": "The demo scripts of every product and the engine that records them, one workspace per product under demos/.",
   "engines": {
     "node": ">=20"
   },

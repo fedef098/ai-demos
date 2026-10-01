@@ -4,14 +4,11 @@ Cada demo es un **guion versionado** que se ejecuta con Playwright y produce un
 video con subtítulos, un `.vtt` y una página navegable. Se regenera con un comando
 cuando la UI cambia.
 
-**Viven acá y no en el repo del producto.** La herramienta es de la empresa —por
-eso el video se publica en el bucket de la empresa— y cada producto es un
-consumidor. Además grabar **no lee el checkout de la app**: se graba contra una
-URL desplegada y el seed habla HTTP, así que no hay nada que ganar teniéndolos al
-lado del código.
+Grabar **no lee el checkout de la app**: se graba contra una URL desplegada y el
+seed habla HTTP, así que no hace falta tener el código al lado.
 
 La doctrina (cómo se cuenta la historia, el ritmo, el determinismo) está en
-`../skills/product-demo/`. Acá está sólo lo operativo.
+`../engine/GUIDE.md` y `../engine/references/`. Acá está sólo lo operativo.
 
 ## Estructura
 
@@ -30,57 +27,55 @@ demos/
         ├── index.html          la página navegable
         ├── demo.mp4 · demo.vtt · demo.chapters.vtt · poster.jpg
         ├── narration.md        el texto y los tiempos de la locución
-        └── run.json            duración, escenas, commit, hash y URL del video
+        └── run.json            duración, escenas, commit, hash
 ```
 
-**El `demo.mp4` y el `poster.jpg` NO se commitean** — van a S3 y `run.json` guarda
-la URL. Git no deltifica H.264: cada regrabación dejaría un blob permanente.
+**El `demo.mp4` y el `poster.jpg` NO se commitean** y **no se suben a ningún
+lado**: quedan locales, para mirarlos en la página o bajarlos. Git no deltifica
+H.264: cada regrabación dejaría un blob permanente.
 
 ## Correr
 
-El motor es uno solo, en `../skills/product-demo/templates/runner/`, y `DEMOS_DIR`
+El motor es uno solo, en `../engine/runner/`, y `bin/demo` lo encuentra. `DEMOS_DIR`
 es lo que lo apunta al workspace:
 
 ```bash
-R=skills/product-demo/templates/runner        # desde la raíz del repo
-
-"$R/demo.sh" --doctor                               # ¿la máquina está lista? (no necesita guion ni URL)
-DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com "$R/demo.sh" <slug> --check
-DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com "$R/demo.sh" <slug>
-DEMOS_DIR=demos/<producto> "$R/demo.sh" --catalog   # qué NO tenemos para mostrar
-DEMOS_DIR=demos/<producto> "$R/demo.sh" --page      # sólo regenerar el HTML
+bin/demo --doctor                                                        # ¿la máquina está lista?
+DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com bin/demo <slug> --check
+DEMOS_DIR=demos/<producto> DEMO_BASE_URL=https://qa.ejemplo.com bin/demo <slug>
+DEMOS_DIR=demos/<producto> bin/demo --catalog                            # qué NO tenemos para mostrar
+DEMOS_DIR=demos/<producto> bin/demo --page                               # sólo regenerar el HTML
 ```
 
-Setup por máquina y variables comunes a todos los productos:
-`../skills/product-demo/references/setup.md`. **Las de un producto —su URL, su
-API, su cuenta— están en el README y el `.env.example` de su workspace**, porque
-son distintas en cada uno y nadie las adivina.
+Setup por máquina y variables comunes: `../engine/references/setup.md`. **Las de
+un producto —su URL, su API, su cuenta— están en el README y el `.env.example` de
+su workspace**, porque son distintas en cada uno y nadie las adivina.
 
 ## Escribir una demo
 
-1. **Copiá un arquetipo** de la skill a `demos/<producto>/<slug>.demo.yml` y
-   rellenalo. No se heredan ni se mergean: se copian, para que el PR muestre la
-   historia completa.
+1. **Copiá un arquetipo** de `../engine/archetypes/` a
+   `demos/<producto>/<slug>.demo.yml` y rellenalo. No se heredan ni se mergean: se
+   copian, para que el PR muestre la historia completa.
 2. **Escribí el seed** en `demos/<producto>/seeds/<slug>.mjs`. Idempotente y por
    API. Si no se puede sembrar dos veces seguidas sin ensuciar nada, la demo no
    existe.
 3. **Iterá con `--check`** hasta que pase (no graba, tarda ~20 s).
 4. **Grabá** cuando el check esté verde.
-5. **Mirá y escuchá el video entero antes de publicarlo.** Ningún lint ve píxeles
-   ni oye audio: un dato de otro cliente, un mail real o un nombre mal pronunciado
-   sólo los ves vos. Lo que pronuncia mal el TTS se arregla con `voice:` en el beat.
+5. **Mirá y escuchá el video entero antes de compartirlo.** Ningún lint ve píxeles
+   ni oye audio: un dato sensible, un mail real o un nombre mal pronunciado sólo
+   los ves vos. Lo que pronuncia mal el TTS se arregla con `voice:` en el beat.
 
 ## Cuentas
 
-Cada demo usa **su propia cuenta**, creada para ella y con alias `+test@` para que
-no ensucie las métricas del producto. Una cuenta compartida se rompe sola: alguien
-le cambia la clave, o el estado que dejó otra demo contradice el guion.
+Cada demo usa **su propia cuenta**, creada para ella. Una cuenta compartida se
+rompe sola: alguien le cambia la clave, o el estado que dejó otra demo contradice
+el guion.
 
 ## Trampas
 
 - **Un valor sin comillas que contiene `": "`** rompe el YAML: se lee como una
   clave anidada. `say: "El cierre: el beat más fuerte"` — con comillas.
-- **La demo se graba contra una URL desplegada**, nunca contra `next dev`. En la
+- **La demo se graba contra una URL desplegada**, nunca contra `next dev`. En una
   VPS compartida un dev server dispara el OOM killer y se lleva servicios de
   otros; el preflight aborta si hay menos de 3 GB de RAM libre.
 - **Un popup parte el video en dos.** `recordVideo` escribe un archivo por página.
