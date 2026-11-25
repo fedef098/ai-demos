@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: app-oyente
+product: Latrack
+archetype: custom
+title: La radio en el teléfono del oyente, y en la web sin instalar nada
+titleCard: false
+promise: >
+  El oyente tiene la app de su radio, con su marca, su ciudad, el vivo, la
+  programación y los shorts; y quien no instala nada la escucha igual en la web.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver lo que
+    reciben sus oyentes: una app con la marca de la radio, no una app genérica.
+  in:
+    - El reproductor web público con el cambio de español a inglés
+    - "La app del oyente en un teléfono: la home con la marca, elegir ciudad y escuchar en vivo"
+    - La programación y el feed de shorts
+  out:
+    - La Cabina, los concursos y los sponsors dentro de la app (tienen sus videos)
+    - Despertador, temporizador y CarPlay (no se ven en el build web)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. La app es el build web de
+    la app real apuntado a QA, servido local; el reproductor web es la página pública
+    /listen. Sólo lectura: el seed sólo quita encuestas "Demo …" que hayan quedado.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: visitante
+    name: Un oyente en la computadora
+    context: Llegó al sitio de La Brisa desde Google y no quiere instalar nada.
+  - as: oyente
+    name: Marisol
+    label: "Marisol · oyente en Phoenix"
+    device: iphone
+    timezone: America/Phoenix
+    context: Se mudó a Phoenix y quiere seguir escuchando La Brisa de allá.
+
+world:
+  seed: ./seeds/app-oyente.mjs
+  assert:
+    - La Brisa tiene tres ciudades, programación cargada y shorts publicados
+
+scenes:
+  - id: web
+    title: "Sin instalar nada, en la web"
+    objection: true
+    proves: Reproductor web con la marca de la radio, sus ciudades y lo que sonó, en español o inglés.
+    covers: [reproductor-web]
+    watch: Es la página pública de La Brisa; el idioma se recuerda para la próxima visita.
+    beats:
+      - as: visitante
+        go: /listen/cmwti8qxj00014jo472ejga6p
+        awaits: web-play
+        say: ¿Y el que no quiere instalar nada? La Brisa también suena en la web, con su marca.
+      - click: web-ingles
+        awaits: web-en-ingles
+        say: Y quien prefiere el inglés lo cambia con un toque.
+
+  - id: app
+    title: "La app con la marca de la radio"
+    proves: La app del oyente abre con la marca, la ciudad y el vivo de la radio.
+    covers: [app-oyente]
+    watch: Es la app real de La Brisa (build web) en un teléfono.
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8787/?app=demo-labrisa
+        awaits: app-oyente-home
+        say: En el teléfono, Marisol abre la app de La Brisa, con sus colores y su logo.
+      - click: app-sheet-cerrar
+      - click: app-ciudad
+        awaits: app-ciudad-phoenix
+        say: Elige su ciudad…
+      - click: app-ciudad-phoenix
+        awaits: app-home-phoenix
+        say: …y la app pasa a la señal de Phoenix, con su frecuencia.
+      - click: app-play
+        awaits: app-sonando
+        say: Un toque, y está escuchando en vivo.
+
+  - id: programas
+    title: "La programación y los shorts"
+    proves: Grilla del día en la hora de su ciudad y el feed de videos cortos de la radio.
+    covers: [app-oyente, programacion]
+    watch: La grilla va en la hora de Phoenix; los shorts se publican desde la consola.
+    hold: 2s
+    beats:
+      - click: app-tab-programas
+        awaits: app-programa-al-aire
+        say: Ve la programación del día, en su hora.
+      - click: app-tab-shorts
+        awaits: app-short
+        say: Y los shorts de la radio, para ver entre canción y canción.

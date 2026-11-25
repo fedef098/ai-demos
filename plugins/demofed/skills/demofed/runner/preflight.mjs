@@ -18,7 +18,7 @@ import { loadDemo, lint } from "./lint.mjs";
 // runAction se importa del grabador A PROPÓSITO: las dos etapas tienen que
 // ejecutar exactamente las mismas acciones. Si divergieran, `--check` podría dar
 // verde y la grabación fallar igual, que es justo lo que esta etapa evita.
-import { runAction, authenticate } from "./record.mjs";
+import { runAction, authenticate, demoUserAgent, installFixtures, deviceOf, expandVars } from "./record.mjs";
 
 const playwright = requireDep("@playwright/test");
 if (!playwright) die(missingDepMessage("@playwright/test"));
@@ -50,12 +50,17 @@ async function main() {
   });
   const context = await browser.newContext({
     baseURL,
+    userAgent: demoUserAgent(browser, demo),
     viewport: typeof demo.viewport === "object" ? demo.viewport : VIEWPORTS[demo.viewport ?? "desktop"],
     locale: demo.locale ?? "es-AR",
     timezoneId: demo.timezone ?? "America/Argentina/Buenos_Aires",
   });
   const page = await context.newPage();
   page.setDefaultTimeout(TARGET_TIMEOUT);
+  await installFixtures(page, demo, demoPath);
+  // Una persona con `device:` actúa en su propio contexto de teléfono, igual que
+  // al grabar (sin video).
+  let phone = null;
 
   const problems = [];
   const resolved = new Set();
@@ -67,6 +72,8 @@ async function main() {
   try {
     await authenticate(page, demo.cast[0], baseURL, demoPath);
     current = demo.cast[0].as;
+    let mainAs = current;
+    let active = page;
 
     for (const scene of demo.scenes) {
       for (const [i, beat] of scene.beats.entries()) {
@@ -74,14 +81,38 @@ async function main() {
 
         if (beat.as && beat.as !== current) {
           const person = demo.cast.find((c) => c.as === beat.as);
-          await context.clearCookies();
-          await authenticate(page, person, baseURL, demoPath);
-          await page.reload({ waitUntil: "domcontentloaded" }).catch(() => {});
+          const device = deviceOf(person);
+          if (device) {
+            if (!phone) {
+              phone = await browser.newContext({ ...device, locale: person.locale ?? demo.locale ?? "es-AR", timezoneId: person.timezone ?? demo.timezone ?? "America/Argentina/Buenos_Aires" });
+              const p = await phone.newPage();
+              p.setDefaultTimeout(TARGET_TIMEOUT);
+              await installFixtures(p, demo, demoPath);
+              await authenticate(p, person, baseURL, demoPath);
+            }
+            active = phone.pages()[0];
+          } else {
+            active = page;
+            if (beat.as !== mainAs) {
+              await context.clearCookies();
+              await authenticate(page, person, baseURL, demoPath);
+              await page.reload({ waitUntil: "domcontentloaded" }).catch(() => {});
+              mainAs = beat.as;
+            }
+          }
           current = beat.as;
         }
 
         try {
-          await runAction(page, beat, selectors, demoPath, null, null);
+          // El primer `go` de una persona de teléfono puede esperar más: la app
+          // arranca de cero en un contexto nuevo.
+          let b = beat;
+          if (beat.go && active !== page && beat.awaits) {
+            await active.goto(await expandVars(beat.go), { waitUntil: "domcontentloaded" });
+            await active.locator(selectors[beat.awaits]).first().waitFor({ state: "visible", timeout: 20000 });
+            b = { ...beat, go: null };
+          }
+          await runAction(active, b, selectors, demoPath, null, null);
           for (const t of targetsOf(beat)) resolved.add(t);
         } catch (e) {
           problems.push({ at, why: firstLine(e.message) });
@@ -91,6 +122,7 @@ async function main() {
       }
     }
   } finally {
+    await phone?.close();
     await context.close();
     await browser.close();
   }

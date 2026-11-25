@@ -1,0 +1,108 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: marca
+product: Latrack
+archetype: admin-panel
+title: Tu marca, y la app cambia al instante
+promise: >
+  La identidad de la radio —logo, colores, tema y redes— se arma en una pantalla
+  con el teléfono al lado, y el kit para reels deja a todo el equipo con el mismo estilo.
+
+intake:
+  audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
+  in:
+    - Una marca nueva con nombre, lema, logo, colores y tema, con la vista previa del teléfono
+    - Las redes de la marca
+    - El kit para reels (estilo de subtítulos, tamaño, posición del logo, usuario en redes)
+  out:
+    - Fuentes propias del kit (subir archivos de fuentes no aporta en video)
+    - La home de la marca (tiene su propio video)
+    - Señales, programación y apps (tienen su propio video)
+  environment: >
+    QA (https://qa-latrack.adavance.com), empresa Demo Media con la cuenta
+    admin@demo.latrack.app. La marca que se crea se llama "Demo Brisa Norte" y el
+    seed la borra antes de cada corrida; nada más de Demo Media se toca. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+titleCard: false
+chapter: { position: top-left, top: 8 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: >
+      Gerente de La Brisa (Demo Media): regional mexicana en Houston, Phoenix y
+      Miami. Arma la app de la radio desde la consola, sin depender de nadie técnico.
+    auth: { via: storageState, file: ./.auth/modulos-admin.json }
+
+world:
+  seed: ./seeds/marca.mjs
+  assert:
+    - Demo Media tiene la marca La Brisa y ninguna "Demo Brisa Norte"
+
+scenes:
+  - id: nueva-marca
+    title: "Una marca nueva, con su app al lado"
+    proves: La identidad de la marca se carga con la vista previa de la app en vivo.
+    covers: [marca]
+    watch: El teléfono de la derecha toma el nombre y el lema mientras se escriben, antes de guardar.
+    beats:
+      - as: gerente
+        go: /brands
+        awaits: marcas-lista
+        say: Aquí viven tus marcas, cada una con su logo, sus colores y su app.
+      - click: marca-nueva
+        awaits: marca-form
+      - type: { target: marca-nombre, text: "Demo Brisa Norte" }
+        say: Escribes el nombre y el lema, y el teléfono de al lado ya los muestra.
+      - type: { target: marca-slogan, text: "La regional del norte" }
+
+  - id: logo-colores
+    title: "Logo, colores y tema, en vivo"
+    proves: Logo, paleta y tema claro u oscuro se ven en la app antes de guardar.
+    covers: [marca]
+    watch: La paleta tiñe el reproductor del teléfono; el tema claro cambia toda la app.
+    beats:
+      - upload: { target: marca-logo, file: ./assets/demo-brisa-norte-logo.png }
+        awaits: marca-logo-listo
+        say: Subes el logo, y así lo ven tus oyentes al abrir la app.
+      - click: marca-paleta-vino
+        say: Eliges una combinación de colores y el reproductor se tiñe al instante.
+      - click: marca-tema-claro
+        say: ¿Tu radio es más de día? Pasas la app a tema claro con un toque.
+
+  - id: redes
+    title: "Sus redes, y la marca queda creada"
+    proves: Las redes de la marca se cargan una vez y aparecen en la app.
+    covers: [marca]
+    watch: Cada red cargada suma su ícono en la app; al guardar se abre la página de la marca.
+    beats:
+      - type: { target: marca-instagram, text: "https://instagram.com/demobrisanorte" }
+        say: Pegas tus redes, y aparecen en la app para que te sigan.
+      - type: { target: marca-tiktok, text: "https://tiktok.com/@demobrisanorte" }
+      - click: marca-guardar
+        awaits: marca-creada
+        say: Guardas, y la marca queda lista para sumarle ciudades y su home.
+
+  - id: kit-reels
+    title: "El kit para reels, igual para todo el equipo"
+    objection: true
+    proves: Un kit de marca para reels que los editores usan pero no pueden cambiar.
+    covers: [kit-reels]
+    watch: La muestra "Así se ven" cambia con cada opción; solo un administrador puede guardar el kit.
+    beats:
+      - scroll: kit-panel
+        say: Más abajo, el kit para reels. Define cómo lucen todos los videos de la marca.
+      - click: kit-contorno
+        say: Eliges subtítulos grandes con contorno, y la muestra te enseña cómo quedan.
+      - click: kit-grande
+      - click: kit-logo-arriba-der
+      - type: { target: kit-usuario, text: "@demobrisanorte" }
+      - click: kit-guardar
+        awaits: kit-guardado
+        say: Tus editores hacen reels con este kit, pero no lo pueden cambiar.

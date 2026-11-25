@@ -1,0 +1,68 @@
+{
+  "id": "sponsors",
+  "title": "Una campaña de sponsor armada y vista en el teléfono antes de salir",
+  "promise": "La radio carga la campaña de un anunciante en un solo formulario, le arma el banner con una plantilla y ve cómo sale en cada lugar de la app antes de guardarla.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T18:35:26.717Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 96000,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 5050766,
+    "sha256": "77a7f67f6b987ee4e9475b89dde9fcf9f8533dfa7f559f8c9ca55ba547ef37c5"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "ubicaciones",
+      "title": "Dónde sale el anunciante",
+      "proves": "Ubicaciones de la campaña en la app, combinables en una sola campaña.",
+      "watch": "Al elegir el acompañante se suma solo el pre-roll, porque sólo se ve mientras suena.",
+      "startMs": 2,
+      "endMs": 16127
+    },
+    {
+      "id": "anunciante",
+      "title": "Sólo en Houston, y los martes",
+      "proves": "Nombre que ven los oyentes, ciudades, enlace con UTM, programa y días.",
+      "watch": "El enlace suma las UTM solo, para que el anunciante vea las visitas en su analítica.",
+      "startMs": 16127,
+      "endMs": 38664
+    },
+    {
+      "id": "oyente",
+      "title": "El oyente nunca queda saturado",
+      "proves": "Los topes de la app (un pre-roll cada 30 minutos por oyente) siempre se respetan.",
+      "watch": "El tope lo fija la radio por app y ninguna campaña lo puede saltear.",
+      "startMs": 38664,
+      "endMs": 45407
+    },
+    {
+      "id": "creatividad",
+      "title": "El banner, hecho con plantilla",
+      "proves": "Spot de audio para el pre-roll y banners generados con plantilla para cada ubicación.",
+      "watch": "El mismo diseño se genera al tamaño de cada ubicación, legible en un teléfono.",
+      "startMs": 45407,
+      "endMs": 71438
+    },
+    {
+      "id": "vista",
+      "title": "Así lo ve el oyente, en cada lugar",
+      "proves": "Vista previa en vivo del teléfono para cada ubicación de la campaña.",
+      "watch": "El teléfono de la derecha es la app de La Brisa con la campaña puesta donde la app la muestra.",
+      "startMs": 71438,
+      "endMs": 87057
+    },
+    {
+      "id": "guardar",
+      "title": "Guardada, y la app la toma sola",
+      "proves": "La campaña queda activa y la app la toma sin publicar una versión nueva.",
+      "watch": "La lista de sponsors la muestra al aire en la app, con sus ubicaciones.",
+      "startMs": 87057,
+      "endMs": 96000
+    }
+  ]
+}

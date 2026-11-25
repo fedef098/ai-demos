@@ -1,0 +1,44 @@
+{
+  "id": "concursos",
+  "title": "Una encuesta al aire, votada desde la app y con resultados en vivo",
+  "promise": "La radio lanza una encuesta en un minuto, los oyentes la votan apenas abren la app y el locutor ve los resultados moverse mientras habla.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T16:05:34.489Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 60240,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 1891044,
+    "sha256": "d4359e3bce8ccffc9cd237d6080e5c249b60c0b28c42082a00b3bbeea9c3b864"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "crear",
+      "title": "La encuesta se arma en un minuto",
+      "proves": "Encuesta con pregunta, opciones ordenables y sponsor que la presenta.",
+      "watch": "Las opciones se escriben de corrido; el sponsor elegido aparece como \"Presentado por\" y suma a su reporte.",
+      "startMs": 11,
+      "endMs": 27311
+    },
+    {
+      "id": "app",
+      "title": "Los oyentes la ven apenas abren la app",
+      "proves": "Aviso de encuesta al abrir la app, una sola vez, con el voto ahí mismo.",
+      "watch": "El aviso aparece una vez por encuesta y nunca mientras arranca el audio; se vota sin salir del inicio.",
+      "startMs": 27311,
+      "endMs": 43225
+    },
+    {
+      "id": "resultados",
+      "title": "Un voto por teléfono, y los resultados en vivo",
+      "proves": "Resultados en vivo con un voto por teléfono, que nadie puede inflar votando dos veces.",
+      "watch": "El voto de Vero se suma a los de la mañana: 42 votos, Grupo Frontera adelante. Los otros 41 votos los siembra el seed.",
+      "startMs": 43225,
+      "endMs": 60240
+    }
+  ]
+}

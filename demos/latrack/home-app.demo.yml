@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: home-app
+product: Latrack
+archetype: admin-panel
+title: La pantalla de inicio de la app, sin pasar por la tienda
+promise: >
+  La home de la app se arma por bloques, cada bloque con su horario, se mira a
+  cualquier día y hora antes de publicar, y cada publicación se puede restaurar.
+
+intake:
+  audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
+  in:
+    - El editor de la home de La Brisa con la vista previa del teléfono
+    - Un bloque de texto con horario (sólo sábados y domingos)
+    - La vista previa a otro día y hora
+    - Publicar, la lista de versiones publicadas y restaurar una anterior
+  out:
+    - Ordenar bloques arrastrando (en video no se lee)
+    - Carrusel de imágenes y bloque de sponsor
+    - La home en la app del oyente (está en el video de puesta en marcha)
+  environment: >
+    QA (https://qa-latrack.adavance.com), empresa Demo Media con la cuenta
+    admin@demo.latrack.app, sobre la home real de La Brisa. El bloque que se suma
+    se titula "Demo · …". El seed guarda una copia de la home de La Brisa (borrador,
+    publicada y versiones) y la repone al terminar de grabar y antes de cada corrida,
+    así que La Brisa queda como estaba. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+titleCard: false
+chapter: { position: top-left, top: 8 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: >
+      Gerente de La Brisa (Demo Media): regional mexicana en Houston, Phoenix y
+      Miami. Arma la app de la radio desde la consola, sin depender de nadie técnico.
+    auth: { via: storageState, file: ./.auth/modulos-admin.json }
+
+world:
+  seed: ./seeds/home-app.mjs
+  assert:
+    - la home de La Brisa está publicada, sin cambios pendientes, con tres versiones guardadas
+
+scenes:
+  - id: home
+    title: "La home de La Brisa, bloque por bloque"
+    proves: Editor de home por bloques con la app en un teléfono al lado.
+    covers: [home-editor]
+    watch: Lo que se ve en el teléfono es la home publicada de La Brisa, con su programación y lo que sonó de verdad.
+    beats:
+      - as: gerente
+        go: ${BRISA_HOME_PATH}
+        awaits: home-editor
+        say: Esta es la pantalla de inicio de la app de La Brisa, armada por bloques.
+
+  - id: aviso
+    title: "Un aviso solo para el fin de semana"
+    proves: Cada bloque puede tener horario propio, en la hora local de cada ciudad.
+    covers: [home-editor, home-horario]
+    watch: El aviso sólo se muestra sábados y domingos de 08:00 a 20:00; el reloj del bloque lo marca en la lista.
+    beats:
+      - click: agregar-bloque
+        awaits: bloque-texto
+        say: Sumas un aviso de texto para la transmisión desde la feria.
+      - click: bloque-texto
+        awaits: bloque-texto-titulo
+      - type: { target: bloque-texto-titulo, text: "Demo · Fin de semana en la feria" }
+      - type: { target: bloque-texto-cuerpo, text: "Sábado y domingo transmitimos en vivo desde la feria. ¡Te esperamos!" }
+      - click: bloque-horario
+        awaits: bloque-dia-sab
+        say: Le pones horario. Solo sábados y domingos, de ocho de la mañana a ocho de la noche.
+      - click: bloque-dia-sab
+      - click: bloque-dia-dom
+      - type: { target: bloque-desde, text: "08:00" }
+      - type: { target: bloque-hasta, text: "20:00" }
+        awaits: bloque-con-horario
+
+  - id: sabado
+    title: "Miras el sábado antes de que llegue"
+    proves: Vista previa de la app a cualquier día y hora.
+    covers: [home-editor, home-horario]
+    watch: Hoy es miércoles y el aviso no se ve; simulando el sábado a las 10 aparece, con el programa de ese momento al aire.
+    beats:
+      - select: { target: home-momento, value: "sim" }
+        awaits: home-dia
+        say: Miras cómo se ve el sábado a las diez, sin esperar a que llegue.
+      - select: { target: home-dia, value: "6" }
+      - type: { target: home-hora, text: "10:00" }
+        awaits: home-aviso-sabado
+      - scroll: home-aviso-sabado
+        say: Ahí está el aviso, con el programa del sábado al aire.
+
+  - id: publicar
+    title: "Publicas, y siempre puedes volver atrás"
+    objection: true
+    proves: Publicar llega a los oyentes sin actualizar la app, y cada publicación se puede restaurar.
+    covers: [home-versiones]
+    watch: Restaurar copia esa versión al borrador; los oyentes siguen viendo lo publicado hasta que se publique otra vez.
+    beats:
+      - click: home-publicar
+        awaits: home-publicada
+        say: Publicas, y tus oyentes lo ven al abrir la app, sin actualizarla.
+      - click: home-versiones
+        awaits: home-restaurar-anterior
+        say: Cada publicación queda guardada. Si algo no te convence, vuelves a la anterior.
+      - click: home-restaurar-anterior
+        awaits: home-restaurar-confirmar
+      - click: home-restaurar-confirmar
+        awaits: home-restaurada
+        say: Se restaura en el borrador, y nadie la ve hasta que vuelvas a publicar.

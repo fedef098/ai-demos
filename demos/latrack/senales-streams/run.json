@@ -1,0 +1,60 @@
+{
+  "id": "senales-streams",
+  "title": "Cada ciudad al aire, con su stream vigilado",
+  "promise": "Cada señal de la radio —AM, FM o HD— tiene su stream probado en el momento, un respaldo por si se cae, su estado a la vista y el WhatsApp de cabina.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T17:07:22.180Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 80800,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3181476,
+    "sha256": "e78c48389deb4bdfe89a3466f3a3bf442c989094bde4326304859ff275bd9e02"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "senales",
+      "title": "Tus señales, de un vistazo",
+      "proves": "Todas las señales de la marca con frecuencia, streams, WhatsApp y estado.",
+      "watch": "Cada fila muestra la frecuencia, cuántos streams tiene, si hay WhatsApp y si el stream está en línea.",
+      "startMs": 2,
+      "endMs": 7012
+    },
+    {
+      "id": "estado",
+      "title": "El stream vigilado, y lo que sonó",
+      "proves": "El estado de cada stream, revisado cada pocos minutos, y las canciones leídas del stream.",
+      "watch": "Las barras son las últimas revisiones del stream; la lista de la derecha sale de lo que el stream dice que suena.",
+      "startMs": 7012,
+      "endMs": 20830
+    },
+    {
+      "id": "nueva-senal",
+      "title": "Una ciudad nueva, con AM, FM y HD",
+      "proves": "Una señal con varias frecuencias que transmiten lo mismo (AM y un canal HD de FM).",
+      "watch": "La AM 1310 y la FM 104.5 HD2 quedan en la misma señal, así el oyente ve una sola Dallas.",
+      "startMs": 20830,
+      "endMs": 44462
+    },
+    {
+      "id": "respaldo",
+      "title": "Un stream de respaldo, por si el principal se cae",
+      "proves": "El stream se prueba al pegarlo y se le suma un respaldo al que la app pasa sola.",
+      "watch": "Cada stream se prueba desde el servidor; el respaldo entra solo si el principal se cae, sin que el oyente toque nada.",
+      "startMs": 44462,
+      "endMs": 65464
+    },
+    {
+      "id": "cabina",
+      "title": "El WhatsApp de cabina, listo para tus oyentes",
+      "proves": "El WhatsApp de cabina se escribe como número local y se guarda en formato internacional.",
+      "watch": "El número se escribió sin el +1; la señal guardada lo muestra completo.",
+      "startMs": 65464,
+      "endMs": 80800
+    }
+  ]
+}

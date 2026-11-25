@@ -1,0 +1,126 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: reels
+product: Latrack
+archetype: custom
+title: Un reel con la marca de la radio, publicado en la app sin editor de video
+titleCard: false
+promise: >
+  La radio convierte un momento al aire en un video vertical con su marca, sus
+  subtítulos y su cierre, y lo publica en la app de sus oyentes sin saber editar video.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que el
+    equipo de la radio hace reels con la marca sin un editor de video.
+  in:
+    - "Shorts → Crear con plantilla → Momento al aire, con el kit de marca de La Brisa"
+    - El clip con la confirmación de que es sólo habla (sin música comercial)
+    - Subtítulos escritos y repartidos en el clip
+    - Generar y publicar en Shorts, y verlo en la lista y en la app del oyente
+  out:
+    - La transcripción automática (no está disponible en QA; el clip de prueba no tiene voz)
+    - Editar el kit de marca (es del administrador)
+    - Descargar el MP4 para Instagram o TikTok
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. El clip es
+    el de prueba del equipo (playwright-tests/test-files/clip.mp4, 2 s, sin sonido). El seed
+    borra los reels y shorts "Demo…" de corridas anteriores.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: productora
+    name: Ana Morales
+    context: Produce El Despertador y sube a la app los mejores momentos del programa.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Vero
+    label: "Vero · oyente en Houston"
+    device: iphone
+    timezone: America/Chicago
+    context: Mira los shorts de La Brisa entre canción y canción.
+
+world:
+  seed: ./seeds/reels.mjs
+  assert:
+    - no hay reels ni shorts "Demo…" en La Brisa
+
+scenes:
+  - id: plantilla
+    title: "Un momento al aire, con la marca puesta"
+    proves: Plantillas de reel que ya traen la tipografía, los colores y el logo de la marca.
+    covers: [reels, kit-reels]
+    watch: El kit de marca de La Brisa (colores, tipografías, logo y cierre) ya viene aplicado.
+    beats:
+      - as: productora
+        go: /shorts/reels/new
+        awaits: reel-momento-al-aire
+        say: Ana quiere subir a la app un momento de El Despertador.
+      - click: reel-momento-al-aire
+        awaits: reel-editor
+        say: Elige Momento al aire, y la plantilla ya trae la marca de La Brisa.
+      - type: { target: reel-titulo, text: "Demo: así suena El Despertador" }
+
+  - id: clip
+    title: "Sólo voz, sin música que la bloqueen"
+    objection: true
+    proves: El clip sólo se sube después de confirmar que no lleva música comercial.
+    covers: [reels]
+    watch: Sin la confirmación no se puede subir el clip; las licencias de la radio no cubren canciones en video.
+    beats:
+      - click: reel-sin-musica
+        say: Antes de subir el clip, confirma que es sólo habla, sin música comercial.
+      - upload: { target: reel-clip, file: ./assets/clip.mp4 }
+        awaits: reel-clip-listo
+        say: Así Instagram y TikTok no se lo silencian ni se lo bajan.
+
+  - id: subtitulos
+    title: "Subtítulos repartidos solos"
+    proves: Subtítulos escritos por línea y repartidos a lo largo del clip.
+    covers: [reels]
+    watch: El clip de prueba no tiene voz, así que los subtítulos se escriben; con voz se transcriben.
+    beats:
+      - type: { target: reel-subtitulos-mano, text: "¡Buenos días, Houston!" }
+        say: Escribe los subtítulos, y la consola los reparte a lo largo del clip.
+      - click: reel-repartir
+        awaits: reel-subtitulos-listos
+
+  - id: publicar
+    title: "Generado y publicado en la app"
+    proves: El video vertical se genera en el servidor y se publica en el feed de Shorts.
+    covers: [reels]
+    watch: Se puede salir de la página mientras se genera; el reel se publica solo al terminar.
+    beats:
+      - click: reel-publicar
+        awaits: reel-publicar-ahora
+      - click: reel-publicar-ahora
+        awaits: reel-en-cola
+        say: Lo publica, y el video vertical se genera en el servidor.
+      - say: Mientras tanto, Ana puede seguir con otra cosa. No necesita un editor de video.
+        wait: 10s
+      - scroll: reel-publicado
+        say: En segundos, el reel está listo y publicado en Shorts.
+
+  - id: app
+    title: "Y en el teléfono de los oyentes"
+    proves: El reel publicado aparece en el feed de Shorts de la app.
+    covers: [reels, app-oyente]
+    watch: Es la app real de La Brisa; el reel está arriba del feed.
+    hold: 2s
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8787/?app=demo-labrisa
+        awaits: app-oyente-home
+        say: Y del otro lado, Vero lo ve en los shorts de la app de La Brisa.
+      - click: app-sheet-cerrar
+      - click: app-tab-shorts
+        awaits: app-short-demo
+      - say: Con la marca de La Brisa, como todo lo que publica la radio.
+        wait: 4s

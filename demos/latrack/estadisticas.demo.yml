@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: estadisticas
+product: Latrack
+archetype: custom
+title: La audiencia de la app, en los números con los que se vende radio
+titleCard: false
+promise: >
+  La radio ve cuánta gente la escucha en la app, cuándo y en qué programas, con las
+  mismas métricas que usa para vender, y sale a vender con un media kit en un clic.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que la
+    app les da números de audiencia que entienden y que les sirven para vender.
+  in:
+    - "Las tarjetas: oyentes únicos (cume), AQH, TSL, horas escuchadas y % en el auto"
+    - La explicación de cada métrica, en palabras simples
+    - Franjas de lunes a viernes y de fin de semana, ranking de programas y mapa de calor
+    - El filtro por ciudad y el media kit
+  out:
+    - El CSV y el PDF impreso (se descargan)
+    - Por ciudad, dónde escuchan y sistema (abajo de todo)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. Sólo
+    lectura: muestra los datos de escucha de demo de Demo Media; no se siembra nada.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa. Prepara la reunión con un anunciante grande de Houston.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/estadisticas.mjs
+  assert:
+    - Demo Media tiene un mes de escuchas de demo en sus tres ciudades
+
+scenes:
+  - id: tarjetas
+    title: "Cuánta gente escucha, en una mirada"
+    proves: Cume, AQH, TSL, horas y escucha en el auto, contra el período anterior.
+    covers: [estadisticas]
+    watch: Cada tarjeta compara con el período anterior; todo sale de sesiones reales de la app.
+    beats:
+      - as: gerente
+        go: /analytics
+        awaits: stats-cume
+        say: Ana prepara una reunión con un anunciante y abre las estadísticas de la app.
+      - say: Oyentes únicos del mes, oyentes por cuarto de hora y cuánto escucha cada uno.
+      - say: Las horas escuchadas, y qué parte se escucha en el auto.
+
+  - id: explicado
+    title: "Cada número, explicado sin jerga"
+    objection: true
+    proves: Cada métrica explica qué cuenta y cómo se calcula, en palabras simples.
+    covers: [estadisticas]
+    watch: "No es un rating de Nielsen: es audiencia digital medida por sesiones reales, y lo dice."
+    beats:
+      - hover: stats-aqh-ayuda
+        awaits: stats-aqh-tooltip
+        say: Y si alguien pregunta qué es el AQH, la consola lo explica en una línea.
+
+  - id: franjas
+    title: "Cuándo escuchan, y qué programas"
+    proves: Oyentes por franja de lunes a viernes y fin de semana, ranking por AQH y mapa de calor.
+    covers: [estadisticas]
+    watch: Las franjas van en la hora local de cada ciudad; el ranking cuenta cada cuarto de hora para el programa al aire.
+    beats:
+      - scroll: stats-franjas
+        say: Las franjas muestran cuántos oyentes hay en cada momento del día…
+      - click: stats-finde
+        awaits: stats-finde-on
+        say: …de lunes a viernes, y el fin de semana.
+      - scroll: stats-ranking
+        say: El ranking ordena los programas por oyentes por cuarto de hora, que es lo que se vende.
+      - scroll: stats-heatmap
+        say: Y el mapa de calor dice qué día y a qué hora escuchan más.
+
+  - id: ciudad
+    title: "Sólo Houston, y el media kit listo"
+    proves: Filtro por ciudad que recalcula todo, y un media kit de una página para vender.
+    covers: [estadisticas]
+    watch: El media kit toma la ciudad filtrada; se imprime o se guarda como PDF desde el navegador.
+    hold: 2s
+    beats:
+      - click: stats-houston
+        awaits: stats-houston-on
+        say: El anunciante es de Houston, así que filtra por esa ciudad.
+      - click: stats-media-kit
+        awaits: stats-kit
+        say: Y con un clic tiene el media kit de una página para llevarle.

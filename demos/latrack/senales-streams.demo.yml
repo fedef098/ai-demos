@@ -1,0 +1,128 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: senales-streams
+product: Latrack
+archetype: admin-panel
+title: Cada ciudad al aire, con su stream vigilado
+promise: >
+  Cada señal de la radio —AM, FM o HD— tiene su stream probado en el momento, un
+  respaldo por si se cae, su estado a la vista y el WhatsApp de cabina.
+
+intake:
+  audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
+  in:
+    - La lista de señales de La Brisa (frecuencia, streams, WhatsApp, estado)
+    - El estado del stream y "Lo que sonó" de La Brisa 101.1 Houston
+    - Una señal nueva con AM y FM en HD2, stream probado, respaldo y WhatsApp de cabina
+  out:
+    - Ubicación y coordenadas (no se ven en video)
+    - Validaciones de frecuencia (ya están en el video de puesta en marcha)
+    - Borrar una señal
+  environment: >
+    QA (https://qa-latrack.adavance.com), empresa Demo Media con la cuenta
+    admin@demo.latrack.app. Houston sólo se mira. La señal que se crea se llama
+    "Demo La Brisa 1310 Dallas" y el seed la borra antes de cada corrida (y al
+    terminar de grabar). Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+titleCard: false
+chapter: { position: top-left, top: 8 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: >
+      Gerente de La Brisa (Demo Media): regional mexicana en Houston, Phoenix y
+      Miami. Arma la app de la radio desde la consola, sin depender de nadie técnico.
+    auth: { via: storageState, file: ./.auth/modulos-admin.json }
+
+world:
+  seed: ./seeds/senales-streams.mjs
+  assert:
+    - La Brisa tiene sus tres señales (Houston, Phoenix, Miami) con streams en línea
+    - no existe "Demo La Brisa 1310 Dallas"
+
+scenes:
+  - id: senales
+    title: "Tus señales, de un vistazo"
+    proves: Todas las señales de la marca con frecuencia, streams, WhatsApp y estado.
+    covers: [senales]
+    watch: Cada fila muestra la frecuencia, cuántos streams tiene, si hay WhatsApp y si el stream está en línea.
+    beats:
+      - as: gerente
+        go: /stations
+        awaits: senal-houston
+        say: La Brisa sale en tres ciudades. Cada señal, con su frecuencia, su stream y su WhatsApp.
+
+  - id: estado
+    title: "El stream vigilado, y lo que sonó"
+    proves: El estado de cada stream, revisado cada pocos minutos, y las canciones leídas del stream.
+    covers: [estado-stream]
+    watch: Las barras son las últimas revisiones del stream; la lista de la derecha sale de lo que el stream dice que suena.
+    beats:
+      - click: senal-houston
+        awaits: senal-estado-stream
+      - scroll: senal-estado-stream
+        say: La consola revisa el stream cada pocos minutos y te avisa si se cae.
+      - scroll: senal-lo-que-sono
+        say: Y anota las canciones que van sonando, leídas del propio stream.
+
+  - id: nueva-senal
+    title: "Una ciudad nueva, con AM, FM y HD"
+    proves: Una señal con varias frecuencias que transmiten lo mismo (AM y un canal HD de FM).
+    covers: [senales, frecuencias-am-fm-hd]
+    watch: La AM 1310 y la FM 104.5 HD2 quedan en la misma señal, así el oyente ve una sola Dallas.
+    beats:
+      - click: nav-senales
+        awaits: senales-agregar
+      - click: senales-agregar
+        awaits: senal-form
+      - type: { target: senal-nombre, text: "Demo La Brisa 1310 Dallas" }
+        say: Sumas Dallas, con su ciudad y su zona horaria.
+      - type: { target: senal-ciudad, text: "Dallas" }
+      - type: { target: senal-estado, text: "TX" }
+      - select: { target: senal-banda-0, value: "AM" }
+        say: La AM 1310 y la FM en HD2 transmiten lo mismo, así que van en una sola señal.
+      - type: { target: senal-frecuencia, text: "1310" }
+      - click: senal-agregar-frecuencia
+        awaits: senal-frecuencia-2
+      - type: { target: senal-frecuencia-2, text: "104.5" }
+      - select: { target: senal-hd-2, value: "2" }
+
+  - id: respaldo
+    title: "Un stream de respaldo, por si el principal se cae"
+    objection: true
+    proves: El stream se prueba al pegarlo y se le suma un respaldo al que la app pasa sola.
+    covers: [stream-respaldo, stream-probe]
+    watch: Cada stream se prueba desde el servidor; el respaldo entra solo si el principal se cae, sin que el oyente toque nada.
+    beats:
+      - type: { target: senal-stream, text: "${DEMO_STREAM_URL}" }
+      - click: senal-probar
+        awaits: senal-probar-ok
+        say: Pegas tu stream y lo pruebas. Funciona, y te dice qué está sonando.
+        voice: Pegas tu estrím y lo pruebas. Funciona, y te dice qué está sonando.
+      - click: senal-agregar-respaldo
+        awaits: senal-stream-respaldo
+      - type: { target: senal-stream-respaldo, text: "https://ice2.somafm.com/groovesalad-128-mp3" }
+      - click: senal-probar-respaldo
+        awaits: senal-respaldo-ok
+        say: Sumas un respaldo. Si el principal se cae, la app pasa sola al siguiente.
+
+  - id: cabina
+    title: "El WhatsApp de cabina, listo para tus oyentes"
+    proves: El WhatsApp de cabina se escribe como número local y se guarda en formato internacional.
+    covers: [senales]
+    watch: El número se escribió sin el +1; la señal guardada lo muestra completo.
+    beats:
+      - type: { target: senal-whatsapp, text: "214-555-0142" }
+        say: Y el WhatsApp de cabina, para que tus oyentes le escriban al locutor.
+        voice: Y el guátsap de cabina, para que tus oyentes le escriban al locutor.
+      - click: senal-guardar
+        awaits: senal-dallas-guardada
+      - scroll: senal-dallas-guardada
+        say: Guardas, y Dallas ya aparece en la app, con su número listo.

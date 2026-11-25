@@ -1,0 +1,44 @@
+{
+  "id": "app-oyente",
+  "title": "La radio en el teléfono del oyente, y en la web sin instalar nada",
+  "promise": "El oyente tiene la app de su radio, con su marca, su ciudad, el vivo, la programación y los shorts; y quien no instala nada la escucha igual en la web.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T18:36:34.632Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 42160,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 1146683,
+    "sha256": "0bc54f1a459fa66be624b16c6a294fa07b38fa059aacf350358900e567f41bfb"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "web",
+      "title": "Sin instalar nada, en la web",
+      "proves": "Reproductor web con la marca de la radio, sus ciudades y lo que sonó, en español o inglés.",
+      "watch": "Es la página pública de La Brisa; el idioma se recuerda para la próxima visita.",
+      "startMs": 5,
+      "endMs": 9782
+    },
+    {
+      "id": "app",
+      "title": "La app con la marca de la radio",
+      "proves": "La app del oyente abre con la marca, la ciudad y el vivo de la radio.",
+      "watch": "Es la app real de La Brisa (build web) en un teléfono.",
+      "startMs": 9782,
+      "endMs": 30139
+    },
+    {
+      "id": "programas",
+      "title": "La programación y los shorts",
+      "proves": "Grilla del día en la hora de su ciudad y el feed de videos cortos de la radio.",
+      "watch": "La grilla va en la hora de Phoenix; los shorts se publican desde la consola.",
+      "startMs": 30139,
+      "endMs": 42160
+    }
+  ]
+}

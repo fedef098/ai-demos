@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: pagina-producto
+product: Latrack
+archetype: custom
+title: Lo que ve una radio que llega a Latrack por primera vez
+titleCard: false
+promise: >
+  El dueño de una radio entiende en un minuto qué es Latrack, cuánto cuesta y cómo
+  pedir una demo con su propia radio.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Muestra el recorrido
+    de un prospecto por la página pública antes de hablar con ventas.
+  in:
+    - La portada con la app de ejemplo en el teléfono
+    - Un día al aire con la app
+    - El reproductor de ejemplo
+    - Precios, sin contrato, y la pregunta del contrato
+    - El formulario para pedir la demo (sin enviarlo)
+  out:
+    - Enviar el formulario (crearía un pedido de demo y avisaría a ventas)
+    - El resto de las preguntas frecuentes
+  environment: >
+    QA (https://qa-latrack.adavance.com), página pública /producto, sin sesión. No se
+    siembra ni se crea nada: el formulario se completa pero no se envía.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: prospecto
+    name: Jorge Villarreal
+    context: Dueño de dos FM regionales en el Valle de Texas. Busca una app para su radio.
+
+world:
+  seed: ./seeds/pagina-producto.mjs
+
+scenes:
+  - id: portada
+    title: "La app de tu radio, con tu marca"
+    proves: La portada muestra la app de una radio de ejemplo y el precio de entrada.
+    covers: [pagina-producto]
+    watch: El teléfono es la vista real de la app de ejemplo, La Brisa 101.1.
+    beats:
+      - as: prospecto
+        go: /producto
+        awaits: producto-telefono
+        say: Jorge tiene dos radios en Texas y llega a la página de Latrack.
+      - say: Lo primero que ve es la app de una radio de ejemplo, con su marca, en un teléfono.
+      - scroll: producto-dia
+        say: Y cómo se trabaja un día al aire, de la mañana a la noche.
+
+  - id: escuchar
+    title: "Escuchar la radio de ejemplo"
+    proves: El prospecto escucha el reproductor web de la radio de ejemplo sin registrarse.
+    covers: [pagina-producto, reproductor-web]
+    watch: Es el mismo reproductor web que recibe cada radio.
+    beats:
+      - go: /producto
+        awaits: producto-reproductor
+      - click: producto-reproductor
+        awaits: web-play
+        say: Puede escuchar la radio de ejemplo, en el mismo reproductor que tendría la suya.
+
+  - id: precios
+    title: "Un precio por mes, sin contrato"
+    objection: true
+    proves: Precios publicados y la respuesta a la objeción del contrato.
+    covers: [pagina-producto]
+    watch: Los precios están a la vista; la respuesta aclara que la prueba empieza con la app publicada.
+    beats:
+      - go: /producto
+        awaits: producto-hero
+      - scroll: producto-precios
+        say: Los precios están a la vista, por mes.
+      - click: producto-contrato
+        awaits: producto-contrato-resp
+        say: Y a la pregunta de siempre, la respuesta es no hay contrato, se paga mes a mes.
+
+  - id: demo
+    title: "Pide la demo con su propia radio"
+    proves: Formulario corto para pedir una demo con la radio del prospecto.
+    covers: [pagina-producto]
+    watch: El formulario no se envía en el video.
+    hold: 2s
+    beats:
+      - scroll: producto-volver-demo
+        say: Al final, pide una demo con su propia radio.
+      - type: { target: demo-nombre, text: "Jorge Villarreal" }
+      - type: { target: demo-radio, text: "La Ranchera 98.3" }
+      - type: { target: demo-ciudades, text: "McAllen 98.3 FM, Harlingen 104.5 FM" }
+        say: Deja su nombre, su radio y sus ciudades, y el equipo le arma la demo con su señal.
+      - highlight: demo-enviar

@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: apps-tiendas
+product: Latrack
+archetype: admin-panel
+title: La app en las tiendas, y anuncios que no espantan
+promise: >
+  La ficha de App Store y Google Play se completa con un checklist que dice qué
+  falta, y las reglas de anuncios avisan cuando una opción espantaría a los oyentes.
+
+intake:
+  audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
+  in:
+    - La ficha de la tienda con su checklist
+    - El ícono y el Bundle ID sugerido, hasta el checklist en verde
+    - El botón de compilar (se muestra, no se toca)
+    - La sección Anuncios, con los avisos del pre-roll y un programa sin cortes
+  out:
+    - Compilar y enviar a las tiendas (necesita las cuentas de Apple y Google del cliente)
+    - Funciones de la app e idioma
+    - Apps de varias marcas
+  environment: >
+    QA (https://qa-latrack.adavance.com), empresa Demo Media con la cuenta
+    admin@demo.latrack.app. Se trabaja sobre "Demo Brisa Norte", una segunda app de
+    La Brisa que el seed crea a medio completar (sin ícono ni identificadores); los
+    anuncios se cambian sólo en esa app, así que la app y las reglas de La Brisa no
+    se tocan. El seed la borra y la vuelve a crear en cada corrida, y la borra al
+    terminar. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+titleCard: false
+chapter: { position: top-left, top: 8 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: >
+      Gerente de La Brisa (Demo Media): regional mexicana en Houston, Phoenix y
+      Miami. Arma la app de la radio desde la consola, sin depender de nadie técnico.
+    auth: { via: storageState, file: ./.auth/modulos-admin.json }
+
+world:
+  seed: ./seeds/apps-tiendas.mjs
+  assert:
+    - existe "Demo Brisa Norte" con ficha cargada, sin ícono ni identificadores, y anuncios por defecto
+
+scenes:
+  - id: ficha
+    title: "La ficha de la tienda, con su checklist"
+    proves: Ficha de App Store y Google Play con un checklist que dice qué falta.
+    covers: [ficha-tienda]
+    watch: El checklist lo calcula el servidor con lo guardado; faltan el ícono y los identificadores.
+    beats:
+      - as: gerente
+        go: ${DEMO_APP_PATH}
+        awaits: app-checklist-pendiente
+        say: Esta es la ficha de tu app para el App Store y Google Play.
+        voice: Esta es la ficha de tu app para el App Stor y Gúgol Plei.
+      - highlight: app-checklist-pendiente
+        say: A la derecha, el checklist te dice qué falta antes de publicar.
+
+  - id: completar
+    title: "Lo que falta, y el checklist en verde"
+    proves: Ícono validado, Bundle ID sugerido a partir del nombre y checklist completo.
+    covers: [ficha-tienda]
+    watch: El Bundle ID lo sugiere la consola con el nombre de la app; queda fijo cuando la app se publica por primera vez.
+    beats:
+      - upload: { target: app-icono, file: ./assets/demo-brisa-norte-icon-1024.png }
+        awaits: app-icono-listo
+        say: Subes el ícono de mil veinticuatro píxeles, como lo piden las tiendas.
+      - click: usar-bundle-sugerido
+        awaits: app-ids-sugeridos
+        say: Y el nombre interno de la app, que la consola te sugiere listo para usar.
+      - click: app-guardar-cambios
+        awaits: checklist-completo
+      - highlight: boton-compilar
+        say: Todo en verde. Un botón la compila y la envía a las tiendas, a nombre de tu radio.
+
+  - id: anuncios
+    title: "Anuncios que no espantan a tus oyentes"
+    objection: true
+    proves: Reglas del pre-roll con valores que protegen al oyente y avisos cuando se cambian.
+    covers: [anuncios-reglas]
+    watch: Los avisos aparecen al cambiar el valor, antes de guardar; el programa sin cortes no lleva pre-roll mientras está al aire.
+    beats:
+      - type: { target: anuncios-tope, text: "15" }
+        awaits: anuncios-aviso-tope
+        say: Si pones un anuncio cada quince minutos, la consola te dice cómo lo vive el oyente.
+      - click: anuncios-primera-vez
+        awaits: anuncios-aviso-primera
+        say: Lo mismo si apagas una protección, como no poner anuncios en la primera escucha.
+      - click: anuncios-primera-vez
+      - type: { target: anuncios-tope, text: "45" }
+        say: Lo dejas en cuarenta y cinco minutos, con la primera escucha sin anuncios.
+      - click: anuncios-sin-cortes
+        say: Y marcas El Despertador como programa sin cortes.
+      - click: app-guardar-cambios
+        awaits: app-guardada
+        say: Guardas, y las reglas llegan a la app sin publicar otra versión.

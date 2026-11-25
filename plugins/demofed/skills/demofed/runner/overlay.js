@@ -81,6 +81,35 @@
       opacity: 0; transition: opacity 220ms ease;
     }
     .chapter[data-on="1"] { opacity: 1; }
+    /* Dónde va el pill: arriba a la izquierda tapaba el logo de las apps que lo
+       tienen ahí. El guion lo elige con \`chapter: { position, top }\`. */
+    .chapter { top: var(--chapter-top, 22px); }
+    .chapter[data-pos="top-right"] { left: auto; right: 22px; }
+    .chapter[data-pos="top-center"] { left: 50%; transform: translateX(-50%); }
+    .chapter[data-pos="bottom-left"] { top: auto; bottom: 22px; }
+    /* Escenario de dispositivo: cuando la persona activa usa un teléfono, el
+       video muestra un marco de teléfono y build.mjs pega adentro, cuadro a
+       cuadro, la grabación del contexto móvil. Esto es sólo el marco. */
+    .stage {
+      position: fixed; inset: 0; opacity: 0; transition: opacity 300ms ease;
+      background: radial-gradient(120% 90% at 30% 40%, #1d2233 0%, #0b0d14 70%);
+    }
+    .stage[data-on="1"] { opacity: 1; }
+    .stage .bezel {
+      position: fixed; border-radius: 48px; background: #0a0a0c;
+      box-shadow: 0 0 0 2px #2a2d36, 0 30px 80px rgba(0,0,0,.55);
+    }
+    .stage .screen { position: fixed; background: #000; border-radius: 8px; }
+    .stage .who {
+      position: fixed; color: #fff; font-size: 15px; font-weight: 600;
+      letter-spacing: .02em; text-transform: uppercase; opacity: .72;
+    }
+    .caption[data-side="1"] {
+      left: var(--side-left, 640px); right: auto; bottom: auto; top: 50%;
+      transform: translateY(-50%); max-width: min(520px, 44vw);
+      font-size: 26px; text-align: left; background: rgba(255,255,255,.06);
+      box-shadow: none; border: 1px solid rgba(255,255,255,.12);
+    }
     /* Cursor sintético. Heredado de mira/runner/post-task-review.sh, pero acá
        adentro: el original lo dibujaba en body::after, que rompe cualquier app
        que ya use ese pseudo-elemento. */
@@ -121,7 +150,14 @@
     // y bastaba que la app tocara el body para que el MutationObserver re-anexara
     // el host y el orden se diera vuelta a mitad del video.
     host.style.cssText =
-      "all:initial;position:fixed;inset:0;z-index:2147483647;pointer-events:none;";
+      "all:initial;position:fixed;inset:0;z-index:2147483647;pointer-events:none;" +
+      "width:100vw;height:100vh;margin:0;padding:0;border:0;background:transparent;overflow:visible;";
+    // El host va en el TOP LAYER (popover manual), no sólo con z-index máximo.
+    // Un <dialog> abierto con showModal() —y cualquier popover de la app— vive
+    // en el top layer, que se pinta por encima de todo z-index: el subtítulo
+    // quedaba debajo del backdrop del modal, atenuado, y el cursor desaparecía
+    // detrás del diálogo justo cuando el beat hacía click adentro.
+    host.setAttribute("popover", "manual");
 
     root = host.attachShadow({ mode: "closed" });
     root.innerHTML = `
@@ -130,6 +166,7 @@
         <!-- Arranca NEGRO Y OPACO a propósito: el video empieza a grabar en
              cuanto se crea la página, así que sin esto los primeros segundos
              muestran el redirect a /login, el skeleton y el FOUT. -->
+        <div class="stage" data-on="0"><div class="bezel"></div><div class="screen"></div><div class="who"></div></div>
         <div class="cover" data-state="shown">
           <div class="cover-title"></div>
           <div class="cover-promise"></div>
@@ -142,6 +179,7 @@
 
     els = {
       cover: root.querySelector(".cover"),
+      stage: root.querySelector(".stage"),
       coverTitle: root.querySelector(".cover-title"),
       coverPromise: root.querySelector(".cover-promise"),
       chapter: root.querySelector(".chapter"),
@@ -151,12 +189,26 @@
     };
 
     restoreCover();
+    applyOptions();
     document.body.appendChild(host);
+    raise();
 
     // Un SPA puede vaciar el body al hidratar. Si nos borra, volvemos.
     new MutationObserver(() => {
-      if (!document.body.contains(host)) document.body.appendChild(host);
+      if (!document.body.contains(host)) {
+        document.body.appendChild(host);
+        raise();
+      }
     }).observe(document.body, { childList: true });
+
+    // El top layer se ordena por llegada: el último en entrar queda arriba. Cada
+    // vez que la app abre un diálogo o un popover, el overlay vuelve a entrar
+    // para quedar encima. hide+show corre en el mismo task, sin un cuadro en el
+    // medio.
+    new MutationObserver((records) => {
+      if (records.some((r) => r.target !== host && r.target.hasAttribute?.("open"))) raise();
+    }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["open"] });
+    document.addEventListener("toggle", (e) => { if (e.target !== host && e.newState === "open") raise(); }, true);
 
     restoreCue();
   }
@@ -205,6 +257,38 @@
     );
   }
 
+  function raise() {
+    const host = root?.host;
+    if (!host || typeof host.showPopover !== "function") return;
+    try {
+      if (host.matches(":popover-open")) host.hidePopover();
+      host.showPopover();
+    } catch {}
+  }
+
+  function applyOptions() {
+    const o = window.__demoOpts?.chapter;
+    if (!o || !els) return;
+    if (o.position) els.chapter.setAttribute("data-pos", o.position);
+    if (o.top != null) els.chapter.style.setProperty("--chapter-top", `${o.top}px`);
+  }
+
+  // Un pill que se apaga se desvanece CON su texto. Vaciarlo en el acto dejaba
+  // 220 ms de cápsula vacía encogiéndose: en la placa final se veían dos pills
+  // vacíos flotando sobre la app.
+  const clearTimers = new WeakMap();
+  function setPill(el, text) {
+    clearTimeout(clearTimers.get(el));
+    const on = Boolean(text && String(text).trim());
+    if (on) {
+      el.textContent = text;
+      el.setAttribute("data-on", "1");
+    } else {
+      el.setAttribute("data-on", "0");
+      clearTimers.set(el, setTimeout(() => { if (el.getAttribute("data-on") === "0") el.textContent = ""; }, 260));
+    }
+  }
+
   function boot() {
     whenNodeExists(() => document.body, build);
   }
@@ -218,7 +302,14 @@
   function restoreCover() {
     try {
       const raw = sessionStorage.getItem(COVER_KEY);
-      if (!raw) return;   // primer documento: el negro de fábrica es el correcto
+      // sessionStorage es por origen: al cruzar de origen (un mail servido como
+      // fixture → la app) el documento nuevo no sabe que el telón ya se levantó
+      // y quedaba negro hasta el final. record.mjs marca con
+      // `__demoCoverStart` que la apertura ya pasó.
+      if (!raw) {
+        if (window.__demoCoverStart === "hidden") els.cover.setAttribute("data-state", "hidden");
+        return;   // primer documento: el negro de fábrica es el correcto
+      }
       const { shown, background } = JSON.parse(raw);
       if (background) els.cover.style.background = background;
       els.cover.setAttribute("data-state", shown ? "shown" : "hidden");
@@ -264,17 +355,18 @@
   }
 
   function paint(text) {
-    const on = Boolean(text && text.trim());
-    els.caption.textContent = text ?? "";
-    els.caption.setAttribute("data-on", on ? "1" : "0");
+    setPill(els.caption, text ?? "");
   }
+  // Lo que el cue "dice" ahora, aunque el texto se esté desvaneciendo.
+  const captionText = () => (els.caption.getAttribute("data-on") === "1" ? els.caption.textContent : "");
+  const chapterText = () => (els.chapter.getAttribute("data-on") === "1" ? els.chapter.textContent : "");
 
   const api = {
     say(text) {
       build();
       stopQueue();
       paint(text);
-      persistCue(text, els.chapter.textContent, null);
+      persistCue(text, chapterText(), null);
     },
 
     /**
@@ -295,7 +387,7 @@
       let i = 0;
       const step = () => {
         paint(phrases[i].text);
-        persistCue(phrases[i].text, els.chapter.textContent, { phrases, index: i });
+        persistCue(phrases[i].text, chapterText(), { phrases, index: i });
         if (i >= phrases.length - 1) return;
         const hold = phrases[i].ms;
         queueTimer = setTimeout(() => { i += 1; step(); }, hold);
@@ -305,9 +397,8 @@
 
     chapter(text) {
       build();
-      els.chapter.textContent = text ?? "";
-      els.chapter.setAttribute("data-on", text ? "1" : "0");
-      persistCue(els.caption.textContent, text);
+      setPill(els.chapter, text ?? "");
+      persistCue(captionText(), text);
     },
 
     /** state: 'black' | 'hidden' | 'flash' | 'brand' */
@@ -341,6 +432,29 @@
         els.cover.style.opacity = "1";
         persistCover(true, "#000");
       }
+    },
+
+    /**
+     * Marco de teléfono para una persona con `device:`. `screen` es el rect, en
+     * px de esta página (= px del video), donde build.mjs pega la grabación del
+     * contexto móvil. Con el escenario puesto el subtítulo pasa a la columna de
+     * la derecha, para no taparle la pantalla al teléfono.
+     */
+    stage(on, { screen, label = "" } = {}) {
+      build();
+      const st = els.stage;
+      if (on && screen) {
+        const b = 14;
+        Object.assign(st.querySelector(".screen").style, { left: `${screen.x}px`, top: `${screen.y}px`, width: `${screen.w}px`, height: `${screen.h}px` });
+        Object.assign(st.querySelector(".bezel").style, { left: `${screen.x - b}px`, top: `${screen.y - b}px`, width: `${screen.w + 2 * b}px`, height: `${screen.h + 2 * b}px` });
+        const who = st.querySelector(".who");
+        who.textContent = label;
+        Object.assign(who.style, { left: `${screen.x + screen.w + 100}px`, top: `${screen.y + 36}px` });
+        els.caption.style.setProperty("--side-left", `${screen.x + screen.w + 100}px`);
+      }
+      st.setAttribute("data-on", on ? "1" : "0");
+      els.caption.setAttribute("data-side", on ? "1" : "0");
+      els.cursor.style.display = on ? "none" : "";
     },
 
     cursor(x, y) {

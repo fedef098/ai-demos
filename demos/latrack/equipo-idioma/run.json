@@ -1,0 +1,52 @@
+{
+  "id": "equipo-idioma",
+  "title": "Cada uno entra con su rol, queda registro, y la consola habla su idioma",
+  "promise": "La radio suma a su equipo con el permiso justo, ve quién cambió qué, y cada persona usa la consola en español o en inglés.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T17:03:11.289Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 42920,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 1530039,
+    "sha256": "613dc7d6b02c4c41be621f83bbc83b1cb90b09623f224a7ff2006c9b524a645e"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "equipo",
+      "title": "Cada uno con el permiso justo",
+      "proves": "Roles de administrador y editor por marca, e invitaciones pendientes que se reenvían o cancelan.",
+      "watch": "Diego es editor de La Brisa; la invitación pendiente vence en siete días.",
+      "startMs": 2,
+      "endMs": 15645
+    },
+    {
+      "id": "permiso",
+      "title": "Un editor no entra donde no debe",
+      "proves": "Equipo, apps y facturación son sólo para administradores; el editor ve un aviso claro.",
+      "watch": "Diego entra con su propia sesión de editor.",
+      "startMs": 15645,
+      "endMs": 22798
+    },
+    {
+      "id": "actividad",
+      "title": "Y queda registro de todo",
+      "proves": "Actividad con quién cambió qué y cuándo.",
+      "watch": "Cada cambio de la consola queda con su autor y su hora.",
+      "startMs": 22798,
+      "endMs": 28461
+    },
+    {
+      "id": "idioma",
+      "title": "Su consola, en su idioma",
+      "proves": "Idioma de la consola por persona, español o inglés, guardado en su cuenta.",
+      "watch": "El cambio es sólo para Ana; el resto del equipo sigue en su idioma.",
+      "startMs": 28461,
+      "endMs": 42920
+    }
+  ]
+}

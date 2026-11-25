@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: notificaciones
+product: Latrack
+archetype: custom
+title: Una notificación para Houston, vista en la pantalla bloqueada y programada
+titleCard: false
+promise: >
+  La radio le escribe a los oyentes de una ciudad, ve cómo les llega al teléfono
+  antes de mandarla y la programa para la hora del programa, con marcha atrás.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que
+    avisar a los oyentes de una ciudad es simple y que nada sale sin querer.
+  in:
+    - Redactar con la vista previa de la pantalla bloqueada
+    - Audiencia por ciudad (La Brisa 101.1 Houston) con el alcance contado
+    - La confirmación antes de enviar ahora (sin enviar)
+    - Programar para mañana a las 5 de la tarde, el historial, y cancelarla
+  out:
+    - Enviar de verdad (no hay teléfonos reales con notificaciones en QA)
+    - Audiencia por fans de un programa y el link a un concurso
+    - Las aperturas de una notificación enviada
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. El seed
+    registra 48 dispositivos de demo en Houston con notificaciones (tokens falsos: no
+    se puede entregar nada) y los borra al terminar, junto con las notificaciones "Demo …".
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: digital
+    name: Ana Morales
+    context: Maneja lo digital de La Brisa y quiere llenar la tarde del sorteo de boletos.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/notificaciones.mjs
+  assert:
+    - no hay notificaciones "Demo …" en la app de La Brisa
+    - hay 48 teléfonos de demo en Houston con las notificaciones activadas
+
+scenes:
+  - id: redactar
+    title: "Así le llega al oyente, antes de mandarla"
+    proves: Redacción con la vista previa de la pantalla bloqueada, con el logo y el nombre de la app.
+    covers: [push]
+    watch: El teléfono de la derecha se actualiza con cada letra y corta el texto donde lo cortaría un teléfono.
+    beats:
+      - as: digital
+        go: /push
+        awaits: push-form
+        say: Ana quiere avisarle a Houston que esta tarde se regalan boletos.
+      - type: { target: push-titulo, text: "Demo: hoy regalamos boletos a las 5" }
+      - type: { target: push-cuerpo, text: "Escucha La Hora del Regreso y llévate dos boletos para el Baile del Año." }
+        awaits: push-vista-bloqueo
+        say: Mientras escribe, ve cómo se va a ver en la pantalla bloqueada del oyente.
+
+  - id: audiencia
+    title: "Sólo a la ciudad que importa"
+    proves: Audiencia por señal o ciudad, con cuántos teléfonos la van a recibir.
+    covers: [push]
+    watch: El alcance cuenta sólo los teléfonos con las notificaciones activadas en esa ciudad.
+    beats:
+      - click: push-por-senal
+        awaits: push-houston
+      - click: push-houston
+        awaits: push-alcance
+        say: La manda sólo a La Brisa 101.1, y ya sabe a cuántos teléfonos llega.
+
+  - id: confirmar
+    title: "Nada sale sin querer"
+    objection: true
+    proves: Enviar ahora siempre pide confirmación, con el alcance y el texto final.
+    covers: [push]
+    watch: La confirmación repite a cuántos llega y avisa que una notificación enviada no se puede borrar; se vuelve con Revisar.
+    beats:
+      - click: push-ahora-enviar
+        awaits: push-confirmar
+        say: Si la mandara ahora, la consola le pide confirmar a cuántos les llega.
+      - click: push-revisar
+        say: Pero prefiere que salga justo antes del programa.
+
+  - id: programar
+    title: "Programada para mañana a las 5"
+    proves: Envío programado en la hora de la ciudad, que queda en el historial.
+    covers: [push]
+    watch: La hora se escribe en la hora de Houston; el historial muestra la notificación como Programada.
+    beats:
+      - click: push-programar
+        awaits: push-cuando
+      - type: { target: push-cuando, text: "${PUSH_AT}" }
+        awaits: push-sale
+        say: La programa para mañana a las cinco de la tarde, hora de Houston.
+      - click: push-enviar
+        awaits: push-programada
+      - scroll: push-fila-demo
+        say: Queda en el historial, programada, con los teléfonos a los que va a llegar.
+
+  - id: cancelar
+    title: "Y hasta que sale, se puede cancelar"
+    proves: Una notificación programada se cancela desde el historial hasta el momento de salir.
+    covers: [push]
+    watch: Cancelada no sale a nadie; el historial la conserva para que quede registro.
+    hold: 2s
+    beats:
+      - click: push-cancelar
+        awaits: push-cancelar-si
+        say: Si el sorteo se cae, la cancela desde el historial.
+      - click: push-cancelar-si
+        awaits: push-cancelada
+        say: Y no le llega a nadie.

@@ -75,6 +75,39 @@ prosodia de una frase entera es mucho mejor que la de tres pedazos pegados.
 | Placa de portada / cierre | 3 s / 2 s | Se lee la promesa; se sostiene el remate |
 | Cortina al cambiar de persona | 700 ms | Tapa el flash del reload y marca el corte narrativo |
 
+### `pace: slow`
+
+Para un público que **no conoce el producto**, el guion puede pedir `pace: slow`.
+No toca la regla del max: cambia la tabla (`PACES.slow` en `pacing.mjs`) —cursor
+de 28 pasos, tipeo a 85 ms por carácter, lectura a 13 cps, 1,3 s entre escenas—
+y agrega aire **después** de cada beat: 0,9 s tras la locución (`sayTail`) y
+0,6 s tras una acción muda (`actionTail`), para que se llegue a mirar el
+resultado antes de la acción siguiente. La estimación del lint usa el mismo
+perfil.
+
+### `pace: medium`
+
+A mitad de camino entre los dos (`PACES.medium`): cursor de 23 pasos, tipeo a
+65 ms, lectura a 14,5 cps, 1 s entre escenas, 0,45 s de aire tras la locución y
+0,3 s tras una acción muda. Es el punto para cuando `normal` resultó apurado y
+`slow` se hizo largo.
+
+### Sin subtítulos quemados: `captions: false`
+
+El texto no se pinta en el video; la locución, el `.vtt`, los capítulos y el
+transcript de la página quedan iguales. Como no hay nada que leer en pantalla,
+el beat dura lo que la voz (más el aire del ritmo), no el tiempo de lectura.
+
+### Traer el elemento a cuadro antes de tocarlo
+
+Todo `click`, `type`, `select`, `upload` y `hover` lleva primero su target a la
+**franja cómoda** (entre el 16% y el 74% del alto): si está afuera, scroll
+animado hasta centrarlo y una pausa (`intoViewSettle`) **antes** de mover el
+cursor. "Visible" no alcanzaba: un campo pegado al borde inferior estaba en
+cuadro pero tapado por el subtítulo o por una barra de guardar sticky, y se
+tipeaba sin que se viera. Un `<input type=file>` oculto se ubica por su control
+visible (el botón de subir), que es donde va el cursor.
+
 **Total objetivo: 90-180 s.** Cada escena entre 8 y 20 s. Abajo de 45 s el lint
 advierte que probablemente no alcanza a contar nada.
 

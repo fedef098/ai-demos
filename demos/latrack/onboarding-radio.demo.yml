@@ -1,0 +1,335 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: onboarding-radio
+product: Latrack
+archetype: login-onboarding
+title: De la invitación a la app en el celular del oyente
+titleCard: false
+promise: >
+  El dueño de una radio arma la app de su emisora él solo, en una tarde, y sus
+  oyentes la usan para escucharlo y escribirle a la cabina.
+
+intake:
+  audience: >
+    Dueños y gerentes de radios hispanas en EE.UU. (las afiliadas de Univision) que
+    evalúan Latrack. Al terminar tienen que pedir una demo con su propia radio.
+    El mismo video va a efetrack como avance de producto.
+  in:
+    - La invitación por mail y la entrada a la consola
+    - Marca (nombre, lema, descripción, logo, colores) con la vista previa del teléfono
+    - Dos señales (El Paso y Odessa) con frecuencia, stream, zona horaria y WhatsApp de cabina
+    - El error amigable al guardar una frecuencia inválida, sin perder lo escrito
+    - Un programa con locutores, su horario de lunes a viernes y la copia a Odessa
+    - Home de la app por bloques, vista previa a otra hora y publicación
+    - Ficha de la tienda hasta el checklist completo (sin compilar)
+    - Una notificación programada para Odessa, con la vista de pantalla bloqueada
+    - La app del oyente (El Paso, en vivo, programación, pedido a cabina) y el pedido en la bandeja
+  out:
+    - Estadísticas, sponsors y reels (tienen su propia demo)
+    - Equipo e invitaciones (no es lo que decide la compra)
+    - El envío real a las tiendas (necesita cuentas de Apple y Google del cliente)
+    - Mandar la notificación ahora (no hay teléfonos con notificaciones; se programa)
+  environment: >
+    QA (https://qa-latrack.adavance.com). El seed crea cada vez una empresa demo
+    "Radio Sol" nueva con su invitación, desde Superadmin; nunca producción. La app
+    del oyente es el build web de la app real, servido local y apuntado a QA.
+  approved_by: "Federico (dueño de producto). v1 2026-11-25; v2 (11 escenas, más lento, app del oyente y notificación) aprobada 2026-11-25 en el chat de Latrack"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+# For someone who doesn't know the product, but not as slow as v2: between the
+# default pace (v1) and slow (v2).
+pace: medium
+# The owner asked for no subtitles burned into the video. The voice-over, the
+# .vtt sidecars and the page transcript stay.
+captions: false
+# Top-left covered the console's "latrack" logo; top-right sits below the trial
+# banner and clear of the page headers.
+chapter: { position: top-right, top: 48 }
+# The owner's address on the invitation page is a real (+test) mailbox of the
+# team; the email's fallback link carries the invite token.
+redact: ['main p strong', 'a[style*="break-all"]']
+
+# The invitation email is Latrack's real template (inviteEmail() in the web app),
+# rendered by seeds/render-invite-email.ts. Nothing is emailed: the seed creates
+# the invitation as a database row, and the link inside is that run's.
+fixtures:
+  - route: "https://correo.latrack-demo.invalid/**"
+    body: ./assets/invite-email.html
+    contentType: text/html; charset=utf-8
+    vars: true
+
+cast:
+  - as: dueno
+    name: Ramiro Gutiérrez
+    context: >
+      Dueño de Radio Sol, dos FM de música regional mexicana en Texas (El Paso 97.5 y
+      Odessa 105.1). No es técnico y no tiene tiempo para un proyecto de meses.
+  - as: oyente
+    name: Lupita
+    label: "Lupita · oyente en El Paso"
+    device: iphone
+    timezone: America/Denver
+    context: >
+      Oyente de Radio Sol en El Paso. Abre la app desde el celular para escuchar
+      en vivo y pedir una canción para su mamá.
+
+world:
+  seed: ./seeds/onboarding-radio.mjs
+  assert:
+    - existe la empresa "Radio Sol" sin marca, sin señales, sin programas y sin app
+    - hay una invitación de administrador pendiente para Ramiro
+
+scenes:
+  - id: invitacion
+    title: "La invitación le llega por mail"
+    proves: Alta por invitación, sin instalación ni llamada con ventas.
+    covers: [invitacion]
+    watch: Es el mail real de Latrack (la plantilla de invitación), con el link de esta corrida; el botón abre la invitación.
+    beats:
+      - as: dueno
+        go: https://correo.latrack-demo.invalid/invitacion
+        awaits: correo-invitacion
+        say: Ramiro tiene dos radios en Texas y quiere su propia app.
+        voice: Ramiro tiene dos radios en Tejas y quiere su propia app.
+      - scroll: correo-aceptar
+        say: Esta es la invitación que le llegó.
+      - click: correo-aceptar
+        awaits: invitacion-form
+
+  - id: entra
+    title: "Entra a su consola"
+    proves: Cuenta nueva desde la invitación y una guía de seis pasos al entrar.
+    covers: [invitacion]
+    watch: Ramiro entra como usuario nuevo; la consola abre con los seis pasos pendientes.
+    beats:
+      - type: { target: invitacion-nombre, text: "Ramiro Gutiérrez" }
+      - type: { target: invitacion-password, text: "${DEMO_OWNER_PW}" }
+        say: Elige una contraseña y entra.
+      - click: invitacion-aceptar
+        awaits: inicio-checklist
+        say: La consola le muestra los seis pasos para tener su app al aire.
+      - scroll: inicio-checklist
+
+  - id: marca
+    title: "Su marca, y el teléfono cambia al instante"
+    proves: Identidad de marca con vista previa en vivo de la app.
+    covers: [marca]
+    watch: La vista previa del teléfono toma el logo, el lema y los colores mientras se cargan, antes de guardar.
+    beats:
+      - click: paso-marca
+        awaits: marcas-vacio
+      - click: marcas-vacio
+        awaits: marca-form
+      - type: { target: marca-nombre, text: "Radio Sol" }
+        say: Carga el nombre y el lema de su radio.
+      - type: { target: marca-slogan, text: "La regional de Texas" }
+      - type: { target: marca-descripcion, text: "Música regional mexicana en El Paso y Odessa." }
+      - upload: { target: marca-logo, file: ./assets/radio-sol-logo.png }
+        awaits: marca-logo-listo
+        say: Sube el logo y elige sus colores. El teléfono de al lado ya muestra cómo se verá su app.
+      - type: { target: marca-color, text: "#C2410C" }
+        awaits: telefono-preview
+      - type: { target: marca-acento, text: "#FACC15" }
+      - click: marca-guardar
+        awaits: marca-guardada
+        say: Guarda, y Radio Sol ya tiene identidad propia.
+
+  - id: ciudad-1
+    title: "Su primera ciudad: El Paso"
+    proves: Señal con zona horaria propia y stream verificado en vivo.
+    covers: [senales, stream-probe]
+    watch: El stream se prueba en el momento y la consola muestra lo que está sonando; El Paso va en hora de la Montaña.
+    beats:
+      - click: nav-senales
+        awaits: senales-agregar
+      - click: senales-agregar
+        awaits: senal-form
+      - type: { target: senal-nombre, text: "Radio Sol 97.5 El Paso" }
+        say: "Ahora agrega su primera ciudad: El Paso, con su zona horaria."
+      - type: { target: senal-ciudad, text: "El Paso" }
+      - type: { target: senal-estado, text: "TX" }
+      - select: { target: senal-zona, value: "America/Denver" }
+      - type: { target: senal-stream, text: "${DEMO_STREAM_URL}" }
+      - click: senal-probar
+        awaits: senal-probar-ok
+        say: Pega la dirección de su stream y la consola le confirma qué está sonando ahora.
+        voice: Pega la dirección de su estrím y la consola le confirma qué está sonando ahora.
+
+  - id: sin-tecnicismos
+    title: "Si algo está mal, se lo dice sin tecnicismos"
+    objection: true
+    proves: Validación en palabras simples que no borra lo escrito y acepta el teléfono local sin el +1.
+    covers: [validacion-amigable, senales]
+    watch: Ante el error el formulario no se vacía; el WhatsApp escrito como número local se guarda con el +1.
+    beats:
+      - type: { target: senal-whatsapp, text: "915-555-0123" }
+      - type: { target: senal-frecuencia, text: "250.3" }
+      - click: senal-guardar
+        awaits: senal-error-frecuencia
+        say: Si algo no cuadra, se lo dice en palabras simples. Y no pierde nada de lo que escribió.
+      - type: { target: senal-frecuencia, text: "97.5" }
+      - click: senal-guardar
+        awaits: senal-guardada
+      - scroll: senal-guardada
+        say: Corrige un número y guarda. El WhatsApp de cabina queda listo, con el más uno que faltaba.
+        voice: Corrige un número y guarda. El guátsap de cabina queda listo, con el más uno que faltaba.
+
+  - id: ciudad-2
+    title: "Suma Odessa, con su propia hora"
+    proves: Varias ciudades por marca, cada una con su frecuencia, stream y zona horaria.
+    covers: [senales]
+    watch: Odessa va en hora del Centro, una hora más que El Paso.
+    beats:
+      - click: nav-senales
+        awaits: senales-agregar
+      - click: senales-agregar
+        awaits: senal-form
+      - type: { target: senal-nombre, text: "Radio Sol 105.1 Odessa" }
+        say: Suma Odessa, su otra FM. Cada ciudad tiene su frecuencia, su stream y su hora.
+      - type: { target: senal-ciudad, text: "Odessa" }
+      - type: { target: senal-estado, text: "TX" }
+      - select: { target: senal-zona, value: "America/Chicago" }
+      - type: { target: senal-frecuencia, text: "105.1" }
+      - type: { target: senal-stream, text: "${DEMO_STREAM_URL}" }
+      - click: senal-guardar
+        awaits: senal-odessa-guardada
+
+  - id: programacion
+    title: "Su programa de la mañana, en las dos ciudades"
+    proves: Programas con locutores, grilla semanal y copia a otra señal respetando la zona horaria.
+    covers: [programacion, copiar-grilla]
+    watch: "El Paso está en hora de la Montaña y Odessa en la del Centro; la copia mantiene las 06:00 locales en cada ciudad."
+    beats:
+      - click: nav-programacion
+        awaits: grilla
+      - click: nuevo-programa
+        awaits: show-form
+        say: Carga su programa de la mañana con los locutores.
+      - type: { target: show-nombre, text: "El Despertador Ranchero" }
+      - type: { target: show-locutores, text: "Lupita Arredondo, Chuy Montes" }
+      - click: show-crear
+        awaits: show-creado
+      - click: agregar-horario
+        awaits: slot-form
+      - select: { target: slot-programa, value: "El Despertador Ranchero" }
+        say: Lo ubica de lunes a viernes, de seis a diez.
+      - click: slot-lunes-a-viernes
+      - type: { target: slot-inicio, text: "06:00" }
+      - type: { target: slot-fin, text: "10:00" }
+      - click: slot-guardar
+        awaits: slot-en-grilla
+      - click: copiar-grilla
+        awaits: copia-destino
+      - select: { target: copia-destino, value: "Radio Sol 105.1 Odessa (vacía)" }
+      - click: copia-confirmar
+        awaits: copia-confirmada
+        say: "Y lo copia a Odessa: la app respeta la hora de cada ciudad."
+      - select: { target: selector-senal, value: "Radio Sol 105.1 Odessa" }
+        awaits: grilla-odessa
+
+  - id: home
+    title: "Arma la pantalla de inicio y la publica"
+    proves: Editor de home por bloques, con vista previa a cualquier día y hora.
+    covers: [home-editor]
+    watch: A las 7 de un día de semana el teléfono muestra El Despertador Ranchero al aire; publicar no requiere una versión nueva en las tiendas.
+    beats:
+      - go: ${HOME_EDITOR_PATH}
+        awaits: home-editor
+      - click: agregar-bloque
+        awaits: bloque-ciudades
+        say: Arma lo que ven sus oyentes al abrir la app, bloque por bloque.
+      - click: bloque-ciudades
+        awaits: bloque-ciudades-nuevo
+      - click: agregar-bloque
+        awaits: bloque-programas
+      - click: bloque-programas
+        awaits: bloque-programas-nuevo
+      - select: { target: home-momento, value: "sim" }
+        awaits: home-hora
+        say: Puede ver cómo queda a cualquier hora del día.
+      - type: { target: home-hora, text: "07:00" }
+        awaits: home-al-aire
+      - click: home-publicar
+        awaits: home-publicada
+        say: Publica, y llega a los oyentes sin pasar por la tienda.
+
+  - id: tienda
+    title: "La ficha de la tienda, con el checklist en verde"
+    proves: Ficha de App Store y Google Play con checklist y app publicada a nombre de la radio.
+    covers: [ficha-tienda]
+    watch: El nombre interno (bundle id) lo sugiere la consola a partir del nombre de la app; el checklist lo calcula el servidor al guardar.
+    beats:
+      - click: nav-apps
+        awaits: apps-nueva
+      - click: apps-nueva
+        awaits: app-form
+      - type: { target: app-nombre, text: "Radio Sol" }
+        say: Completa la ficha que piden Apple y Google, campo por campo.
+        voice: Completa la ficha que piden Ápol y Gúgol, campo por campo.
+      - type: { target: app-descripcion, text: "La regional mexicana de El Paso y Odessa, en vivo y con tus programas favoritos. Pide canciones y escríbele a la cabina." }
+      - upload: { target: app-icono, file: ./assets/radio-sol-icon-1024.png }
+        awaits: app-icono-listo
+      - type: { target: app-soporte, text: "oyentes@radiosol.example" }
+      - type: { target: app-privacidad, text: "https://radiosol.example/privacidad" }
+      - click: usar-bundle-sugerido
+      - click: app-guardar
+        awaits: checklist-completo
+        say: "El checklist le avisa qué falta. Todo en verde: lista para enviar."
+      - highlight: boton-compilar
+        say: Un botón la publica en las cuentas de Radio Sol, a su nombre.
+
+  - id: notificacion
+    title: "Avisa a sus oyentes de Odessa"
+    proves: Notificaciones por ciudad, con vista previa de la pantalla bloqueada y envío programado.
+    covers: [push]
+    watch: La vista de la derecha es cómo se ve en un teléfono bloqueado; se programa (hoy no hay teléfonos con notificaciones, así que no sale nada).
+    beats:
+      - click: nav-push
+        awaits: push-form
+      - type: { target: push-titulo, text: "Mañana arranca El Despertador Ranchero" }
+        say: Ahora avisa a sus oyentes. Así les llega al celular, en la pantalla bloqueada.
+      - type: { target: push-cuerpo, text: "De lunes a viernes de 6 a 10, con Lupita y Chuy. ¡No te lo pierdas!" }
+      - click: push-por-senal
+        awaits: push-odessa
+      - click: push-odessa
+      - click: push-programar
+        awaits: push-cuando
+      - type: { target: push-cuando, text: "${PUSH_AT}" }
+        awaits: push-sale
+        say: La programa para mañana a las seis, en la hora de cada ciudad.
+      - click: push-enviar
+        awaits: push-programada
+
+  - id: oyente
+    title: "Y del otro lado, la app de Radio Sol"
+    proves: La app del oyente con la marca, la ciudad, el en vivo, la programación y la cabina; el pedido llega a la consola.
+    covers: [app-oyente, mensajes-cabina]
+    hold: 3s
+    watch: Es el build web de la app real de Latrack, en un teléfono, con la app que Ramiro acaba de crear; el pedido de Lupita aparece en Mensajes a cabina.
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8787/?app=${APP_KEY}
+        awaits: app-oyente-home
+        say: Esto es lo que ve un oyente al abrir la app de Radio Sol.
+      - click: app-ciudad
+        awaits: app-ciudad-el-paso
+      - click: app-ciudad-el-paso
+        awaits: app-play
+        say: Elige su ciudad y escucha en vivo, con la programación a mano.
+      - click: app-play
+      - click: app-tab-programas
+        awaits: app-programa
+      - click: app-tab-cabina
+        awaits: app-pedido
+        say: Le escribe a la cabina un pedido de canción…
+      - click: app-pedido
+      - type: { target: app-nombre-oyente, text: "Lupita" }
+      - type: { target: app-mensaje, text: "¿Me ponen algo de Carin León para mi mamá?" }
+      - click: app-enviar
+        awaits: app-enviado
+      - as: dueno
+        go: /inbox
+        awaits: inbox-pedido-lupita
+        say: …y le llega al locutor al instante, en la consola.

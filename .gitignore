@@ -38,3 +38,6 @@ demos/**/index.html
 demos/**/catalog.json
 
 .DS_Store
+
+# Demo sessions minted by seeds: secrets.
+**/seeds/.state/

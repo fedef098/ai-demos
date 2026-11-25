@@ -15,7 +15,7 @@ import { dirname, resolve, join } from "node:path";
 import { requireDep, missingDepMessage } from "./deps.mjs";
 import { estimateDuration, MAX_CAPTION_CHARS } from "./pacing.mjs";
 
-const VERBS = ["go", "click", "hover", "type", "select", "upload", "scroll", "highlight"];
+const VERBS = ["go", "click", "hover", "press", "type", "select", "upload", "scroll", "highlight"];
 
 // Un say que empieza así está describiendo la UI en vez de contar la historia.
 const NARRATING_THE_UI = [

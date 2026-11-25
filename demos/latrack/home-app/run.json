@@ -1,0 +1,52 @@
+{
+  "id": "home-app",
+  "title": "La pantalla de inicio de la app, sin pasar por la tienda",
+  "promise": "La home de la app se arma por bloques, cada bloque con su horario, se mira a cualquier día y hora antes de publicar, y cada publicación se puede restaurar.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T17:01:39.171Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 66760,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3544507,
+    "sha256": "d10b4bc197258267698864e7067549a00bdf965565b830b1efd97f7c2adf2106"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "home",
+      "title": "La home de La Brisa, bloque por bloque",
+      "proves": "Editor de home por bloques con la app en un teléfono al lado.",
+      "watch": "Lo que se ve en el teléfono es la home publicada de La Brisa, con su programación y lo que sonó de verdad.",
+      "startMs": 11,
+      "endMs": 5571
+    },
+    {
+      "id": "aviso",
+      "title": "Un aviso solo para el fin de semana",
+      "proves": "Cada bloque puede tener horario propio, en la hora local de cada ciudad.",
+      "watch": "El aviso sólo se muestra sábados y domingos de 08:00 a 20:00; el reloj del bloque lo marca en la lista.",
+      "startMs": 5571,
+      "endMs": 34555
+    },
+    {
+      "id": "sabado",
+      "title": "Miras el sábado antes de que llegue",
+      "proves": "Vista previa de la app a cualquier día y hora.",
+      "watch": "Hoy es miércoles y el aviso no se ve; simulando el sábado a las 10 aparece, con el programa de ese momento al aire.",
+      "startMs": 34555,
+      "endMs": 47264
+    },
+    {
+      "id": "publicar",
+      "title": "Publicas, y siempre puedes volver atrás",
+      "proves": "Publicar llega a los oyentes sin actualizar la app, y cada publicación se puede restaurar.",
+      "watch": "Restaurar copia esa versión al borrador; los oyentes siguen viendo lo publicado hasta que se publique otra vez.",
+      "startMs": 47264,
+      "endMs": 66760
+    }
+  ]
+}

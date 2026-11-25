@@ -98,12 +98,16 @@
       "description": "Las personas de la historia. Nombre y contexto concretos: 'usuario A' mata la demo.",
       "items": {
         "type": "object",
-        "required": ["as", "name", "auth"],
+        "required": ["as", "name"],
         "additionalProperties": false,
         "properties": {
           "as": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
           "name": { "type": "string" },
           "context": { "type": "string", "description": "Rol, edad, situación. Por qué le importa." },
+          "device": { "type": "string", "enum": ["iphone"], "description": "La persona usa un teléfono: actúa en su propio contexto (viewport, dsf, touch, UA de teléfono) y su grabación se pega dentro de un marco de teléfono en el video." },
+          "label": { "type": "string", "description": "Rótulo junto al marco de teléfono (con device:). Por defecto, name." },
+          "locale": { "type": "string" },
+          "timezone": { "type": "string", "description": "Zona horaria del contexto de esta persona (sólo con device:)." },
           "auth": {
             "type": "object",
             "required": ["via"],
@@ -142,9 +146,32 @@
         "properties": {
           "route": { "type": "string" },
           "method": { "type": "string", "enum": ["GET", "HEAD"], "default": "GET" },
-          "body": { "type": "string", "description": "Ruta a un .json" },
-          "status": { "type": "integer", "default": 200 }
+          "body": { "type": "string", "description": "Ruta a un .json, o a un .html con contentType text/html." },
+          "status": { "type": "integer", "default": 200 },
+          "contentType": { "type": "string", "default": "application/json" },
+          "vars": { "type": "boolean", "default": false, "description": "Sustituye ${VAR} en el cuerpo al servirlo (valores del seed o del entorno)." }
         }
+      }
+    },
+
+    "pace": {
+      "type": "string",
+      "enum": ["normal", "medium", "slow"],
+      "default": "normal",
+      "description": "Ritmo del video. slow: cursor y tipeo más lentos y más aire después de cada acción y cada frase, para quien no conoce el producto. medium: a mitad de camino entre normal y slow."
+    },
+    "captions": {
+      "type": "boolean",
+      "default": true,
+      "description": "false: el subtítulo NO se quema en el video. La locución, el .vtt y el transcript de la página quedan igual."
+    },
+    "chapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Dónde va el pill con el título de la escena.",
+      "properties": {
+        "position": { "type": "string", "enum": ["top-left", "top-center", "top-right", "bottom-left"], "default": "top-left" },
+        "top": { "type": "integer", "description": "Distancia al borde superior, en px (default 22)." }
       }
     },
 
@@ -193,6 +220,7 @@
         "go": { "type": "string", "description": "Ruta relativa." },
         "click": { "type": "string", "description": "Nombre de un target de selectors.yml." },
         "hover": { "type": "string" },
+        "press": { "type": "string", "description": "Una tecla del teclado (\"j\", \"Escape\", \"Shift+A\"), para mostrar atajos. Se ve como una tecla en pantalla." },
         "type": {
           "type": "object",
           "required": ["target", "text"],

@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: equipo-idioma
+product: Latrack
+archetype: custom
+title: Cada uno entra con su rol, queda registro, y la consola habla su idioma
+titleCard: false
+promise: >
+  La radio suma a su equipo con el permiso justo, ve quién cambió qué, y cada persona
+  usa la consola en español o en inglés.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que
+    pueden darle acceso a locutores y productores sin perder el control.
+  in:
+    - "Equipo: roles de administrador y editor por marca, y una invitación pendiente"
+    - Lo que ve un editor si intenta entrar a Equipo (sólo administradores)
+    - Actividad, con quién hizo qué
+    - Cambiar la consola a inglés en Mi cuenta, y volver al español
+  out:
+    - Mandar la invitación en cámara (mandaría un email; la invitación la crea el seed)
+    - Aceptar la invitación (está en el video de onboarding)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media, admin y editor de demo. El seed crea
+    la invitación pendiente como fila de la base (ningún email) y deja el idioma del
+    admin en automático; los emails reales van difuminados.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+# Members' and invitees' addresses are real team mailboxes. Plain CSS only:
+# one Playwright-only pseudo (:has-text) invalidates the whole blur rule.
+redact: ['main li p.truncate.text-muted', 'main li div.min-w-0 > p.font-medium:has(+ p:not(.truncate))']
+
+cast:
+  - as: admin
+    name: Ana Morales
+    context: Gerente de La Brisa. Administra quién entra a la consola.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: editor
+    name: Diego Ruiz
+    context: Productor de La Brisa, editor de contenido.
+    auth: { via: storageState, file: ./seeds/.state/editor-session.json }
+
+world:
+  seed: ./seeds/equipo-idioma.mjs
+  assert:
+    - hay una invitación de editora de La Brisa pendiente, creada sin email
+    - la consola de Ana está en idioma automático (español)
+
+scenes:
+  - id: equipo
+    title: "Cada uno con el permiso justo"
+    proves: Roles de administrador y editor por marca, e invitaciones pendientes que se reenvían o cancelan.
+    covers: [equipo]
+    watch: Diego es editor de La Brisa; la invitación pendiente vence en siete días.
+    beats:
+      - as: admin
+        go: /team
+        awaits: equipo-miembros
+        say: Ana maneja quién entra a la consola de La Brisa.
+      - select: { target: equipo-marca, value: "La Brisa" }
+        say: Un editor sólo toca contenido, y se lo puede limitar a una marca.
+      - scroll: equipo-pendiente
+        say: La invitación a la nueva productora ya salió, y se puede reenviar o cancelar.
+
+  - id: permiso
+    title: "Un editor no entra donde no debe"
+    objection: true
+    proves: Equipo, apps y facturación son sólo para administradores; el editor ve un aviso claro.
+    covers: [equipo]
+    watch: Diego entra con su propia sesión de editor.
+    beats:
+      - as: editor
+        go: /team
+        awaits: equipo-solo-admin
+        say: Si Diego, que es editor, intenta entrar a Equipo, la consola se lo explica.
+
+  - id: actividad
+    title: "Y queda registro de todo"
+    proves: Actividad con quién cambió qué y cuándo.
+    covers: [equipo]
+    watch: Cada cambio de la consola queda con su autor y su hora.
+    beats:
+      - as: admin
+        go: /activity
+        awaits: actividad-lista
+        say: En Actividad, Ana ve quién cambió qué y cuándo.
+
+  - id: idioma
+    title: "Su consola, en su idioma"
+    proves: Idioma de la consola por persona, español o inglés, guardado en su cuenta.
+    covers: [consola-ingles]
+    watch: El cambio es sólo para Ana; el resto del equipo sigue en su idioma.
+    hold: 2s
+    beats:
+      - go: /account
+        awaits: cuenta-ingles
+      - click: cuenta-ingles
+        awaits: cuenta-en-ingles
+        say: Y si alguien del equipo prefiere el inglés, cambia su consola con un clic.
+      - click: cuenta-espanol
+        awaits: cuenta-en-espanol
+        say: Ana vuelve al español, y todo queda como estaba.

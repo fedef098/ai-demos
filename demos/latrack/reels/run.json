@@ -1,0 +1,60 @@
+{
+  "id": "reels",
+  "title": "Un reel con la marca de la radio, publicado en la app sin editor de video",
+  "promise": "La radio convierte un momento al aire en un video vertical con su marca, sus subtítulos y su cierre, y lo publica en la app de sus oyentes sin saber editar video.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T16:59:56.083Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 77400,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3205076,
+    "sha256": "e34c7d1b849cdb4ea874115dec8fe768afb4ff9250a81bcafadfa33182423f30"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "plantilla",
+      "title": "Un momento al aire, con la marca puesta",
+      "proves": "Plantillas de reel que ya traen la tipografía, los colores y el logo de la marca.",
+      "watch": "El kit de marca de La Brisa (colores, tipografías, logo y cierre) ya viene aplicado.",
+      "startMs": 3,
+      "endMs": 13642
+    },
+    {
+      "id": "clip",
+      "title": "Sólo voz, sin música que la bloqueen",
+      "proves": "El clip sólo se sube después de confirmar que no lleva música comercial.",
+      "watch": "Sin la confirmación no se puede subir el clip; las licencias de la radio no cubren canciones en video.",
+      "startMs": 13642,
+      "endMs": 23693
+    },
+    {
+      "id": "subtitulos",
+      "title": "Subtítulos repartidos solos",
+      "proves": "Subtítulos escritos por línea y repartidos a lo largo del clip.",
+      "watch": "El clip de prueba no tiene voz, así que los subtítulos se escriben; con voz se transcriben.",
+      "startMs": 23693,
+      "endMs": 30974
+    },
+    {
+      "id": "publicar",
+      "title": "Generado y publicado en la app",
+      "proves": "El video vertical se genera en el servidor y se publica en el feed de Shorts.",
+      "watch": "Se puede salir de la página mientras se genera; el reel se publica solo al terminar.",
+      "startMs": 30974,
+      "endMs": 56127
+    },
+    {
+      "id": "app",
+      "title": "Y en el teléfono de los oyentes",
+      "proves": "El reel publicado aparece en el feed de Shorts de la app.",
+      "watch": "Es la app real de La Brisa; el reel está arriba del feed.",
+      "startMs": 56127,
+      "endMs": 77400
+    }
+  ]
+}

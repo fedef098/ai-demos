@@ -1,0 +1,110 @@
+{
+  "id": "onboarding-radio",
+  "title": "De la invitación a la app en el celular del oyente",
+  "promise": "El dueño de una radio arma la app de su emisora él solo, en una tarde, y sus oyentes la usan para escucharlo y escribirle a la cabina.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T16:22:14.717Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 278280,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 11097699,
+    "sha256": "922631c5d6dc8cb06095140b726933b5350830d38541298e3d10104691e30723"
+  },
+  "usedFixtures": [
+    "https://correo.latrack-demo.invalid/**"
+  ],
+  "scenes": [
+    {
+      "id": "invitacion",
+      "title": "La invitación le llega por mail",
+      "proves": "Alta por invitación, sin instalación ni llamada con ventas.",
+      "watch": "Es el mail real de Latrack (la plantilla de invitación), con el link de esta corrida; el botón abre la invitación.",
+      "startMs": 5,
+      "endMs": 10879
+    },
+    {
+      "id": "entra",
+      "title": "Entra a su consola",
+      "proves": "Cuenta nueva desde la invitación y una guía de seis pasos al entrar.",
+      "watch": "Ramiro entra como usuario nuevo; la consola abre con los seis pasos pendientes.",
+      "startMs": 10879,
+      "endMs": 22053
+    },
+    {
+      "id": "marca",
+      "title": "Su marca, y el teléfono cambia al instante",
+      "proves": "Identidad de marca con vista previa en vivo de la app.",
+      "watch": "La vista previa del teléfono toma el logo, el lema y los colores mientras se cargan, antes de guardar.",
+      "startMs": 22053,
+      "endMs": 50804
+    },
+    {
+      "id": "ciudad-1",
+      "title": "Su primera ciudad: El Paso",
+      "proves": "Señal con zona horaria propia y stream verificado en vivo.",
+      "watch": "El stream se prueba en el momento y la consola muestra lo que está sonando; El Paso va en hora de la Montaña.",
+      "startMs": 50804,
+      "endMs": 74555
+    },
+    {
+      "id": "sin-tecnicismos",
+      "title": "Si algo está mal, se lo dice sin tecnicismos",
+      "proves": "Validación en palabras simples que no borra lo escrito y acepta el teléfono local sin el +1.",
+      "watch": "Ante el error el formulario no se vacía; el WhatsApp escrito como número local se guarda con el +1.",
+      "startMs": 74555,
+      "endMs": 97649
+    },
+    {
+      "id": "ciudad-2",
+      "title": "Suma Odessa, con su propia hora",
+      "proves": "Varias ciudades por marca, cada una con su frecuencia, stream y zona horaria.",
+      "watch": "Odessa va en hora del Centro, una hora más que El Paso.",
+      "startMs": 97649,
+      "endMs": 121251
+    },
+    {
+      "id": "programacion",
+      "title": "Su programa de la mañana, en las dos ciudades",
+      "proves": "Programas con locutores, grilla semanal y copia a otra señal respetando la zona horaria.",
+      "watch": "El Paso está en hora de la Montaña y Odessa en la del Centro; la copia mantiene las 06:00 locales en cada ciudad.",
+      "startMs": 121251,
+      "endMs": 156301
+    },
+    {
+      "id": "home",
+      "title": "Arma la pantalla de inicio y la publica",
+      "proves": "Editor de home por bloques, con vista previa a cualquier día y hora.",
+      "watch": "A las 7 de un día de semana el teléfono muestra El Despertador Ranchero al aire; publicar no requiere una versión nueva en las tiendas.",
+      "startMs": 156301,
+      "endMs": 177850
+    },
+    {
+      "id": "tienda",
+      "title": "La ficha de la tienda, con el checklist en verde",
+      "proves": "Ficha de App Store y Google Play con checklist y app publicada a nombre de la radio.",
+      "watch": "El nombre interno (bundle id) lo sugiere la consola a partir del nombre de la app; el checklist lo calcula el servidor al guardar.",
+      "startMs": 177850,
+      "endMs": 211349
+    },
+    {
+      "id": "notificacion",
+      "title": "Avisa a sus oyentes de Odessa",
+      "proves": "Notificaciones por ciudad, con vista previa de la pantalla bloqueada y envío programado.",
+      "watch": "La vista de la derecha es cómo se ve en un teléfono bloqueado; se programa (hoy no hay teléfonos con notificaciones, así que no sale nada).",
+      "startMs": 211349,
+      "endMs": 237788
+    },
+    {
+      "id": "oyente",
+      "title": "Y del otro lado, la app de Radio Sol",
+      "proves": "La app del oyente con la marca, la ciudad, el en vivo, la programación y la cabina; el pedido llega a la consola.",
+      "watch": "Es el build web de la app real de Latrack, en un teléfono, con la app que Ramiro acaba de crear; el pedido de Lupita aparece en Mensajes a cabina.",
+      "startMs": 237788,
+      "endMs": 278280
+    }
+  ]
+}

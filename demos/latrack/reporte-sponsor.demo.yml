@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: reporte-sponsor
+product: Latrack
+archetype: custom
+title: El reporte del sponsor, en su idioma y con un link que se revoca
+titleCard: false
+promise: >
+  La radio le muestra al anunciante qué recibió por su plata, en el idioma que pida,
+  con un link que el cliente abre sin usuario y que se apaga cuando termina la campaña.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que
+    rendirle cuentas a un anunciante digital no requiere armar planillas a mano.
+  in:
+    - "La pestaña Reporte de una campaña con datos: impresiones, alcance, frecuencia, CTR, por ciudad, franja y programa"
+    - El selector de idioma del reporte (a inglés)
+    - Crear el link de solo lectura, abrirlo sin sesión y revocarlo
+  out:
+    - El PDF y el CSV (se descargan, no se ven en la consola)
+    - Crear o editar la campaña (otro video)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media, admin de demo. El seed copia la
+    campaña de demo "Mueblería Don Pepe · Pre-roll diciembre" (pausada, con sus semanas
+    de datos) como "Demo …"; el link se crea en cámara y su campo va difuminado.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+# The read-only link carries a live token.
+redact: ['input[aria-label="Link del reporte"]']
+
+cast:
+  - as: ventas
+    name: Ana Morales
+    context: Vende la publicidad de La Brisa y le rinde cuentas a cada anunciante.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: cliente
+    name: La agencia de Mueblería Don Pepe
+    context: Compra medios para Don Pepe desde Dallas y quiere ver el reporte en inglés, sin usuario.
+
+world:
+  seed: ./seeds/reporte-sponsor.mjs
+  assert:
+    - existe la campaña "Demo Mueblería Don Pepe · Pre-roll diciembre" con semanas de datos y sin links
+    - un watcher espera el link que se crea en cámara
+
+scenes:
+  - id: reporte
+    title: "Lo que recibió el anunciante, sin planillas"
+    proves: Reporte con impresiones, alcance, frecuencia y CTR, por ciudad, franja horaria y programa.
+    covers: [reporte-sponsor]
+    watch: Todo se calcula solo de lo que la app registró; las franjas van en la hora local de cada ciudad.
+    beats:
+      - as: ventas
+        go: ${REPORT_PATH}
+        awaits: reporte-doc
+        say: Don Pepe compró un pre-roll en diciembre, y la consola le arma el reporte sola.
+      - say: Impresiones, oyentes únicos, cuántas veces lo escuchó cada uno, y los clics.
+      - scroll: reporte-por-ciudad
+        say: Y el detalle por ciudad, por franja horaria y por programa.
+
+  - id: idioma
+    title: "En el idioma del cliente"
+    proves: El idioma del reporte se elige por campaña y vale para el PDF, el CSV y el link.
+    covers: [reporte-sponsor]
+    watch: Cambia el documento del anunciante, no la consola.
+    beats:
+      - select: { target: reporte-idioma, value: "en" }
+        awaits: reporte-en-ingles
+        say: La agencia de Don Pepe es de Dallas y lo quiere en inglés. Un cambio, y listo.
+
+  - id: link
+    title: "Un link que el cliente abre sin usuario"
+    proves: Link de solo lectura que el anunciante abre sin cuenta, siempre actualizado.
+    covers: [reporte-sponsor]
+    watch: El link se muestra una sola vez (va difuminado); el cliente lo abre sin iniciar sesión.
+    beats:
+      - click: reporte-crear-link
+        awaits: reporte-link
+        say: Le crea un link de solo lectura para mandárselo.
+      - as: cliente
+        go: ${REPORT_URL}?v=${REPORT_READY}
+        awaits: reporte-cliente
+        say: Así lo abre la agencia, sin usuario, en inglés y siempre al día.
+      - scroll: reporte-cliente-ciudad
+
+  - id: revocar
+    title: "Y se apaga cuando termina la campaña"
+    objection: true
+    proves: La consola muestra cuándo lo vieron, y revocar el link lo apaga al instante.
+    covers: [reporte-sponsor]
+    watch: El link revocado muestra que el reporte ya no está disponible, sin datos.
+    hold: 2s
+    beats:
+      - as: ventas
+        go: ${REPORT_PATH}
+        awaits: reporte-visto
+        say: De vuelta en la consola de Ana.
+      - scroll: reporte-visto
+        say: Ve que la agencia ya abrió el reporte.
+      - click: reporte-revocar
+        awaits: reporte-revocar-si
+        say: Cuando termina la campaña, revoca el link…
+      - click: reporte-revocar-si
+        awaits: reporte-revocado
+      - as: cliente
+        go: ${REPORT_URL}?v=revoked
+        awaits: reporte-no-disponible
+        say: …y quien lo abra ya no ve nada.

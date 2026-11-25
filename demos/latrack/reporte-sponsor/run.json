@@ -1,0 +1,52 @@
+{
+  "id": "reporte-sponsor",
+  "title": "El reporte del sponsor, en su idioma y con un link que se revoca",
+  "promise": "La radio le muestra al anunciante qué recibió por su plata, en el idioma que pida, con un link que el cliente abre sin usuario y que se apaga cuando termina la campaña.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T16:31:52.389Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 56520,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2907342,
+    "sha256": "0ce8cfa02cedfc94e7f52aad530cae7273a9d6f414a4a0ea5f8de0dc61b86661"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "reporte",
+      "title": "Lo que recibió el anunciante, sin planillas",
+      "proves": "Reporte con impresiones, alcance, frecuencia y CTR, por ciudad, franja horaria y programa.",
+      "watch": "Todo se calcula solo de lo que la app registró; las franjas van en la hora local de cada ciudad.",
+      "startMs": 2,
+      "endMs": 16738
+    },
+    {
+      "id": "idioma",
+      "title": "En el idioma del cliente",
+      "proves": "El idioma del reporte se elige por campaña y vale para el PDF, el CSV y el link.",
+      "watch": "Cambia el documento del anunciante, no la consola.",
+      "startMs": 16738,
+      "endMs": 22797
+    },
+    {
+      "id": "link",
+      "title": "Un link que el cliente abre sin usuario",
+      "proves": "Link de solo lectura que el anunciante abre sin cuenta, siempre actualizado.",
+      "watch": "El link se muestra una sola vez (va difuminado); el cliente lo abre sin iniciar sesión.",
+      "startMs": 22797,
+      "endMs": 34512
+    },
+    {
+      "id": "revocar",
+      "title": "Y se apaga cuando termina la campaña",
+      "proves": "La consola muestra cuándo lo vieron, y revocar el link lo apaga al instante.",
+      "watch": "El link revocado muestra que el reporte ya no está disponible, sin datos.",
+      "startMs": 34512,
+      "endMs": 56520
+    }
+  ]
+}

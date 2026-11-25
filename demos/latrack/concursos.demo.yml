@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: concursos
+product: Latrack
+archetype: custom
+title: Una encuesta al aire, votada desde la app y con resultados en vivo
+titleCard: false
+promise: >
+  La radio lanza una encuesta en un minuto, los oyentes la votan apenas abren la app
+  y el locutor ve los resultados moverse mientras habla.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que
+    una encuesta se arma sola, llega a los oyentes sin buscarla y se lee en vivo.
+  in:
+    - Crear la encuesta "Demo ¿Qué canción ponemos a las 7?" con tres opciones y sponsor
+    - El aviso único de la encuesta al abrir la app del oyente (teléfono) y el voto
+    - Los resultados en la consola, con el voto sumado y la actualización automática
+  out:
+    - Sorteos y la elección del ganador al azar (otra historia)
+    - Fechas de inicio y cierre (la encuesta abre al guardarla)
+    - Descargar el CSV
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. El seed
+    borra las encuestas "Demo …" de corridas anteriores; cuando la nueva aparece, suma
+    41 votos de otros oyentes (installId demo-vote-*). La app es el build web real.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: productora
+    name: Ana Morales
+    context: Produce la mañana de La Brisa y quiere que la audiencia elija la canción de las 7.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Vero
+    label: "Vero · oyente en Houston"
+    device: iphone
+    timezone: America/Chicago
+    context: Escucha La Brisa camino al trabajo.
+
+world:
+  seed: ./seeds/concursos.mjs
+  assert:
+    - no hay ninguna encuesta "Demo …" en La Brisa
+    - hay un watcher esperando la encuesta nueva para sumar los votos de la mañana
+
+scenes:
+  - id: crear
+    title: "La encuesta se arma en un minuto"
+    proves: Encuesta con pregunta, opciones ordenables y sponsor que la presenta.
+    covers: [concursos]
+    watch: Las opciones se escriben de corrido; el sponsor elegido aparece como "Presentado por" y suma a su reporte.
+    beats:
+      - as: productora
+        go: /contests/new
+        awaits: concurso-form
+        say: Ana quiere que los oyentes elijan la canción de las siete.
+      - click: concurso-encuesta
+        awaits: concurso-opciones
+      - type: { target: concurso-pregunta, text: "Demo ¿Qué canción ponemos a las 7?" }
+        say: Escribe la pregunta y las opciones, tal cual las va a decir al aire.
+      - type: { target: concurso-opcion-1, text: "Carin León" }
+      - type: { target: concurso-opcion-2, text: "Grupo Frontera" }
+      - click: concurso-agregar-opcion
+        awaits: concurso-opcion-3
+      - type: { target: concurso-opcion-3, text: "Peso Pluma" }
+      - select: { target: concurso-sponsor, value: "Mueblería Don Pepe · Presentado por" }
+        say: Y se la vende a un sponsor, que aparece como presentador.
+      - click: concurso-crear
+        awaits: concurso-creado
+        say: Al guardar, la encuesta ya está en la app.
+
+  - id: app
+    title: "Los oyentes la ven apenas abren la app"
+    proves: Aviso de encuesta al abrir la app, una sola vez, con el voto ahí mismo.
+    covers: [concursos, app-oyente]
+    watch: El aviso aparece una vez por encuesta y nunca mientras arranca el audio; se vota sin salir del inicio.
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8787/?app=demo-labrisa
+        awaits: app-sheet-encuesta
+        say: Vero abre la app de La Brisa y la encuesta la está esperando.
+      - click: app-voto-frontera
+        say: Elige Grupo Frontera y vota sin salir de la pantalla de inicio.
+      - click: app-votar
+        awaits: app-votado
+
+  - id: resultados
+    title: "Un voto por teléfono, y los resultados en vivo"
+    objection: true
+    proves: Resultados en vivo con un voto por teléfono, que nadie puede inflar votando dos veces.
+    covers: [concursos]
+    watch: "El voto de Vero se suma a los de la mañana: 42 votos, Grupo Frontera adelante. Los otros 41 votos los siembra el seed."
+    hold: 2s
+    beats:
+      - as: productora
+        go: ${CONTEST_PATH}
+        awaits: concurso-resultados
+        say: En la consola, el voto de Vero ya suma. Grupo Frontera va adelante.
+      - highlight: concurso-en-vivo
+        say: Se actualiza sola mientras votan, y cuenta un voto por teléfono.

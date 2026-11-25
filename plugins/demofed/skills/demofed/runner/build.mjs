@@ -69,11 +69,13 @@ async function main() {
 
   const mp4 = join(outDir, "demo.mp4");
   const silent = join(tmpDir, "video-only.mp4");
-  console.log("· transcodificando a mp4 (faststart, seekable)…");
+  const device = devicePlan(tl, (t) => t - (tl.openAt ?? 0));
+  console.log(`· transcodificando a mp4 (faststart, seekable)${device ? ` con ${device.count} tramo(s) de teléfono` : ""}…`);
   sh("nice", [
     // `-ss` antes de `-i` con re-encode: ffmpeg decodifica desde el keyframe
     // previo y descarta, así que el corte es exacto al cuadro, no al keyframe.
     "-n", "10", "ffmpeg", "-y", "-ss", (trimAt / 1000).toFixed(3), "-i", tl.webm,
+    ...(device ? device.args : []),
     "-c:v", "libx264", "-crf", "24", "-preset", "veryfast",
     "-pix_fmt", "yuv420p", "-g", "50",
     "-movflags", "+faststart",   // el índice al principio: permite seek sin bajar todo
@@ -195,6 +197,74 @@ function findClapStart(mp4) {
   }
   console.warn("  ⚠ no encontré el flash de la claqueta; asumo que el video arranca en 0.");
   return 0;
+}
+
+/**
+ * Los tramos en que la persona activa tenía `device:`. Su contexto grabó su
+ * propio webm (en píxeles de dispositivo) y acá se pega, escalado, dentro del
+ * marco de teléfono que el overlay dibujó en el video principal.
+ *
+ * Sincronía: cada vez que se entra al teléfono, record.mjs dispara ahí un flash
+ * blanco y anota su instante (`flashAt`) en el reloj del principal. El tramo i
+ * usa el flash i del webm del teléfono, así que el cuadro del teléfono que va en
+ * el instante T del principal es  flash_i + (T - flashAt_i).
+ *
+ * `toOut` lleva un instante del reloj de record.mjs al video ya cortado (sin la
+ * escala de calibración: es ≈1 y se mide después del transcode).
+ */
+function devicePlan(tl, toOut) {
+  const ph = tl.phone;
+  if (!ph?.segments?.length || !ph.webm || !existsSync(ph.webm)) return null;
+  const flashes = findFlashEdges(ph.webm);
+  if (flashes.length < ph.segments.length) {
+    console.warn(`  ⚠ el video del teléfono tiene ${flashes.length} flash(es) para ${ph.segments.length} tramo(s); el marco queda vacío.`);
+    return null;
+  }
+  const { x, y, w, h } = ph.screen;
+  const parts = [];
+  let last = "0:v";
+  ph.segments.forEach((seg, i) => {
+    const from = (flashes[i] + (seg.start - seg.flashAt)) / 1000;
+    const to = (flashes[i] + (seg.end - seg.flashAt)) / 1000;
+    const at = toOut(seg.start) / 1000;
+    const until = toOut(seg.end) / 1000;
+    parts.push(
+      `[1:v]trim=start=${from.toFixed(3)}:end=${to.toFixed(3)},setpts=PTS-STARTPTS+${at.toFixed(3)}/TB,` +
+        `scale=${w}:${h}:flags=lanczos,format=yuv420p[ph${i}]`,
+      `[${last}][ph${i}]overlay=${x}:${y}:enable='between(t,${at.toFixed(3)},${until.toFixed(3)})':eof_action=pass[mx${i}]`,
+    );
+    last = `mx${i}`;
+  });
+  return {
+    count: ph.segments.length,
+    args: ["-i", ph.webm, "-filter_complex", parts.join(";"), "-map", `[${last}]`],
+  };
+}
+
+/** Los instantes (ms) en que el video pasa de oscuro a blanco de un cuadro al
+ *  siguiente: los flashes de calibración. Un borde y no un umbral, porque el
+ *  primer cuadro de una página nueva es about:blank, que ya es blanco. */
+function findFlashEdges(video) {
+  let out = "";
+  try {
+    out = execFileSync(
+      "ffmpeg",
+      ["-i", video, "-vf", "scale=2:2,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-", "-f", "null", "-"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], maxBuffer: 64 * 1024 * 1024 },
+    );
+  } catch {
+    return [];
+  }
+  const re = /pts_time:([\d.]+)[\s\S]*?YAVG=([\d.]+)/g;
+  const edges = [];
+  let prev = 255;
+  let m;
+  while ((m = re.exec(out))) {
+    const y = Number(m[2]);
+    if (y > 200 && prev < 50) edges.push(Number(m[1]) * 1000);
+    prev = y;
+  }
+  return edges;
 }
 
 /** Los cues llegan como marcas de inicio/fin; los emparejamos en intervalos. */

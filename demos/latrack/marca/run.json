@@ -1,0 +1,52 @@
+{
+  "id": "marca",
+  "title": "Tu marca, y la app cambia al instante",
+  "promise": "La identidad de la radio —logo, colores, tema y redes— se arma en una pantalla con el teléfono al lado, y el kit para reels deja a todo el equipo con el mismo estilo.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T17:05:04.874Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 69240,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2908785,
+    "sha256": "acb78e304930cf16b7f3c054149343f9613180154ea63d9b014f1fc38788307e"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "nueva-marca",
+      "title": "Una marca nueva, con su app al lado",
+      "proves": "La identidad de la marca se carga con la vista previa de la app en vivo.",
+      "watch": "El teléfono de la derecha toma el nombre y el lema mientras se escriben, antes de guardar.",
+      "startMs": 3,
+      "endMs": 14399
+    },
+    {
+      "id": "logo-colores",
+      "title": "Logo, colores y tema, en vivo",
+      "proves": "Logo, paleta y tema claro u oscuro se ven en la app antes de guardar.",
+      "watch": "La paleta tiñe el reproductor del teléfono; el tema claro cambia toda la app.",
+      "startMs": 14399,
+      "endMs": 28645
+    },
+    {
+      "id": "redes",
+      "title": "Sus redes, y la marca queda creada",
+      "proves": "Las redes de la marca se cargan una vez y aparecen en la app.",
+      "watch": "Cada red cargada suma su ícono en la app; al guardar se abre la página de la marca.",
+      "startMs": 28645,
+      "endMs": 41848
+    },
+    {
+      "id": "kit-reels",
+      "title": "El kit para reels, igual para todo el equipo",
+      "proves": "Un kit de marca para reels que los editores usan pero no pueden cambiar.",
+      "watch": "La muestra \"Así se ven\" cambia con cada opción; solo un administrador puede guardar el kit.",
+      "startMs": 41848,
+      "endMs": 69240
+    }
+  ]
+}

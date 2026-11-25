@@ -53,7 +53,69 @@ export const TIMING = {
   // esperarlo una sola vez devuelve el control sobre una pantalla que está por
   // vaciarse. Corre antes de la claqueta, así que no cuesta un frame de video.
   openingSettle: 1200,
+  // Lo que se sostiene DESPUÉS de cada beat, además de la regla del max. En el
+  // ritmo normal es cero; `pace: slow` lo sube para que el que no conoce el
+  // producto llegue a mirar el resultado antes de la acción siguiente.
+  sayTail: 0,             // aire después de la locución de un beat con `say`
+  actionTail: 0,          // aire después de un beat mudo (tipeo, click, select)
+  // Cuando un type/select/click/upload apunta a algo fuera de la franja cómoda
+  // de la pantalla, se lo trae al centro con scroll animado y se espera esto
+  // antes de mover el cursor: el ojo tiene que ver dónde quedó el campo.
+  intoViewSettle: 300,
+  cps: 16,                // lectura (ver CPS)
 };
+
+/**
+ * Perfiles de ritmo por demo (`pace:` en el guion). `normal` es la tabla de
+ * arriba; `slow` es para un público que no conoce el producto: cursor y tipeo
+ * más lentos, más aire después de cada acción y de cada frase, y lectura a 13
+ * cps en vez de 16. Se aplican con `setPace()` ANTES de calcular nada: lint
+ * (estimación), record y preflight usan el mismo perfil.
+ */
+export const PACES = {
+  normal: {},
+  // A mitad de camino entre normal y slow: el que mira sigue cada paso sin que
+  // se haga eterno.
+  medium: {
+    cursorSteps: 23,
+    dwellBeforeClick: 350,
+    afterClick: 800,
+    typeDelay: 65,
+    typeFullThreshold: 70,
+    betweenScenes: 1000,
+    scrollSpeed: 1300,
+    scrollSettle: 550,
+    sayTail: 450,
+    actionTail: 300,
+    intoViewSettle: 450,
+    cps: 14.5,
+  },
+  slow: {
+    cursorSteps: 28,
+    dwellBeforeClick: 450,
+    afterClick: 1000,
+    typeDelay: 85,
+    typeFullThreshold: 80,
+    betweenScenes: 1300,
+    scrollSpeed: 1100,
+    scrollSettle: 700,
+    sayTail: 900,
+    actionTail: 600,
+    intoViewSettle: 600,
+    cps: 13,
+  },
+};
+
+const DEFAULT_TIMING = { ...TIMING };
+
+/** Aplica un perfil de ritmo sobre TIMING (in place: todos los módulos lo leen
+ *  de ahí). Sin nombre o con uno desconocido vuelve al normal. */
+export function setPace(name) {
+  const profile = PACES[name ?? "normal"];
+  if (!profile) throw new Error(`pace desconocido: '${name}'. Opciones: ${Object.keys(PACES).join(", ")}`);
+  Object.assign(TIMING, DEFAULT_TIMING, profile);
+  return TIMING;
+}
 
 /**
  * Cuánto se sostiene un subtítulo, en ms.
@@ -63,7 +125,7 @@ export const TIMING = {
 export function captionHold(text) {
   const chars = (text ?? "").trim().length;
   if (chars === 0) return 0;
-  return clamp(600 + (chars / CPS) * 1000, 1600, 6000);
+  return clamp(600 + (chars / (TIMING.cps ?? CPS)) * 1000, 1600, 6000);
 }
 
 /**
@@ -71,8 +133,11 @@ export function captionHold(text) {
  * —si hay TTS— la locución. Nunca se acelera ni se estira el audio: el video se
  * adapta a él.
  */
-export function beatDuration({ caption, actionMs = 0, voiceMs = 0 }) {
-  return Math.max(captionHold(caption), actionMs, voiceMs);
+export function beatDuration({ caption, actionMs = 0, voiceMs = 0, read = true }) {
+  // `read: false` = el subtítulo no va quemado en el video (`captions: false`):
+  // no hay texto que leer, así que manda la locución, no la lectura.
+  const base = Math.max(read ? captionHold(caption) : 0, actionMs, voiceMs);
+  return base + ((caption ?? "").trim() ? TIMING.sayTail : 0);
 }
 
 /** Costo estimado de una acción, para presupuestar la demo sin grabarla. */
@@ -80,8 +145,10 @@ export function actionCost(beat) {
   const t = TIMING;
   if (beat.go) return 1200;
   if (beat.click) return t.cursorSteps * 20 + t.dwellBeforeClick + t.afterClick;
-  if (beat.type) return typeCost(beat.type.text ?? "") + t.afterClick;
+  if (beat.type) return t.cursorSteps * 20 + typeCost(beat.type.text ?? "") + t.afterClick;
+  if (beat.select || beat.upload) return t.cursorSteps * 20 + t.dwellBeforeClick + t.afterClick;
   if (beat.hover) return t.cursorSteps * 20 + 400;
+  if (beat.press) return 450 + t.afterClick;
   if (beat.wait) return parseDuration(beat.wait);
   return 0;
 }
@@ -114,13 +181,28 @@ export function splitForTyping(text) {
 /** Estimación de la duración total, en ms. La usa el lint para avisar que la
  *  demo se fue de largo antes de gastar una grabación. */
 export function estimateDuration(demo) {
+  // El perfil del guion manda en la estimación, sin dejarlo puesto: quien llama
+  // (lint) puede estar corriendo con otro.
+  const prev = { ...TIMING };
+  setPace(demo.pace);
+  try {
+    return estimateWithCurrentPace(demo);
+  } finally {
+    Object.assign(TIMING, prev);
+  }
+}
+
+function estimateWithCurrentPace(demo) {
   let total = TIMING.clapFlash + TIMING.fade + TIMING.outroHold;
   if (demo.titleCard !== false) total += TIMING.coverHold;
   for (const scene of demo.scenes ?? []) {
     total += TIMING.betweenScenes;
     if (scene.hold) total += parseDuration(scene.hold);
     for (const beat of scene.beats ?? []) {
-      total += scrollCost(beat) + beatDuration({ caption: beat.say, actionMs: actionCost(beat) });
+      // Sin la voz medida (el lint no sintetiza), la lectura es el mejor estimador
+      // de cuánto dura la locución aunque el subtítulo no vaya quemado.
+      const d = beatDuration({ caption: beat.say, actionMs: actionCost(beat) });
+      total += scrollCost(beat) + (beat.say ? d : Math.max(d, TIMING.actionTail));
       if (beat.as) total += TIMING.identitySwap;
     }
   }

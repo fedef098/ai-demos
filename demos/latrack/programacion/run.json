@@ -1,0 +1,52 @@
+{
+  "id": "programacion",
+  "title": "La programación, una vez, en la hora de cada ciudad",
+  "promise": "Los programas se cargan una vez con sus locutores, se ubican en la grilla semanal y se copian a otra ciudad respetando su hora local.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T17:10:33.954Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 63320,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2860769,
+    "sha256": "a7a758e48a7197e4c15ef177c3fe21c91a86a4939a8568087e45ace06dd2d1dc"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "grilla",
+      "title": "La semana de La Brisa, en la hora de Houston",
+      "proves": "Grilla semanal por señal, en la hora local de la ciudad.",
+      "watch": "La línea \"Ahora son las…\" usa la hora de Houston; la app calcula qué está al aire con esa hora.",
+      "startMs": 11,
+      "endMs": 11400
+    },
+    {
+      "id": "programa",
+      "title": "Un programa nuevo, con sus locutores",
+      "proves": "Programas con locutores, cargados una vez para todas las señales de la marca.",
+      "watch": "El programa es de la marca, no de una señal; se puede usar en la grilla de cualquier ciudad de La Brisa.",
+      "startMs": 11400,
+      "endMs": 24464
+    },
+    {
+      "id": "horario",
+      "title": "Al aire los fines de semana",
+      "proves": "Un horario que se repite varios días se carga de una vez.",
+      "watch": "Fin de semana carga sábado y domingo juntos; la consola avisaría si se cruzara con otro programa.",
+      "startMs": 24464,
+      "endMs": 43927
+    },
+    {
+      "id": "copiar",
+      "title": "La misma grilla en otra ciudad, en su hora",
+      "proves": "La grilla se copia a otra señal en otra zona horaria y mantiene la hora local.",
+      "watch": "Los Ángeles está dos horas detrás de Houston; el programa de las 06:00 queda a las 06:00 en cada ciudad.",
+      "startMs": 43927,
+      "endMs": 63320
+    }
+  ]
+}

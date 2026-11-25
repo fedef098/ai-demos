@@ -1,0 +1,60 @@
+{
+  "id": "notificaciones",
+  "title": "Una notificación para Houston, vista en la pantalla bloqueada y programada",
+  "promise": "La radio le escribe a los oyentes de una ciudad, ve cómo les llega al teléfono antes de mandarla y la programa para la hora del programa, con marcha atrás.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T16:12:58.121Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 57000,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2583896,
+    "sha256": "b6a2adac33d91969a45b7c13594bbbf68f1741458189e397a89d74afa6a5c37c"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "redactar",
+      "title": "Así le llega al oyente, antes de mandarla",
+      "proves": "Redacción con la vista previa de la pantalla bloqueada, con el logo y el nombre de la app.",
+      "watch": "El teléfono de la derecha se actualiza con cada letra y corta el texto donde lo cortaría un teléfono.",
+      "startMs": 1,
+      "endMs": 13763
+    },
+    {
+      "id": "audiencia",
+      "title": "Sólo a la ciudad que importa",
+      "proves": "Audiencia por señal o ciudad, con cuántos teléfonos la van a recibir.",
+      "watch": "El alcance cuenta sólo los teléfonos con las notificaciones activadas en esa ciudad.",
+      "startMs": 13763,
+      "endMs": 22208
+    },
+    {
+      "id": "confirmar",
+      "title": "Nada sale sin querer",
+      "proves": "Enviar ahora siempre pide confirmación, con el alcance y el texto final.",
+      "watch": "La confirmación repite a cuántos llega y avisa que una notificación enviada no se puede borrar; se vuelve con Revisar.",
+      "startMs": 22208,
+      "endMs": 31583
+    },
+    {
+      "id": "programar",
+      "title": "Programada para mañana a las 5",
+      "proves": "Envío programado en la hora de la ciudad, que queda en el historial.",
+      "watch": "La hora se escribe en la hora de Houston; el historial muestra la notificación como Programada.",
+      "startMs": 31583,
+      "endMs": 46322
+    },
+    {
+      "id": "cancelar",
+      "title": "Y hasta que sale, se puede cancelar",
+      "proves": "Una notificación programada se cancela desde el historial hasta el momento de salir.",
+      "watch": "Cancelada no sale a nadie; el historial la conserva para que quede registro.",
+      "startMs": 46322,
+      "endMs": 57000
+    }
+  ]
+}

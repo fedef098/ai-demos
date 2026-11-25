@@ -15,7 +15,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, resolve, join, basename } from "node:path";
 import { requireDep, missingDepMessage } from "./deps.mjs";
 import { loadDemo, lint } from "./lint.mjs";
-import { TIMING, beatDuration, captionHold, actionCost, splitForTyping, parseDuration } from "./pacing.mjs";
+import { TIMING, beatDuration, captionHold, actionCost, splitForTyping, parseDuration, setPace } from "./pacing.mjs";
 import { phraseTimings } from "./subtitles.mjs";
 import { loadVoices } from "./voice.mjs";
 import { cueKey, voicesPath } from "./narrate.mjs";
@@ -32,6 +32,69 @@ const VIEWPORTS = {
 
 const OVERLAY = new URL("./overlay.js", import.meta.url).pathname;
 
+/**
+ * Dispositivos para una persona del cast con `device:`. Esa persona no comparte
+ * la página de escritorio: tiene su propio contexto (viewport, dsf, touch, UA
+ * de teléfono) y su propia grabación, que build.mjs pega dentro del marco de
+ * teléfono que el overlay dibuja en el video principal. Ver `stageScreen()`.
+ */
+export const DEVICES = {
+  iphone: {
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+    isMobile: true,
+    hasTouch: true,
+    userAgent:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+  },
+};
+
+export function deviceOf(person) {
+  if (!person?.device) return null;
+  const d = DEVICES[person.device];
+  if (!d) throw new Error(`device '${person.device}' desconocido en cast '${person.as}'. Opciones: ${Object.keys(DEVICES).join(", ")}`);
+  return d;
+}
+
+/** Dónde va la pantalla del teléfono dentro del cuadro de escritorio: alto casi
+ *  completo (24 px de aire arriba y abajo), proporción del dispositivo, a un
+ *  tercio del ancho para dejar la columna derecha al subtítulo. Números pares:
+ *  el overlay de ffmpeg en yuv420p los prefiere. */
+export function stageScreen(device, frame) {
+  const even = (n) => Math.round(n / 2) * 2;
+  const h = even(frame.height - 48);
+  const w = even((h * device.viewport.width) / device.viewport.height);
+  return { x: even(frame.width * 0.31 - w / 2), y: 24, w, h };
+}
+
+/** Init scripts de un contexto: máscara, opciones del overlay y el overlay. */
+async function installOverlay(context, demo) {
+  await context.addInitScript(
+    (m) => { window.__demoMask = m.mask; window.__demoOpts = m.opts; },
+    { mask: { hide: demo.hide ?? DEFAULT_HIDE, redact: demo.redact ?? [] }, opts: { chapter: demo.chapter ?? null } },
+  );
+  await context.addInitScript({ path: OVERLAY });
+}
+
+/**
+ * `fixtures:` — respuestas fijas para pedidos de LECTURA. Además del JSON de
+ * siempre, un fixture puede servir una página (`contentType: text/html`): así se
+ * muestra, por ejemplo, el mail de invitación renderizado con la plantilla real
+ * del producto. Con `vars: true` el cuerpo pasa por la misma sustitución
+ * \${VAR} que el guion, leída al momento del pedido (un link recién creado por el
+ * seed nunca queda escrito en el repo).
+ */
+export async function installFixtures(page, demo, demoPath) {
+  for (const f of demo.fixtures ?? []) {
+    const raw = readFileSync(resolve(dirname(demoPath), f.body), "utf8");
+    await page.route(f.route, async (route) => {
+      if (route.request().method() !== (f.method ?? "GET")) return route.continue();
+      const body = f.vars ? await expandVars(raw) : raw;
+      return route.fulfill({ status: f.status ?? 200, contentType: f.contentType ?? "application/json", body });
+    });
+  }
+}
+
 // ── reloj monotónico, en ms desde el arranque del proceso ────────────────────
 const now = () => Number(process.hrtime.bigint() / 1000n) / 1000;
 
@@ -42,6 +105,7 @@ async function main() {
   const { demo, selectors, capabilities } = loadDemo(demoPath);
   const { errors } = lint(demo, selectors, capabilities);
   if (errors.length) die(`El guion no pasa el lint:\n${errors.map((e) => `  ✖ ${e}`).join("\n")}`);
+  setPace(demo.pace);
 
   const baseURL = process.env.DEMO_BASE_URL;
   if (!baseURL) die("Falta DEMO_BASE_URL (la app tiene que estar ya desplegada — el grabador nunca levanta un dev server).");
@@ -66,6 +130,7 @@ async function main() {
   const context = await browser.newContext({
     ...vp,
     baseURL,
+    userAgent: demoUserAgent(browser, demo),
     locale: demo.locale ?? "es-AR",
     timezoneId: demo.timezone ?? "America/Argentina/Buenos_Aires",
     colorScheme: "light",
@@ -74,15 +139,10 @@ async function main() {
   });
 
   // La máscara antes que el overlay: el overlay la lee al arrancar y así queda
-  // puesta en CADA documento, no sólo en el primero.
-  await context.addInitScript(
-    (m) => { window.__demoMask = m; },
-    { hide: demo.hide ?? DEFAULT_HIDE, redact: demo.redact ?? [] },
-  );
-
-  // El overlay ANTES de cualquier navegación: pinta el cover negro a
-  // document-start, así el video no arranca mostrando el redirect a /login.
-  await context.addInitScript({ path: OVERLAY });
+  // puesta en CADA documento, no sólo en el primero. Y el overlay ANTES de
+  // cualquier navegación: pinta el cover negro a document-start, así el video no
+  // arranca mostrando el redirect a /login.
+  await installOverlay(context, demo);
 
   const page = await context.newPage();
   page.setDefaultTimeout(TIMING.actionTimeout);
@@ -99,14 +159,7 @@ async function main() {
   // parecería muerta (se mueren polling, debounces y transiciones).
   if (demo.freezeTime) await page.clock.setFixedTime(new Date(demo.freezeTime));
 
-  for (const f of demo.fixtures ?? []) {
-    const body = readFileSync(resolve(dirname(demoPath), f.body), "utf8");
-    await page.route(f.route, (route) =>
-      route.request().method() === (f.method ?? "GET")
-        ? route.fulfill({ status: f.status ?? 200, contentType: "application/json", body })
-        : route.continue(),
-    );
-  }
+  await installFixtures(page, demo, demoPath);
 
   const cues = [];      // { t, kind, text, sceneId, voice? }
   const chapters = [];  // { t, id, title, proves, watch }
@@ -125,14 +178,21 @@ async function main() {
 
   // ── Apertura: el cover ya está negro. Autenticamos y cargamos DETRÁS de él. ──
   const first = demo.cast[0];
+  if (deviceOf(first)) die("La primera persona del cast no puede tener `device:`: el video principal es el de escritorio.");
   await authenticate(page, first, baseURL, demoPath);
   current = first.as;
+  // Quién tiene la sesión del contexto de escritorio. Una persona con `device:`
+  // vive en otro contexto, así que volver de ella NO borra cookies: el dueño
+  // sigue logueado donde lo dejamos.
+  let mainAs = first.as;
+  let active = page;          // la página que recibe las acciones
+  const phone = { ctx: null, page: null, flashAt: null, segStart: null, segments: [], screen: null, device: null };
   // Esta navegación ES la del primer beat, adelantada detrás del cover. Se guarda
   // el beat para no repetirla en cámara: volver a `goto` la misma URL recarga la
   // app entera y el video abre sobre el skeleton, que es justo lo que el cover
   // estaba tapando.
   const openingBeat = demo.scenes[0].beats.find((b) => b.go) ?? null;
-  await page.goto(openingBeat?.go ?? "/", { waitUntil: "domcontentloaded" });
+  await page.goto(openingBeat?.go ? await expandVars(openingBeat.go) : "/", { waitUntil: "domcontentloaded" });
   await applyMask(page, demo);
   // Sin esperar las fuentes, los primeros segundos del video son FOUT.
   // El await va DENTRO del evaluate: FontFaceSet no es serializable.
@@ -191,6 +251,9 @@ async function main() {
   // mientras que buscarlo por luminancia obliga a adivinar dónde termina un
   // fundido, y adivinar de menos abre en un cuadro blanco o gris.
   const openAt = now() - t0;
+  // De acá en adelante un documento nuevo de OTRO origen (sin el estado del
+  // telón en su sessionStorage) tiene que arrancar sin telón. Ver overlay.js.
+  await context.addInitScript(() => { window.__demoCoverStart = "hidden"; });
 
   // ── Escenas ────────────────────────────────────────────────────────────────
   for (const scene of demo.scenes) {
@@ -203,10 +266,27 @@ async function main() {
       let action = beat === openingBeat ? { ...beat, go: null } : beat;
 
       if (beat.as && beat.as !== current) {
-        await switchIdentity(page, demo, beat.as, baseURL, demoPath, {
-          goTo: beat.go,
-          awaitsCss: beat.awaits ? selectors[beat.awaits] : null,
-        });
+        const person = demo.cast.find((c) => c.as === beat.as);
+        const device = deviceOf(person);
+        const awaitsSel = beat.awaits ? selectors[beat.awaits] : null;
+        if (device) {
+          active = await enterDevice(page, phone, { demo, person, device, vp, tmpDir, demoPath, baseURL, goTo: beat.go, awaitsSel, t0 });
+        } else {
+          if (active !== page) {
+            await page.evaluate((fade) => window.__demo.cover("black", { fade }), TIMING.fade);
+            await page.waitForTimeout(TIMING.identitySwap);
+            phone.segments.push({ start: phone.segStart, end: now() - t0, flashAt: phone.flashAt });
+            phone.segStart = null;
+            await page.evaluate(() => window.__demo.stage(false));
+            active = page;
+          }
+          await switchIdentity(page, demo, beat.as, baseURL, demoPath, {
+            goTo: beat.go,
+            awaitsCss: awaitsSel,
+            keepSession: beat.as === mainAs,
+          });
+          mainAs = beat.as;
+        }
         current = beat.as;
         if (beat.go) action = { ...beat, go: null };
       }
@@ -228,14 +308,15 @@ async function main() {
       // depende de eso para no romperse.
       const preScroll = isOnlyScroll(action) ? (action.scroll ?? action.highlight) : null;
       if (preScroll) {
-        await runAction(page, { scroll: preScroll }, selectors, demoPath, outDir, shots);
+        await runAction(active, { scroll: preScroll }, selectors, demoPath, outDir, shots);
         if (action.scroll) action = { ...action, scroll: null };
       }
 
       // El beat dura lo que tarde MÁS: leer el subtítulo, ejecutar la acción o
       // decir la locución. Se calcula ANTES de actuar porque de esa duración
       // sale el reparto de las frases del subtítulo.
-      const target = beatDuration({ caption: beat.say, actionMs: actionCost(action), voiceMs: clip?.ms ?? 0 });
+      const burn = demo.captions !== false;
+      const target = beatDuration({ caption: beat.say, actionMs: actionCost(action), voiceMs: clip?.ms ?? 0, read: burn || !clip });
 
       if (beat.say) {
         // El subtítulo pasa en frases de una línea en vez de aparecer como un
@@ -254,14 +335,20 @@ async function main() {
           });
           off += p.ms;
         }
-        await page.evaluate((ph) => window.__demo.sayQueue(ph), phrases);
+        // `captions: false`: el texto no se pinta en el video. Los cues se
+        // marcan igual — de ahí salen el .vtt, el transcript y la voz.
+        if (burn) await page.evaluate((ph) => window.__demo.sayQueue(ph), phrases);
       }
 
       const started = now();
-      await runAction(page, action, selectors, demoPath, outDir, shots);
+      await runAction(active, action, selectors, demoPath, outDir, shots);
 
+      // Lo que falte para la duración del beat, y como mínimo el aire del ritmo
+      // (`actionTail`) en un beat mudo: sin él, un tipeo encadenaba con el
+      // siguiente sin que se llegara a leer lo que quedó escrito.
       const spent = now() - started;
-      if (spent < target) await page.waitForTimeout(target - spent);
+      const rest = Math.max(target - spent, beat.say ? 0 : TIMING.actionTail);
+      if (rest > 0) await page.waitForTimeout(rest);
 
       if (beat.say) mark("cue-end", "", scene.id);
     }
@@ -283,6 +370,13 @@ async function main() {
   const tEnd = now() - t0;
 
   await page.evaluate(() => window.__demo.done());
+  if (phone.segStart != null) phone.segments.push({ start: phone.segStart, end: tEnd, flashAt: phone.flashAt });
+  let phoneTrack = null;
+  if (phone.ctx) {
+    const pv = phone.page.video();
+    await phone.ctx.close();
+    phoneTrack = { webm: await pv.path(), segments: phone.segments, screen: phone.screen };
+  }
   const video = page.video();
   await context.close();          // recién acá se materializa el .webm
   await browser.close();
@@ -290,7 +384,7 @@ async function main() {
   const webm = await video.path();
   writeFileSync(
     join(tmpDir, "timeline.json"),
-    JSON.stringify({ demo: demo.id, webm, tEnd, openAt, cues, chapters, shots, outDir, demoPath }, null, 2),
+    JSON.stringify({ demo: demo.id, webm, tEnd, openAt, cues, chapters, shots, outDir, demoPath, phone: phoneTrack }, null, 2),
   );
   console.log(`✓ grabado: ${webm}\n  timeline: ${join(tmpDir, "timeline.json")}`);
   process.stdout.write(`${join(tmpDir, "timeline.json")}\n`);
@@ -300,7 +394,7 @@ async function main() {
 
 /** Acciones que tienen que ocurrir ANTES de un scroll: cambian qué hay para
  *  scrollear. Si el beat trae alguna, el scroll no se puede adelantar. */
-const ACTIONS_BEFORE_SCROLL = ["go", "click", "type", "select", "hover", "wait"];
+const ACTIONS_BEFORE_SCROLL = ["go", "click", "type", "select", "hover", "press", "wait"];
 
 export const isOnlyScroll = (beat) => !ACTIONS_BEFORE_SCROLL.some((k) => beat[k]);
 
@@ -312,71 +406,113 @@ export async function runAction(page, beat, selectors, demoPath, outDir, shots) 
   };
 
   if (beat.go) {
-    await page.goto(beat.go, { waitUntil: "domcontentloaded" });
+    await page.goto(await expandVars(beat.go), { waitUntil: "domcontentloaded" });
     // Nada de networkidle: en apps con websockets o long-polling no dispara nunca
     // y te comés 15 s de video congelado por navegación.
   }
 
-  if (beat.click) {
-    const css = sel(beat.click);
-    const loc = page.locator(css).first();
-    await moveTo(page, loc, css);
-    await page.waitForTimeout(TIMING.dwellBeforeClick);
-    const box = await loc.boundingBox();
+  // Todo verbo que toca un elemento (click, type, select, upload, hover) lo trae
+  // primero a la franja cómoda de la pantalla —centrado, con scroll animado— y
+  // espera un instante ANTES de mover el cursor (ver `moveTo`). Antes sólo lo
+  // hacían click y type, y sólo si el elemento estaba entero fuera de cuadro:
+  // un campo pegado al borde inferior, debajo de una barra sticky o del
+  // subtítulo, se tipeaba sin que se viera, y un `select` saltaba de golpe.
+  const pulse = (box) =>
+    box &&
     // El `?.` y el catch: preflight.mjs reusa esta función SIN overlay montado.
-    if (box)
-      await page
-        .evaluate(([x, y]) => window.__demo?.click(x, y), [box.x + box.width / 2, box.y + box.height / 2])
-        .catch(() => {});
+    page.evaluate(([x, y]) => window.__demo?.click(x, y), [box.x + box.width / 2, box.y + box.height / 2]).catch(() => {});
+
+  if (beat.click) {
+    const loc = page.locator(sel(beat.click)).first();
+    await moveTo(page, loc);
+    await page.waitForTimeout(TIMING.dwellBeforeClick);
+    await pulse(await loc.boundingBox());
     await loc.click();
   }
 
   if (beat.hover) {
-    const css = sel(beat.hover);
-    const loc = page.locator(css).first();
-    await moveTo(page, loc, css);
+    const loc = page.locator(sel(beat.hover)).first();
+    await moveTo(page, loc);
     await loc.hover();
   }
 
+  if (beat.press) {
+    // A keyboard shortcut has no cursor to follow, so the key is drawn on screen
+    // (a keycap, bottom centre) for as long as the press takes to register.
+    await page.evaluate((key) => {
+      const k = document.createElement("div");
+      k.setAttribute("data-demo-key", "");
+      k.textContent = key.length === 1 ? key.toUpperCase() : key;
+      k.style.cssText = "all:initial;position:fixed;left:50%;bottom:72px;transform:translateX(-50%);z-index:2147483646;" +
+        "min-width:44px;padding:10px 16px;border-radius:12px;background:#111827;color:#fff;font:600 22px/1 system-ui,sans-serif;" +
+        "text-align:center;box-shadow:0 6px 0 #374151,0 10px 24px rgba(0,0,0,.35);pointer-events:none;transition:opacity .25s;";
+      document.body.appendChild(k);
+      setTimeout(() => { k.style.opacity = "0"; }, 900);
+      setTimeout(() => k.remove(), 1200);
+    }, beat.press).catch(() => {});
+    await page.waitForTimeout(TIMING.dwellBeforeClick);
+    await page.keyboard.press(beat.press);
+  }
+
   if (beat.type) {
-    const css = sel(beat.type.target);
-    const loc = page.locator(css).first();
-    await moveTo(page, loc, css);
+    const loc = page.locator(sel(beat.type.target)).first();
+    await moveTo(page, loc);
     await loc.click();
-    // Tipear 200 caracteres enteros son 9 segundos de video muerto. El ojo sólo
-    // necesita ver escribirse el final.
-    const { instant, typed } = splitForTyping(beat.type.text);
-    if (instant) await loc.fill(instant);
-    await loc.pressSequentially(typed, { delay: TIMING.typeDelay });
+    const text = await expandVars(beat.type.text);
+    // Fecha y hora no se tipean: el teclado entra por segmentos que dependen
+    // del locale (es-US pide AM/PM), así que "07:00" tipeado quedaba inválido.
+    // fill() con el valor ISO es lo que haría el selector nativo.
+    const kind = await loc.evaluate((el) => el.type ?? "").catch(() => "");
+    if (["date", "time", "datetime-local", "month", "week"].includes(kind)) {
+      await loc.fill(text);
+    } else {
+      // Tipear 200 caracteres enteros son 9 segundos de video muerto. El ojo sólo
+      // necesita ver escribirse el final.
+      const { instant, typed } = splitForTyping(text);
+      // fill() SIEMPRE, aunque sea con "": `type` reemplaza el valor del campo, no
+      // lo extiende. Sin esto, tipear "97.5" sobre "250.3" dejaba "250.397.5", y un
+      // campo con un valor inicial (un color, una hora) no cambiaba nunca.
+      await loc.fill(instant);
+      // El timeout de la acción (5 s) es para encontrar el elemento, no para
+      // tipear: a ritmo lento 70 caracteres ya son 6 s.
+      await loc.pressSequentially(typed, { delay: TIMING.typeDelay, timeout: TIMING.actionTimeout + typed.length * TIMING.typeDelay });
+    }
   }
 
   if (beat.select) {
-    await page.locator(sel(beat.select.target)).first().selectOption(beat.select.value);
+    const loc = page.locator(sel(beat.select.target)).first();
+    await moveTo(page, loc);
+    await page.waitForTimeout(TIMING.dwellBeforeClick);
+    await pulse(await loc.boundingBox());
+    await loc.selectOption(beat.select.value);
   }
 
   if (beat.upload) {
-    await page.locator(sel(beat.upload.target)).first()
-      .setInputFiles(resolve(dirname(demoPath), beat.upload.file));
+    // El <input type=file> suele estar oculto: el cursor va al control visible
+    // que lo contiene (el botón de subir), que es lo que una persona tocaría.
+    const loc = page.locator(sel(beat.upload.target)).first();
+    await moveTo(page, loc);
+    await page.waitForTimeout(TIMING.dwellBeforeClick);
+    await pulse(await visibleBox(loc));
+    await loc.setInputFiles(resolve(dirname(demoPath), beat.upload.file));
   }
 
   if (beat.scroll) {
-    await scrollTo(page, sel(beat.scroll));
+    await scrollTo(page, page.locator(sel(beat.scroll)).first());
     await page.waitForTimeout(TIMING.scrollSettle); // frena antes del cue
   }
 
   if (beat.highlight) {
-    const s = sel(beat.highlight);
+    const loc = page.locator(sel(beat.highlight)).first();
     // Un recuadro rojo fuera de cuadro no destaca nada.
-    await scrollTo(page, s);
-    await page.evaluate((css) => {
-      const el = document.querySelector(css);
-      if (!el) return;
+    await scrollTo(page, loc);
+    await loc.evaluate((el) => {
       const prev = el.style.boxShadow;
       el.style.transition = "box-shadow 200ms ease";
       el.style.boxShadow = "0 0 0 4px rgba(255,50,50,.55)";
-      setTimeout(() => { el.style.boxShadow = prev; }, 1200);
-    }, s);
-    await page.waitForTimeout(1200);
+      setTimeout(() => { el.style.boxShadow = prev; }, 1600);
+    }).catch(() => {});
+    await page.waitForTimeout(1600);
   }
 
   if (beat.wait) await page.waitForTimeout(parseDuration(beat.wait));
@@ -416,13 +552,14 @@ export async function runAction(page, beat, selectors, demoPath, outDir, shots) 
  * de más. Se anima el ancestro scrolleable, no siempre la ventana, porque un
  * panel con overflow propio no se mueve tocando `window`.
  */
-async function scrollTo(page, css) {
-  const ms = await page
+async function scrollTo(page, locator) {
+  const ms = await locator
     .evaluate(
-      ([selector, speed, min, max]) =>
+      (target, [speed, min, max]) =>
         new Promise((done) => {
-          const el = document.querySelector(selector);
-          if (!el) return done(0);
+          // Un elemento sin caja (un input oculto) se ubica por su ancestro visible.
+          let el = target;
+          while (el.parentElement && el.getBoundingClientRect().height === 0) el = el.parentElement;
 
           let scroller = document.scrollingElement ?? document.documentElement;
           for (let n = el.parentElement; n; n = n.parentElement) {
@@ -457,30 +594,69 @@ async function scrollTo(page, css) {
           };
           requestAnimationFrame(step);
         }),
-      [css, TIMING.scrollSpeed, TIMING.scrollMin, TIMING.scrollMax],
+      [TIMING.scrollSpeed, TIMING.scrollMin, TIMING.scrollMax],
     )
     .catch(() => 0);
   if (ms) await page.waitForTimeout(ms + 60);
   return ms;
 }
 
+/**
+ * ¿Está el elemento en la franja cómoda de la pantalla? Entre el 16% y el 74%
+ * del alto: por encima quedan los encabezados sticky y el pill del capítulo; por
+ * debajo, el subtítulo y las barras de guardar sticky. "Visible" no alcanzaba:
+ * un campo pegado al borde inferior estaba técnicamente en cuadro y tapado.
+ */
+async function inComfortBand(locator) {
+  return locator
+    .evaluate((target) => {
+      let el = target;
+      while (el.parentElement && el.getBoundingClientRect().height === 0) el = el.parentElement;
+      // Algo sticky o fixed (la barra de "Guardar" al pie) ya está donde va a
+      // estar: scrollear no lo mueve, sólo arrastra el contenido de abajo y saca
+      // de cuadro lo que el beat anterior había dejado a la vista.
+      for (let n = el; n && n !== document.body && n.tagName !== "DIALOG"; n = n.parentElement) {
+        if (/^(sticky|fixed)$/.test(getComputedStyle(n).position)) return true;
+      }
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (r.height > vh * 0.58) return r.top >= 0 && r.top <= vh * 0.3;
+      return r.top >= vh * 0.16 && r.bottom <= vh * 0.74;
+    })
+    .catch(() => true);
+}
+
+/** La caja del elemento o, si está oculto, la de su control visible. */
+async function visibleBox(locator) {
+  const box = await locator.boundingBox().catch(() => null);
+  if (box && box.width && box.height) return box;
+  return locator
+    .evaluate((target) => {
+      for (let el = target.parentElement; el; el = el.parentElement) {
+        const ctl = el.querySelector("button, label, [role=button]");
+        const pick = ctl && ctl.getBoundingClientRect().height ? ctl : el;
+        const r = pick.getBoundingClientRect();
+        if (r.width && r.height) return { x: r.x, y: r.y, width: r.width, height: r.height };
+      }
+      return null;
+    })
+    .catch(() => null);
+}
+
 /** Mueve el cursor con pasos intermedios para que el ojo pueda seguirlo.
  *  Heredado de mira/runner/post-task-review.sh. */
-async function moveTo(page, locator, css) {
+async function moveTo(page, locator) {
   // Playwright también scrollea solo antes de un click, pero de un salto. Si el
-  // target está fuera de cuadro se lo trae animado ANTES de mover el cursor: si
-  // no, el puntero viaja a una posición que la pantalla todavía no muestra.
-  if (css) {
-    const visible = await locator
-      .evaluate((el) => {
-        const { top, bottom } = el.getBoundingClientRect();
-        return top >= 0 && bottom <= window.innerHeight;
-      })
-      .catch(() => true);
-    if (!visible) await scrollTo(page, css);
+  // target no está en la franja cómoda se lo trae al centro, animado, y se deja
+  // un instante quieto ANTES de mover el cursor: si no, el puntero viaja a una
+  // posición que la pantalla todavía no muestra, o se tipea en un campo tapado.
+  await locator.waitFor({ state: "attached" }).catch(() => {});
+  if (!(await inComfortBand(locator))) {
+    const ms = await scrollTo(page, locator);
+    if (ms) await page.waitForTimeout(TIMING.intoViewSettle);
   }
 
-  const box = await locator.boundingBox().catch(() => null);
+  const box = await visibleBox(locator);
   if (!box) return;
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
@@ -511,16 +687,20 @@ async function moveTo(page, locator, css) {
  * plan de Marion mientras se veía la página pública del vecino. El beat corre
  * después sin su `go`, igual que el de apertura.
  */
-async function switchIdentity(page, demo, as, baseURL, demoPath, { goTo, awaitsCss } = {}) {
+async function switchIdentity(page, demo, as, baseURL, demoPath, { goTo, awaitsCss, keepSession = false } = {}) {
   const person = demo.cast.find((c) => c.as === as);
   if (!person) throw new Error(`'${as}' no está en cast`);
 
   await page.evaluate((fade) => window.__demo.cover("black", { fade }), TIMING.fade);
   await page.waitForTimeout(TIMING.identitySwap);
 
-  await page.context().clearCookies();
-  await authenticate(page, person, baseURL, demoPath);
-  if (goTo) await page.goto(goTo, { waitUntil: "domcontentloaded" });
+  // Volver a quien ya tenía la sesión de este contexto (después de una escena
+  // en el teléfono) no la borra: no tiene por qué volver a loguearse.
+  if (!keepSession) {
+    await page.context().clearCookies();
+    await authenticate(page, person, baseURL, demoPath);
+  }
+  if (goTo) await page.goto(await expandVars(goTo), { waitUntil: "domcontentloaded" });
   else await page.reload({ waitUntil: "domcontentloaded" });
   await applyMask(page, demo);
   // Si el target no está en selectors.yml no se falla acá: runAction levanta el
@@ -529,6 +709,62 @@ async function switchIdentity(page, demo, as, baseURL, demoPath, { goTo, awaitsC
 
   await page.evaluate((fade) => window.__demo.cover("hidden", { fade }), TIMING.fade);
   await page.waitForTimeout(TIMING.fade);
+}
+
+/**
+ * Entra a una persona con `device:`. El video de escritorio queda tapado por el
+ * telón mientras se arma, después muestra el marco de teléfono; la persona actúa
+ * en SU contexto (viewport, dsf, touch y UA de teléfono), que graba su propio
+ * webm. El flash de calibración se repite en el teléfono: build.mjs lo busca en
+ * ese webm para saber qué cuadro corresponde a cada instante del principal.
+ */
+async function enterDevice(page, phone, { demo, person, device, vp, tmpDir, demoPath, baseURL, goTo, awaitsSel, t0 }) {
+  await page.evaluate((fade) => window.__demo.cover("black", { fade }), TIMING.fade);
+  await page.waitForTimeout(TIMING.identitySwap);
+
+  phone.screen = stageScreen(device, vp.viewport);
+  phone.device = device;
+  await page.evaluate(
+    ([screen, label]) => window.__demo.stage(true, { screen, label }),
+    [phone.screen, person.label ?? person.name ?? ""],
+  );
+
+  if (!phone.ctx) {
+    const dir = join(tmpDir, "device");
+    mkdirSync(dir, { recursive: true });
+    phone.ctx = await page.context().browser().newContext({
+      ...device,
+      locale: person.locale ?? demo.locale ?? "es-AR",
+      timezoneId: person.timezone ?? demo.timezone ?? "America/Argentina/Buenos_Aires",
+      colorScheme: "light",
+      // El video va al tamaño del viewport en px CSS. Pedirlo a 2x (dsf) NO da
+      // más resolución: el screencast igual llega en px CSS y Playwright lo pega
+      // arriba a la izquierda de un lienzo gris del doble — un cuarto de imagen.
+      recordVideo: { dir, size: { ...device.viewport } },
+    });
+    await installOverlay(phone.ctx, demo);
+    phone.page = await phone.ctx.newPage();
+    phone.page.setDefaultTimeout(TIMING.actionTimeout);
+    await installFixtures(phone.page, demo, demoPath);
+    await authenticate(phone.page, person, baseURL, demoPath);
+  }
+  const p = phone.page;
+  if (goTo) await p.goto(await expandVars(goTo), { waitUntil: "domcontentloaded" });
+  await applyMask(p, demo);
+  if (awaitsSel) await p.locator(awaitsSel).first().waitFor({ state: "visible", timeout: 20000 });
+  await p.waitForTimeout(TIMING.openingSettle);
+
+  await p.evaluate(() => window.__demo.cover("flash"));
+  await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  phone.flashAt = now() - t0;
+  await p.waitForTimeout(TIMING.clapFlash);
+  await p.evaluate(() => window.__demo.cover("hidden", { fade: 0 }));
+  await p.waitForTimeout(120);
+
+  phone.segStart = now() - t0;
+  await page.evaluate((fade) => window.__demo.cover("hidden", { fade }), TIMING.fade);
+  await page.waitForTimeout(TIMING.fade);
+  return p;
 }
 
 async function authenticate(page, person, baseURL, demoPath) {
@@ -560,10 +796,58 @@ async function authenticate(page, person, baseURL, demoPath) {
 function expand(v) {
   if (!v) return v;
   return String(v).replace(/\$\{([A-Z0-9_]+)\}/g, (_, name) => {
-    const val = process.env[name];
+    const val = seedVars()[name] ?? process.env[name];
     if (!val) die(`Falta la variable de entorno ${name}, referenciada en el guion.`);
     return val;
   });
+}
+
+/**
+ * Los valores que deja el seed. demo.sh le pasa al seed `DEMO_VARS`, la ruta de
+ * un archivo `KEY=VALUE` (600, en el directorio temporal de la corrida), y el
+ * seed escribe ahí lo que el guion necesita y no se conoce de antemano: el link
+ * de una invitación recién creada, el id de algo que se crea en cámara.
+ *
+ * Se relee en cada uso, no una vez al arrancar, porque un valor puede llegar
+ * TARDE: si el seed deja un proceso mirando la base, el id de una marca creada
+ * en la escena 2 recién existe cuando la escena 2 terminó. El archivo gana sobre
+ * el entorno: el seed de esta corrida es la fuente de verdad, y una variable
+ * exportada de una corrida anterior apunta a un mundo que ya se borró.
+ */
+function seedVars() {
+  const file = process.env.DEMO_VARS;
+  if (!file || !existsSync(file)) return {};
+  const out = {};
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    const m = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
+    if (m) out[m[1]] = m[2];
+  }
+  return out;
+}
+
+/** Como expand(), pero espera hasta `LATE_VAR_WAIT` a un valor que el seed
+ *  todavía no escribió, en vez de abortar en el acto. */
+async function expandVars(v) {
+  if (!v || !/\$\{[A-Z0-9_]+\}/.test(String(v))) return v;
+  const deadline = Date.now() + LATE_VAR_WAIT;
+  for (;;) {
+    const names = [...String(v).matchAll(/\$\{([A-Z0-9_]+)\}/g)].map((m) => m[1]);
+    const vars = seedVars();
+    if (names.every((n) => vars[n] ?? process.env[n]) || Date.now() > deadline) return expand(v);
+    await new Promise((r) => setTimeout(r, 250));
+  }
+}
+const LATE_VAR_WAIT = 20_000;
+
+/**
+ * El user agent de un Chrome normal. El headless se anuncia como
+ * "HeadlessChrome/…", y varios CDN de audio y video (SomaFM, entre otros)
+ * contestan 403 a eso: el reproductor de la demo quedaba mudo o en error sin que
+ * la app tuviera nada que ver. `userAgent:` en el guion lo pisa.
+ */
+function demoUserAgent(browser, demo) {
+  if (demo?.userAgent) return demo.userAgent;
+  return `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${browser.version()} Safari/537.36`;
 }
 
 async function applyMask(page, demo) {
@@ -589,7 +873,7 @@ export function die(msg) {
   process.exit(1);
 }
 
-export { authenticate, moveTo };
+export { authenticate, moveTo, demoUserAgent, installOverlay, expandVars };
 
 // Sólo graba cuando se lo invoca directamente: preflight.mjs importa runAction
 // de acá para que las dos etapas ejecuten EXACTAMENTE las mismas acciones. Si

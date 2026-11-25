@@ -1,0 +1,60 @@
+{
+  "id": "mensajes-cabina",
+  "title": "El pedido de la oyente llega a la cabina y se atiende con el teclado",
+  "promise": "Lo que los oyentes piden desde la app le llega al locutor en una bandeja que se atiende sin soltar el teclado, y un error de tecla no pierde ningún mensaje.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T16:02:09.696Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 66840,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2560516,
+    "sha256": "8ad627c3d9b75d49fcbfd79c41988f82d09b11739a0328a9fcea871cdde259a9"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "bandeja",
+      "title": "Todo lo que mandan los oyentes, en una bandeja",
+      "proves": "Bandeja de cabina con saludos, dedicatorias y pedidos de todas las señales.",
+      "watch": "Cada mensaje dice quién lo manda, qué tipo es y de qué señal llega; los sin abrir llevan el punto.",
+      "startMs": 3,
+      "endMs": 5795
+    },
+    {
+      "id": "pedido",
+      "title": "Vero pide su canción desde la app",
+      "proves": "Pedido de canción desde la pestaña Cabina de la app, con confirmación al oyente.",
+      "watch": "Es la app real de La Brisa en un teléfono; el pedido va a la cabina de la ciudad que escucha.",
+      "startMs": 5795,
+      "endMs": 33277
+    },
+    {
+      "id": "llega",
+      "title": "Le llega al locutor al instante",
+      "proves": "El mensaje de la app aparece en la bandeja de la consola, arriba de todo y sin abrir.",
+      "watch": "El pedido de Vero encabeza la lista, marcado como sin abrir.",
+      "startMs": 33277,
+      "endMs": 40460
+    },
+    {
+      "id": "teclado",
+      "title": "Se atiende sin soltar el teclado",
+      "proves": "Atajos de teclado para abrir, marcar leído al aire y archivar, pasando solo al siguiente.",
+      "watch": "J abre el siguiente, A lo marca leído al aire, E lo archiva; después de cada acción se abre el que sigue.",
+      "startMs": 40460,
+      "endMs": 57114
+    },
+    {
+      "id": "deshacer",
+      "title": "Una tecla de más no pierde ningún mensaje",
+      "proves": "Toda acción que saca un mensaje de la vista avisa y ofrece Deshacer.",
+      "watch": "Deshacer devuelve la dedicatoria de Marco a la bandeja y la vuelve a abrir.",
+      "startMs": 57114,
+      "endMs": 66840
+    }
+  ]
+}

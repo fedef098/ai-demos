@@ -1,0 +1,152 @@
+# What Latrack can do, for the demo catalog. One capability = something a radio
+# owner would ask to see, not a screen. Ids are stable: the scripts' `covers:`
+# point at them. `priority` is how costly it is NOT to be able to show it.
+product: Latrack
+
+capabilities:
+  # ── Onboarding ──────────────────────────────────────────────────────────────
+  - id: invitacion
+    title: "El dueño entra con una invitación, sin instalar nada ni hablar con ventas"
+    area: Onboarding
+    priority: alta
+
+  - id: marca
+    title: "Logo, colores y lema, con la app en un teléfono que cambia al instante"
+    area: Onboarding
+    priority: alta
+
+  # ── Señales ─────────────────────────────────────────────────────────────────
+  - id: senales
+    title: "Cada FM o AM de la radio, con su ciudad, su zona horaria y el WhatsApp de cabina"
+    area: Señales
+    priority: alta
+
+  - id: stream-probe
+    title: "El stream se prueba en el momento y dice qué está sonando"
+    area: Señales
+    priority: media
+
+  - id: validacion-amigable
+    title: "Los errores se explican en palabras simples y el formulario no pierde nada"
+    area: Señales
+    priority: media
+
+  # ── Programación ────────────────────────────────────────────────────────────
+  - id: programacion
+    title: "La grilla semanal se carga una vez, de lunes a viernes, y la app sabe quién está al aire"
+    area: Programación
+    priority: alta
+
+  - id: copiar-grilla
+    title: "La grilla de una ciudad se copia a otra respetando la hora local"
+    area: Programación
+    priority: media
+
+  # ── App ─────────────────────────────────────────────────────────────────────
+  - id: home-editor
+    title: "La pantalla de inicio se arma por bloques y se publica sin pasar por la tienda"
+    area: App
+    priority: alta
+
+  - id: ficha-tienda
+    title: "La ficha de App Store y Google Play, con checklist, publicada a nombre de la radio"
+    area: App
+    priority: alta
+
+  - id: app-oyente
+    title: "La app del oyente con la marca de la radio: ciudad, en vivo, programación y cabina"
+    area: App
+    priority: alta
+
+  - id: reproductor-web
+    title: "Un reproductor web con la marca de la radio, listo desde el primer día"
+    area: App
+    priority: media
+
+  # ── Not covered by any demo yet ────────────────────────────────────────────
+  - id: estadisticas
+    title: "Oyentes en vivo, horas escuchadas y AQH por programa y por ciudad"
+    area: Audiencia
+    priority: alta
+
+  - id: sponsors
+    title: "Sponsors con banners y pre-rolls, segmentados por programa y con tope por oyente"
+    area: Ingresos
+    priority: alta
+
+  - id: reporte-sponsor
+    title: "Un reporte para el sponsor con impresiones y clics, listo para mandar"
+    area: Ingresos
+    priority: media
+
+  - id: reels
+    title: "Reels verticales con la marca de la radio, armados desde el aire"
+    area: Contenido
+    priority: media
+
+  - id: mensajes-cabina
+    title: "Los mensajes y pedidos de canciones de los oyentes llegan a una bandeja de cabina"
+    area: Audiencia
+    priority: media
+
+  - id: concursos
+    title: "Concursos y encuestas dentro de la app, con sus participantes"
+    area: Audiencia
+    priority: media
+
+  - id: push
+    title: "Notificaciones push a los oyentes, por ciudad"
+    area: Audiencia
+    priority: media
+
+  - id: consola-ingles
+    title: "La consola en inglés, por usuario, para el equipo que no habla español"
+    area: Plataforma
+    priority: baja
+
+  # ── Module demos (marca, senales-streams, programacion, home-app, apps-tiendas) ──
+  - id: kit-reels
+    title: "Un kit de marca para reels: fuentes, subtítulos y logo, igual para todo el equipo"
+    area: Contenido
+    priority: media
+
+  - id: frecuencias-am-fm-hd
+    title: "AM, FM y canales HD que transmiten lo mismo, en una sola señal"
+    area: Señales
+    priority: media
+
+  - id: stream-respaldo
+    title: "Streams de respaldo: si el principal se cae, la app pasa sola al siguiente"
+    area: Señales
+    priority: alta
+
+  - id: estado-stream
+    title: "El estado de cada stream y las canciones que sonaron, leídas del aire"
+    area: Señales
+    priority: media
+
+  - id: home-horario
+    title: "Bloques de la home con horario: un aviso solo el fin de semana, una promo hasta una fecha"
+    area: App
+    priority: media
+
+  - id: home-versiones
+    title: "Cada publicación de la home queda guardada y se puede restaurar"
+    area: App
+    priority: media
+
+  - id: anuncios-reglas
+    title: "Reglas del pre-roll que protegen al oyente, con avisos cuando una opción lo espanta"
+    area: Ingresos
+    priority: alta
+
+  # ── Added by the module videos (mensajes-cabina … pagina-producto) ──────────
+  - id: equipo
+    title: "Equipo con roles (administrador, editor por marca), invitaciones y registro de actividad"
+    area: Plataforma
+    priority: media
+
+  - id: pagina-producto
+    title: "Una página pública que explica el producto, sus precios y pide la demo"
+    area: Ventas
+    priority: media

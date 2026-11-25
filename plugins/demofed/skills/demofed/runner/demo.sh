@@ -158,7 +158,36 @@ dim "  $DEMO_BASE_URL responde"
 step "lint"
 node "$RUNNER_DIR/lint.mjs" "$GUION"
 
+# El directorio temporal se fija acá —antes del seed y de los targets— y se le
+# pasa a cada etapa, para que el trap borre exactamente el que se creó. El .webm
+# crudo pesa ~10 MB/min y el disco de esta VPS está al 90%: dejarlo tirado no es
+# una opción. Ahí vive también DEMO_VARS: lo que el seed le deja al guion.
+export DEMO_TMPDIR="$TMP_ROOT/demo-$SLUG-$$"
+mkdir -p "$DEMO_TMPDIR"
+chmod 700 "$DEMO_TMPDIR"
+export DEMO_VARS="$DEMO_TMPDIR/vars.env"
+cleanup() { rm -rf "$DEMO_TMPDIR"; }
+trap cleanup EXIT
+
+SEED=$(node --input-type=module -e "
+  import { loadDemo } from '$RUNNER_DIR/lint.mjs';
+  const { demo } = loadDemo('$GUION');
+  process.stdout.write(demo.world?.seed ?? '');
+")
+# El seed deja el mundo como la historia lo necesita y escribe en DEMO_VARS los
+# valores que el guion referencia como ${VAR} (una invitación, un id). Corre
+# ANTES de los targets porque preflight.mjs recorre el flujo de verdad: sin el
+# seed, `--check` arrancaría sobre el mundo que dejó la corrida anterior.
+run_seed() {
+  [ -n "$SEED" ] || return 0
+  step "seed"
+  : > "$DEMO_VARS"
+  chmod 600 "$DEMO_VARS"
+  node "$DEMOS_DIR/${SEED#./}"
+}
+
 # ── 3. Targets ───────────────────────────────────────────────────────────────
+run_seed
 step "targets (sin grabar)"
 node "$RUNNER_DIR/preflight.mjs" "$GUION"
 
@@ -177,25 +206,12 @@ step "narrate"
 node "$RUNNER_DIR/narrate.mjs" "$GUION"
 
 # ── 5. Seed ──────────────────────────────────────────────────────────────────
-SEED=$(node --input-type=module -e "
-  import { loadDemo } from '$RUNNER_DIR/lint.mjs';
-  const { demo } = loadDemo('$GUION');
-  process.stdout.write(demo.world?.seed ?? '');
-")
-if [ -n "$SEED" ]; then
-  step "seed"
-  node "$DEMOS_DIR/${SEED#./}"
-fi
+# Otra vez: recorrer los targets ESCRIBIÓ en el entorno (aceptó la invitación,
+# creó lo que el guion crea). La grabación arranca sobre un mundo recién puesto.
+run_seed
 
 # ── 6. Record ────────────────────────────────────────────────────────────────
 step "record"
-# El directorio temporal se fija acá y se le pasa al runner, para que el trap
-# borre exactamente el que se creó. El .webm crudo pesa ~10 MB/min y el disco
-# de esta VPS está al 90%: dejarlo tirado no es una opción.
-export DEMO_TMPDIR="$TMP_ROOT/demo-$SLUG-$$"
-mkdir -p "$DEMO_TMPDIR"
-cleanup() { rm -rf "$DEMO_TMPDIR"; }
-trap cleanup EXIT
 
 TIMELINE=$(node "$RUNNER_DIR/record.mjs" "$GUION" | tail -1)
 [ -f "$TIMELINE" ] || die "No se generó el timeline: la grabación falló."

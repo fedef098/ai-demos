@@ -175,3 +175,40 @@ test("una demo con la forma de un arquetipo no dispara ninguna advertencia del l
   assert.ok(ms > 45_000, `${Math.round(ms / 1000)}s: el lint lo marcaría como demasiado corto`);
   assert.ok(ms < 180_000, `${Math.round(ms / 1000)}s: el lint lo marcaría como demasiado largo`);
 });
+
+test("pace: slow alarga lectura, tipeo y deja aire después de cada frase", async () => {
+  const { setPace } = await import("./pacing.mjs");
+  const demo = { scenes: [{ id: "a", beats: [{ say: "Una frase de prueba para medir." }, { type: { target: "x", text: "hola" } }] }] };
+  try {
+    const normalHold = captionHold("x".repeat(60));
+    const normal = estimateDuration(demo);
+    setPace("slow");
+    assert.ok(captionHold("x".repeat(60)) > normalHold, "lee más lento");
+    assert.ok(TIMING.typeDelay > 45 && TIMING.sayTail > 0 && TIMING.actionTail > 0);
+    assert.equal(beatDuration({ caption: "Hola", voiceMs: 3000 }), 3000 + TIMING.sayTail, "aire después de la voz");
+    setPace("normal");
+    assert.equal(TIMING.typeDelay, 45, "volver a normal restaura la tabla");
+    assert.ok(estimateDuration({ ...demo, pace: "slow" }) > normal, "la estimación usa el pace del guion");
+    assert.equal(TIMING.typeDelay, 45, "estimar no deja puesto el pace del guion");
+    assert.throws(() => setPace("turbo"));
+  } finally {
+    setPace("normal");
+  }
+});
+
+test("pace: medium queda entre normal y slow; read:false ignora la lectura", async () => {
+  const { setPace } = await import("./pacing.mjs");
+  const demo = { scenes: [{ id: "a", beats: [{ say: "Una frase de prueba para medir el ritmo." }, { type: { target: "x", text: "hola mundo" } }, { click: "y" }] }] };
+  try {
+    const keys = ["cursorSteps", "dwellBeforeClick", "afterClick", "typeDelay", "betweenScenes", "sayTail", "actionTail"];
+    const at = (p) => { setPace(p); return Object.fromEntries(keys.map((k) => [k, TIMING[k]])); };
+    const n = at("normal"), m = at("medium"), s = at("slow");
+    for (const k of keys) assert.ok(n[k] < m[k] && m[k] < s[k], `${k}: ${n[k]} < ${m[k]} < ${s[k]}`);
+    setPace("normal");
+    const en = estimateDuration(demo), em = estimateDuration({ ...demo, pace: "medium" }), es = estimateDuration({ ...demo, pace: "slow" });
+    assert.ok(en < em && em < es, "la estimación también queda en el medio");
+    assert.equal(beatDuration({ caption: "x".repeat(80), voiceMs: 1000, read: false }), 1000, "sin subtítulo quemado manda la voz");
+  } finally {
+    setPace("normal");
+  }
+});

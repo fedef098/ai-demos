@@ -1,0 +1,128 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: mensajes-cabina
+product: Latrack
+archetype: custom
+title: El pedido de la oyente llega a la cabina y se atiende con el teclado
+titleCard: false
+promise: >
+  Lo que los oyentes piden desde la app le llega al locutor en una bandeja que se
+  atiende sin soltar el teclado, y un error de tecla no pierde ningún mensaje.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que
+    la cabina recibe los pedidos de la app al instante y que el locutor los despacha
+    rápido durante el programa.
+  in:
+    - Un pedido de canción mandado desde la Cabina de la app del oyente (teléfono)
+    - La bandeja de cabina de la consola con el pedido arriba de todo
+    - Atajos de teclado (J/K, A leído al aire, E archivar) y Deshacer
+  out:
+    - Filtros por señal y por tipo, y las acciones en lote (no hacen al momento)
+    - El botón de WhatsApp de cabina (abre otra app)
+  environment: >
+    QA (https://qa-latrack.adavance.com), empresa Demo Media, marca La Brisa, con el
+    admin de demo. El seed deja cuatro mensajes sin abrir en La Brisa 101.1 y borra
+    los de corridas anteriores. La app del oyente es el build web real apuntado a QA.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: locutor
+    name: Ana Morales
+    context: Conduce la mañana de La Brisa 101.1 en Houston y atiende la cabina mientras está al aire.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Vero
+    label: "Vero · oyente en Houston"
+    device: iphone
+    timezone: America/Chicago
+    context: Escucha La Brisa en el auto y quiere dedicarle una canción a su hermana.
+
+world:
+  seed: ./seeds/mensajes-cabina.mjs
+  assert:
+    - hay cuatro mensajes sin abrir en La Brisa 101.1 (Lupe, Marco, Rosa y Julián)
+    - no queda el pedido de Vero de una corrida anterior
+
+scenes:
+  - id: bandeja
+    title: "Todo lo que mandan los oyentes, en una bandeja"
+    proves: Bandeja de cabina con saludos, dedicatorias y pedidos de todas las señales.
+    covers: [mensajes-cabina]
+    watch: Cada mensaje dice quién lo manda, qué tipo es y de qué señal llega; los sin abrir llevan el punto.
+    beats:
+      - as: locutor
+        go: /inbox
+        awaits: inbox-lista
+        say: Esta es la cabina de La Brisa. Acá llega todo lo que los oyentes mandan.
+
+  - id: pedido
+    title: "Vero pide su canción desde la app"
+    proves: Pedido de canción desde la pestaña Cabina de la app, con confirmación al oyente.
+    covers: [mensajes-cabina, app-oyente]
+    watch: Es la app real de La Brisa en un teléfono; el pedido va a la cabina de la ciudad que escucha.
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8787/?app=demo-labrisa
+        awaits: app-oyente-home
+        say: Vero escucha La Brisa en Houston y quiere pedir una canción para su hermana.
+      - click: app-sheet-cerrar
+      - click: app-tab-cabina
+        awaits: app-pedido
+      - click: app-pedido
+        say: Elige pedir canción, pone su nombre y el tema que quiere.
+      - type: { target: app-nombre-oyente, text: "Vero" }
+      - type: { target: app-mensaje, text: "¿Me ponen “Ella Baila Sola” para mi hermana en Katy?" }
+      - click: app-enviar
+        awaits: app-enviado
+        say: Lo manda, y la app le confirma que ya está en la cabina.
+
+  - id: llega
+    title: "Le llega al locutor al instante"
+    proves: El mensaje de la app aparece en la bandeja de la consola, arriba de todo y sin abrir.
+    covers: [mensajes-cabina]
+    watch: El pedido de Vero encabeza la lista, marcado como sin abrir.
+    beats:
+      - as: locutor
+        go: /inbox
+        awaits: inbox-pedido-vero
+        say: En la consola, el pedido de Vero ya está arriba de todo, sin abrir.
+
+  - id: teclado
+    title: "Se atiende sin soltar el teclado"
+    proves: Atajos de teclado para abrir, marcar leído al aire y archivar, pasando solo al siguiente.
+    covers: [mensajes-cabina]
+    watch: "J abre el siguiente, A lo marca leído al aire, E lo archiva; después de cada acción se abre el que sigue."
+    beats:
+      - press: j
+        awaits: inbox-abierto-vero
+        say: Con la J lo abre en grande, para leerlo al aire tal cual lo escribió.
+      - press: a
+        awaits: inbox-toast-al-aire
+        say: Con la A queda leído al aire, y la bandeja pasa sola al siguiente.
+      - press: j
+        awaits: inbox-abierto-marco
+        say: La J y la K recorren la lista sin tocar el mouse.
+      - press: e
+        awaits: inbox-toast-archivado
+        say: Y la E archiva lo que ya no hace falta.
+
+  - id: deshacer
+    title: "Una tecla de más no pierde ningún mensaje"
+    objection: true
+    proves: Toda acción que saca un mensaje de la vista avisa y ofrece Deshacer.
+    covers: [mensajes-cabina]
+    watch: Deshacer devuelve la dedicatoria de Marco a la bandeja y la vuelve a abrir.
+    hold: 2s
+    beats:
+      - click: inbox-deshacer
+        awaits: inbox-abierto-marco
+        say: Si fue sin querer, Deshacer devuelve la dedicatoria de Marco, abierta.

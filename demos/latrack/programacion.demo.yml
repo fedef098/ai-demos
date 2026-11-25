@@ -1,0 +1,114 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: programacion
+product: Latrack
+archetype: admin-panel
+title: La programación, una vez, en la hora de cada ciudad
+promise: >
+  Los programas se cargan una vez con sus locutores, se ubican en la grilla
+  semanal y se copian a otra ciudad respetando su hora local.
+
+intake:
+  audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
+  in:
+    - La grilla semanal de La Brisa 101.1 Houston con la hora local
+    - Un programa nuevo con locutores y su horario de fin de semana
+    - Copiar la grilla a otra señal en otra zona horaria
+  out:
+    - Fotos y descripción del programa
+    - Editar o quitar horarios
+    - La programación en la app del oyente (está en el video de puesta en marcha)
+  environment: >
+    QA (https://qa-latrack.adavance.com), empresa Demo Media con la cuenta
+    admin@demo.latrack.app. Se crea el programa "Demo Sábado Ranchero" (sus horarios
+    en Houston se borran con él) y la grilla se copia a "Demo La Brisa 1310 Los
+    Ángeles", una señal vacía que crea el seed. El seed borra ambos antes de cada
+    corrida y al terminar; la grilla propia de Houston no cambia. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+titleCard: false
+chapter: { position: top-left, top: 8 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: >
+      Gerente de La Brisa (Demo Media): regional mexicana en Houston, Phoenix y
+      Miami. Arma la app de la radio desde la consola, sin depender de nadie técnico.
+    auth: { via: storageState, file: ./.auth/modulos-admin.json }
+
+world:
+  seed: ./seeds/programacion.mjs
+  assert:
+    - Houston tiene su grilla de lunes a domingo, con el hueco del fin de semana de 06:00 a 10:00
+    - existe "Demo La Brisa 1310 Los Ángeles" sin grilla, en hora del Pacífico
+
+scenes:
+  - id: grilla
+    title: "La semana de La Brisa, en la hora de Houston"
+    proves: Grilla semanal por señal, en la hora local de la ciudad.
+    covers: [programacion]
+    watch: La línea "Ahora son las…" usa la hora de Houston; la app calcula qué está al aire con esa hora.
+    beats:
+      - as: gerente
+        go: /schedule
+        awaits: grilla-houston
+        say: Esta es la semana de La Brisa en Houston, con cada programa en su horario.
+      - highlight: grilla-houston
+        say: Todo va en la hora de Houston, y la app sabe qué está al aire en cada momento.
+
+  - id: programa
+    title: "Un programa nuevo, con sus locutores"
+    proves: Programas con locutores, cargados una vez para todas las señales de la marca.
+    covers: [programacion]
+    watch: El programa es de la marca, no de una señal; se puede usar en la grilla de cualquier ciudad de La Brisa.
+    beats:
+      - click: nuevo-programa
+        awaits: show-form
+        say: Cargas un programa nuevo con sus locutores, una sola vez para toda la marca.
+      - type: { target: show-nombre, text: "Demo Sábado Ranchero" }
+      - type: { target: show-locutores, text: "Karla Ibarra, DJ Toño" }
+      - click: show-crear
+        awaits: show-demo-creado
+
+  - id: horario
+    title: "Al aire los fines de semana"
+    proves: Un horario que se repite varios días se carga de una vez.
+    covers: [programacion]
+    watch: Fin de semana carga sábado y domingo juntos; la consola avisaría si se cruzara con otro programa.
+    beats:
+      - click: agregar-horario
+        awaits: slot-form
+      - select: { target: slot-programa, value: "Demo Sábado Ranchero" }
+      - click: slot-fin-de-semana
+        say: Lo ubicas sábados y domingos, de siete a diez, justo antes del bailable.
+      - type: { target: slot-inicio, text: "07:00" }
+      - type: { target: slot-fin, text: "10:00" }
+      - click: slot-guardar-2-dias
+        awaits: slot-demo-en-grilla
+      - scroll: slot-demo-en-grilla
+        say: Y ya está en la grilla, los dos días.
+
+  - id: copiar
+    title: "La misma grilla en otra ciudad, en su hora"
+    objection: true
+    proves: La grilla se copia a otra señal en otra zona horaria y mantiene la hora local.
+    covers: [copiar-grilla]
+    watch: Los Ángeles está dos horas detrás de Houston; el programa de las 06:00 queda a las 06:00 en cada ciudad.
+    beats:
+      - click: copiar-grilla
+        awaits: copia-destino
+      - select: { target: copia-destino, value: "Demo La Brisa 1310 Los Ángeles (vacía)" }
+        awaits: copia-nota-zona
+        say: La copias a Los Ángeles, que está en otra zona horaria, y la consola te lo avisa.
+      - click: copia-confirmar
+        awaits: copia-confirmada
+        say: Cada programa queda a la misma hora local. El de las seis, a las seis en cada ciudad.
+      - select: { target: selector-senal, value: "Demo La Brisa 1310 Los Ángeles" }
+        awaits: grilla-los-angeles
+        say: Y la grilla de Los Ángeles ya corre en su propia hora.

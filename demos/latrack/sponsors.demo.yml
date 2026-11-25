@@ -1,0 +1,142 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: sponsors
+product: Latrack
+archetype: custom
+title: Una campaña de sponsor armada y vista en el teléfono antes de salir
+titleCard: false
+promise: >
+  La radio carga la campaña de un anunciante en un solo formulario, le arma el banner
+  con una plantilla y ve cómo sale en cada lugar de la app antes de guardarla.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que
+    vender publicidad digital en la app es tan simple como vender una cuña al aire.
+  in:
+    - Ubicaciones (banner en la home, pre-roll con acompañante, presentado por El Despertador)
+    - Nombre visible, ciudad (Houston), enlace con UTM, días y la protección del oyente
+    - El spot del pre-roll y el banner con el logo, hecho con plantilla para todas las ubicaciones
+    - La vista previa en el teléfono por ubicación, y guardar
+  out:
+    - El reporte del sponsor (tiene su propio video)
+    - Peso, prioridad, tope por oyente y meta de impresiones
+    - Bloque en la home y concurso patrocinado
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. El seed
+    borra los sponsors "Demo Taquería…" de corridas anteriores. El spot (voz sintética) es
+    ficticio, como el logo de la taquería (assets/).
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: ventas
+    name: Ana Morales
+    context: Vende la publicidad de La Brisa en Houston. Acaba de cerrar una campaña con la Taquería El Güero.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/sponsors.mjs
+  assert:
+    - no hay sponsors "Demo …" en Demo Media
+
+scenes:
+  - id: ubicaciones
+    title: "Dónde sale el anunciante"
+    proves: Ubicaciones de la campaña en la app, combinables en una sola campaña.
+    covers: [sponsors]
+    watch: Al elegir el acompañante se suma solo el pre-roll, porque sólo se ve mientras suena.
+    beats:
+      - as: ventas
+        go: /sponsors/new
+        awaits: sponsor-form
+        say: Ana le vendió una campaña a la Taquería El Güero y la carga en un solo formulario.
+      - click: sponsor-acompanante
+        awaits: sponsor-preroll-on
+        say: "Elige dónde sale: el banner en la home, y un pre-roll con su imagen acompañante."
+      - click: sponsor-presentado
+        say: Y su marca en el reproductor mientras está al aire El Despertador.
+
+  - id: anunciante
+    title: "Sólo en Houston, y los martes"
+    proves: Nombre que ven los oyentes, ciudades, enlace con UTM, programa y días.
+    covers: [sponsors]
+    watch: El enlace suma las UTM solo, para que el anunciante vea las visitas en su analítica.
+    beats:
+      - type: { target: sponsor-nombre, text: "Demo Taquería El Güero" }
+      - type: { target: sponsor-visible, text: "Taquería El Güero" }
+        say: Los oyentes ven el nombre del negocio, no el de la campaña.
+      - click: sponsor-houston
+      - type: { target: sponsor-enlace, text: "taqueriaelguero.com" }
+        awaits: sponsor-utm
+        say: Sale sólo en Houston, y cada toque lleva a su web con las UTM puestas.
+      - click: sponsor-despertador
+      - click: sponsor-martes
+        say: Presenta El Despertador, y sale los martes, el día del dos por uno.
+
+  - id: oyente
+    title: "El oyente nunca queda saturado"
+    objection: true
+    proves: Los topes de la app (un pre-roll cada 30 minutos por oyente) siempre se respetan.
+    covers: [sponsors]
+    watch: El tope lo fija la radio por app y ninguna campaña lo puede saltear.
+    beats:
+      - highlight: sponsor-topes
+        say: Venda lo que venda, nadie escucha más de un pre-roll cada media hora.
+
+  - id: creatividad
+    title: "El banner, hecho con plantilla"
+    proves: Spot de audio para el pre-roll y banners generados con plantilla para cada ubicación.
+    covers: [sponsors]
+    watch: El mismo diseño se genera al tamaño de cada ubicación, legible en un teléfono.
+    beats:
+      - upload: { target: sponsor-audio, file: ./assets/taqueria-el-guero-spot.mp3 }
+        awaits: sponsor-audio-listo
+        say: Sube el spot de radio que suena antes del vivo.
+      - click: sponsor-plantilla
+        awaits: sponsor-crear-banner
+      - click: sponsor-crear-banner
+        awaits: builder
+        say: Y como la taquería no tiene banner, lo arma con una plantilla.
+      - click: builder-oferta
+      - type: { target: builder-titulo, text: "2x1 en tacos los martes" }
+      - type: { target: builder-boton, text: "Ver menú" }
+      - upload: { target: builder-logo, file: ./assets/taqueria-el-guero-logo.png }
+        awaits: builder-logo-listo
+        wait: 2s
+        say: Plantilla de oferta, título, botón y el logo de la taquería.
+      - click: builder-generar
+        awaits: sponsor-banner-hecho
+        say: Lo genera al tamaño de cada ubicación, en un clic.
+
+  - id: vista
+    title: "Así lo ve el oyente, en cada lugar"
+    proves: Vista previa en vivo del teléfono para cada ubicación de la campaña.
+    covers: [sponsors]
+    watch: El teléfono de la derecha es la app de La Brisa con la campaña puesta donde la app la muestra.
+    beats:
+      - click: sponsor-vista-banner
+        awaits: sponsor-vista-activa
+        say: Al costado, el teléfono muestra cómo sale el banner en la home.
+      - click: sponsor-vista-preroll
+      - scroll: sponsor-vista-nota
+        say: El acompañante, que se ve mientras suena el pre-roll…
+      - click: sponsor-vista-presenta
+        say: …y su marca junto a El Despertador mientras está al aire.
+
+  - id: guardar
+    title: "Guardada, y la app la toma sola"
+    proves: La campaña queda activa y la app la toma sin publicar una versión nueva.
+    watch: La lista de sponsors la muestra al aire en la app, con sus ubicaciones.
+    covers: [sponsors]
+    hold: 2s
+    beats:
+      - click: sponsor-crear
+        awaits: sponsor-creado
+        say: Guarda, y la campaña entra en la app en el próximo arranque.

@@ -1,0 +1,44 @@
+{
+  "id": "apps-tiendas",
+  "title": "La app en las tiendas, y anuncios que no espantan",
+  "promise": "La ficha de App Store y Google Play se completa con un checklist que dice qué falta, y las reglas de anuncios avisan cuando una opción espantaría a los oyentes.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-25T17:12:12.575Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 57120,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3700612,
+    "sha256": "c30e8423b39a85e1f3968e335eeb8cd9fc9d046a581b47bfecd7c403b588dfa3"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "ficha",
+      "title": "La ficha de la tienda, con su checklist",
+      "proves": "Ficha de App Store y Google Play con un checklist que dice qué falta.",
+      "watch": "El checklist lo calcula el servidor con lo guardado; faltan el ícono y los identificadores.",
+      "startMs": 2,
+      "endMs": 9566
+    },
+    {
+      "id": "completar",
+      "title": "Lo que falta, y el checklist en verde",
+      "proves": "Ícono validado, Bundle ID sugerido a partir del nombre y checklist completo.",
+      "watch": "El Bundle ID lo sugiere la consola con el nombre de la app; queda fijo cuando la app se publica por primera vez.",
+      "startMs": 9566,
+      "endMs": 28406
+    },
+    {
+      "id": "anuncios",
+      "title": "Anuncios que no espantan a tus oyentes",
+      "proves": "Reglas del pre-roll con valores que protegen al oyente y avisos cuando se cambian.",
+      "watch": "Los avisos aparecen al cambiar el valor, antes de guardar; el programa sin cortes no lleva pre-roll mientras está al aire.",
+      "startMs": 28406,
+      "endMs": 57120
+    }
+  ]
+}
