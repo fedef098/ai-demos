@@ -1,0 +1,32 @@
+# What the WIG (BlueButterfly) product can do, for the demo catalog.
+capabilities:
+  - id: vault-add
+    title: The owner keeps passwords, PINs and codes in the vault
+    priority: high
+  - id: vault-own-key
+    title: Each owner's secrets are sealed with a key of their own
+    priority: high
+  - id: vault-reveal
+    title: Lists show names only; a value opens for 60 seconds
+    priority: high
+  - id: vault-views-log
+    title: Every view of a secret is logged for the owner
+    priority: medium
+  - id: vault-contact-reveal
+    title: A trusted contact sees only what was shared with them, when it opens
+    priority: high
+  - id: vault-row-binding
+    title: A sealed value moved to another row or owner does not open
+    priority: medium
+  - id: vault-migration
+    title: Secrets saved before the per-owner keys move over on their own
+    priority: low
+  - id: vault-mentions
+    title: Mention a vault secret in an important note
+    priority: high
+  - id: vault-notes-tab
+    title: The vault as a tab of Important Notes
+    priority: medium
+  - id: vault-no-access
+    title: A contact without access sees the tag, never the value
+    priority: high

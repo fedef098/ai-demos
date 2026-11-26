@@ -1,0 +1,49 @@
+# The ONLY file with selectors for the WIG (BlueButterfly) demos.
+targets:
+  # ── secrets vault: owner ──────────────────────────────────────────────────
+  secrets-list:          '[data-testid="secrets-list"]'
+  secrets-add:           '[data-testid="secrets-add"]'
+  secrets-row:           '[data-testid="secrets-row"]:has-text("Chase checking")'
+  secrets-views:         '[data-testid="secrets-views"]'
+  chase-show:            '[data-testid="secrets-row"]:has-text("Chase checking") [data-testid="secrets-row-show"]'
+  old-router-show:       '[data-testid="secrets-row"]:has-text("Old router") [data-testid="secrets-row-show"]'
+  netflix-show:          '[data-testid="secrets-row"]:has-text("Netflix") [data-testid="secrets-row-show"]'
+  secret-revealed:       '[data-testid="secret-revealed"]'
+  reveal-error:          'text="We couldn''t show this secret."'
+
+  # ── secrets vault: the form ───────────────────────────────────────────────
+  secret-form:           '[data-testid="secret-form"]'
+  secret-form-title:     '[data-testid="secret-form-title"]'
+  secret-form-username:  '[data-testid="secret-form-username"]'
+  secret-form-secret:    '[data-testid="secret-form-secret"]'
+  secret-form-save:      '[data-testid="secret-form-save"]'
+
+  # ── secrets vault: trusted contact ────────────────────────────────────────
+  shared-secrets-panel:     '[data-testid="shared-secrets-panel"]'
+  shared-secrets-row-show:  '[data-testid="shared-secrets-row"]:has-text("Home Wi-Fi") [data-testid="shared-secrets-row-show"]'
+
+  # ── secrets vault demo (full module) ──────────────────────────────────────
+  vault-card:              '[data-testid="secrets-card"]'
+  vault-chase-show:        '[data-testid="secrets-row"]:has-text("Chase checking") [data-testid="secrets-row-show"]'
+  vault-form-shared:       '[data-testid="secret-form-shared"]'
+  vault-form-timing-now:   '[data-testid="secret-form-timing-now"]'
+  vault-amex-row:          '[data-testid="secrets-row"]:has-text("American Express")'
+  vault-views-contact:     '[data-testid="secrets-views"] li:has-text("Lucas Lopez")'
+  notes-add:               '[data-testid="important-notes-list-add-new-button"]'
+  notes-title:             '[data-testid="important-notes-editor-title-input"]'
+  notes-editor:            '[data-testid="rich-text-editor"]'
+  notes-mention-menu:      '[data-testid="note-mention-menu"]'
+  notes-mention-amex:      '[data-testid="note-mention-option"]:has-text("American Express")'
+  notes-mention-chip:      '[data-testid="rich-text-editor"] .secret-mention'
+  notes-save:              '[data-testid="important-notes-editor-save-button"]'
+  notes-secrets-tab:       '[data-testid="important-notes-secrets-tab"]'
+  notes-secret-tile:       '[data-testid="important-notes-secret-tile"]'
+  recap-secrets:           '[data-testid="shared-secrets-panel"]'
+  recap-chase-show:        '[data-testid="shared-secrets-row"]:has-text("Chase checking") [data-testid="shared-secrets-row-show"]'
+  recap-note-tag:          '[data-testid="plan-recap-note-0"] .secret-mention, [data-testid="plan-recap-section-important_notes"] .secret-mention'
+  recap-notes:             '[data-testid="plan-recap-section-important_notes"]'
+  user-menu:               '[data-testid="user-menu-trigger"]'
+  user-menu-settings:      '[data-testid="user-menu-settings"]'
+  settings-secrets:        '[data-testid="secrets-section"]'
+  settings-secrets-open:   '[data-testid="secrets-open-button"]'
+  plan-home:               '[data-testid="user-menu-trigger"]'

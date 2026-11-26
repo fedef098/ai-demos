@@ -1,0 +1,60 @@
+{
+  "id": "secrets-vault-own-keys",
+  "title": "Every owner's secrets now sit under a key of their own",
+  "promise": "The vault looks the same, but each owner's secrets are sealed with their own key and bound to the row they live in.\n",
+  "product": "BlueButterfly",
+  "recordedAt": "2026-11-24T19:01:15.198Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-app.bluebutterfly.com",
+  "durationMs": 68600,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2553353,
+    "sha256": "6eec60e363e86fb693adfd4d5153638c3873735f5abfbde10fdbc7c533b18c03"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "alta",
+      "title": "A secret goes in the way it always did",
+      "proves": "Nothing changed for the owner; the value is sealed with her own key on save.",
+      "watch": "Her first secret is what mints her key. No setup, no new screen.",
+      "startMs": 0,
+      "endMs": 14215
+    },
+    {
+      "id": "leer",
+      "title": "Only names in the list, the value on demand",
+      "proves": "Lists never carry a value; a reveal opens it for 60 seconds and logs it.",
+      "watch": "The row shows a name only; the value comes from a separate, logged request.",
+      "startMs": 14215,
+      "endMs": 23380
+    },
+    {
+      "id": "contacto",
+      "title": "Her son sees what she chose to share",
+      "proves": "The double filter still holds with per-owner keys.",
+      "watch": "Same rules as yesterday. The key change is invisible to the contact too.",
+      "startMs": 23380,
+      "endMs": 40671
+    },
+    {
+      "id": "copiado",
+      "title": "A value moved to another row does not open",
+      "proves": "Each value is bound to its row and column; another row or owner's key cannot open it.",
+      "watch": "The seed copied the Wi-Fi's sealed value onto the Old router row in the database. Before 11-24 a copied value would have opened.",
+      "startMs": 40671,
+      "endMs": 54693
+    },
+    {
+      "id": "migracion",
+      "title": "Older secrets moved over on their own",
+      "proves": "At boot the API reseals values from the app-wide key onto the owner's key.",
+      "watch": "Netflix was written before the change. Nobody re-entered it.",
+      "startMs": 54693,
+      "endMs": 68600
+    }
+  ]
+}

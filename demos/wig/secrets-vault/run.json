@@ -1,0 +1,68 @@
+{
+  "id": "secrets-vault",
+  "title": "The secrets vault, from the owner to the family",
+  "promise": "Maria keeps the passwords and account details her family will need in one encrypted place, mentions them where they matter, and decides who can open each one and when.\n",
+  "product": "BlueButterfly",
+  "recordedAt": "2026-11-25T17:10:34.645Z",
+  "commit": "982bf3d",
+  "baseUrl": "https://qa-app.bluebutterfly.com",
+  "durationMs": 121960,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 4417235,
+    "sha256": "98d0e577c1044c55dbf497994a9eddf1dd34add57bea148b9a5836d2656bf210"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "vault",
+      "title": "Everything in one encrypted place",
+      "proves": "Settings → Secrets lists names only, each with who it is shared with.",
+      "watch": "The list never carries a value; each row says if it is private, shared now or after death.",
+      "startMs": 5,
+      "endMs": 24193
+    },
+    {
+      "id": "add",
+      "title": "Shared on purpose",
+      "proves": "A secret is added in a modal; sharing is an explicit choice, now or after her death.",
+      "watch": "Required and optional fields are marked; sharing starts off.",
+      "startMs": 24193,
+      "endMs": 46140
+    },
+    {
+      "id": "show",
+      "title": "A value, only when asked for",
+      "proves": "Showing a value needs a recent second factor, hides itself, and every look is recorded.",
+      "watch": "The session already passed the second factor; otherwise a code is asked first.",
+      "startMs": 46140,
+      "endMs": 59849
+    },
+    {
+      "id": "notes",
+      "title": "Mentioned right where it matters",
+      "proves": "In an Important Note, typing @ lists her secrets and a click drops one into the text as a tag.",
+      "watch": "The note keeps the name only; the value stays in the vault.",
+      "startMs": 59849,
+      "endMs": 85611
+    },
+    {
+      "id": "family",
+      "title": "Her son sees what she chose",
+      "proves": "A trusted contact allowed to see secrets gets only the ones shared with him now.",
+      "watch": "The Wi-Fi is shared after her death, so it does not appear yet.",
+      "startMs": 85611,
+      "endMs": 101684
+    },
+    {
+      "id": "no-access",
+      "title": "A tag is not a key",
+      "proves": "A contact without the permission sees the mention's name in a note, and has nothing to open.",
+      "watch": "No Secrets panel for Ana, and the API answers 404 to her for every secret.",
+      "startMs": 101684,
+      "endMs": 121960
+    }
+  ]
+}
