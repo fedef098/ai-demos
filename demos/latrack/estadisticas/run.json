@@ -3,50 +3,50 @@
   "title": "La audiencia de la app, en los números con los que se vende radio",
   "promise": "La radio ve cuánta gente la escucha en la app, cuándo y en qué programas, con las mismas métricas que usa para vender, y sale a vender con un media kit en un clic.\n",
   "product": "Latrack",
-  "recordedAt": "2026-11-25T16:35:46.769Z",
-  "commit": "982bf3d",
+  "recordedAt": "2026-11-27T22:27:16.125Z",
+  "commit": "a370d1b",
   "baseUrl": "https://qa-latrack.adavance.com",
-  "durationMs": 57160,
+  "durationMs": 59720,
   "video": {
     "file": "demo.mp4",
     "poster": "poster.jpg",
     "narrated": true,
-    "bytes": 3328389,
-    "sha256": "a9c98d6f71a0d73d67ad564a7e6b0d2b361d51f557fc4e3158e87bb8eb0520d0"
+    "bytes": 3550848,
+    "sha256": "c252604eff6e7245301e88bdc3db72ee89da82cf0cec53f70b84b7920d6f069a"
   },
   "usedFixtures": [],
   "scenes": [
     {
       "id": "tarjetas",
       "title": "Cuánta gente escucha, en una mirada",
-      "proves": "Cume, AQH, TSL, horas y escucha en el auto, contra el período anterior.",
+      "proves": "Cume, AQH, TSL y horas escuchadas, contra el período anterior.",
       "watch": "Cada tarjeta compara con el período anterior; todo sale de sesiones reales de la app.",
-      "startMs": 6,
-      "endMs": 15171
+      "startMs": 2,
+      "endMs": 15715
     },
     {
       "id": "explicado",
       "title": "Cada número, explicado sin jerga",
       "proves": "Cada métrica explica qué cuenta y cómo se calcula, en palabras simples.",
       "watch": "No es un rating de Nielsen: es audiencia digital medida por sesiones reales, y lo dice.",
-      "startMs": 15171,
-      "endMs": 21197
+      "startMs": 15715,
+      "endMs": 21749
     },
     {
       "id": "franjas",
       "title": "Cuándo escuchan, y qué programas",
       "proves": "Oyentes por franja de lunes a viernes y fin de semana, ranking por AQH y mapa de calor.",
       "watch": "Las franjas van en la hora local de cada ciudad; el ranking cuenta cada cuarto de hora para el programa al aire.",
-      "startMs": 21197,
-      "endMs": 43550
+      "startMs": 21749,
+      "endMs": 45047
     },
     {
       "id": "ciudad",
       "title": "Sólo Houston, y el media kit listo",
       "proves": "Filtro por ciudad que recalcula todo, y un media kit de una página para vender.",
       "watch": "El media kit toma la ciudad filtrada; se imprime o se guarda como PDF desde el navegador.",
-      "startMs": 43550,
-      "endMs": 57160
+      "startMs": 45047,
+      "endMs": 59720
     }
   ]
 }

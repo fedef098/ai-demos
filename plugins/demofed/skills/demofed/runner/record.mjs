@@ -326,6 +326,10 @@ async function main() {
             keepSession: beat.as === mainAs,
           });
           mainAs = beat.as;
+          // El documento nuevo puede ser de OTRO origen (la página pública de la radio y
+          // después la consola): la píldora del capítulo vive en el sessionStorage del
+          // origen anterior y no viajaba, así que el resto de la escena salía sin ella.
+          await page.evaluate((t) => window.__demo?.chapter(t), scene.title).catch(() => {});
         }
         current = beat.as;
         if (beat.go) action = { ...beat, go: null };
@@ -382,6 +386,8 @@ async function main() {
 
       const started = now();
       await runAction(active, action, selectors, demoPath, outDir, shots);
+      // Mismo motivo que en el cambio de persona: un `go` a otro origen pierde la píldora.
+      if (action.go && active === page) await page.evaluate((t) => window.__demo?.chapter(t), scene.title).catch(() => {});
 
       // Lo que falte para la duración del beat, y como mínimo el aire del ritmo
       // (`actionTail`) en un beat mudo: sin él, un tipeo encadenaba con el

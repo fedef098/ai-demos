@@ -9,7 +9,7 @@ promise: >
   qué canciones los hacen cambiar, con datos de su propia app.
 
 intake:
-  audience: dueños/gerentes y programadores de radio, y el equipo de Adavance (efetrack)
+  audience: equipo interno y clientes evaluando Latrack (efetrack)
   in:
     - La curva de retención
     - Quién se va rápido, por programa
@@ -20,7 +20,7 @@ intake:
     QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. Las sesiones son las de demo;
     las canciones son una rotación ficticia (artistas inventados) que el seed agrega a las tres
     señales entre hace 26 y 2 días, y que --cleanup borra. Sólo lectura en cámara.
-  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+  approved_by: Federico
 
 viewport: desktop
 locale: es-US

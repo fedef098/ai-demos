@@ -63,6 +63,16 @@ capabilities:
     area: App
     priority: media
 
+  - id: reproductor-web-cancion
+    title: "El reproductor web muestra el programa y la canción al aire, por ciudad"
+    area: App
+    priority: media
+
+  - id: reproductor-web-sitio
+    title: "El reproductor se pega en el sitio de la radio con un código de la consola"
+    area: App
+    priority: media
+
   # ── Not covered by any demo yet ────────────────────────────────────────────
   - id: estadisticas
     title: "Oyentes en vivo, horas escuchadas y AQH por programa y por ciudad"

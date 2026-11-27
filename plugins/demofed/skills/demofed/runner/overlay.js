@@ -20,6 +20,16 @@
 
 (() => {
   if (window.__demo) return; // ya instalado en este documento
+  // Un iframe de OTRO origen (un reproductor embebido en el sitio de un cliente) no lleva
+  // overlay: su cover arrancaba negro y nadie lo levantaba —el driver sólo le habla al frame
+  // principal, y el estado del cover vive en el sessionStorage del otro origen—, así que el
+  // iframe salía como una barra negra con su propia píldora de capítulo. Los iframes del
+  // mismo origen siguen como antes (heredan el cover por sessionStorage).
+  try {
+    if (window.top !== window && window.top.location.origin !== location.origin) return;
+  } catch {
+    return; // leer top.location de otro origen tira: es un iframe ajeno
+  }
 
   const CUE_KEY = "__demo_cue__";
   const COVER_KEY = "__demo_cover__";

@@ -9,21 +9,20 @@ promise: >
   mismas métricas que usa para vender, y sale a vender con un media kit en un clic.
 
 intake:
-  audience: >
-    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que la
-    app les da números de audiencia que entienden y que les sirven para vender.
+  audience: equipo interno y clientes evaluando Latrack (efetrack)
   in:
-    - "Las tarjetas: oyentes únicos (cume), AQH, TSL, horas escuchadas y % en el auto"
+    - "Las tarjetas: oyentes únicos (cume), AQH, TSL y horas escuchadas"
     - La explicación de cada métrica, en palabras simples
     - Franjas de lunes a viernes y de fin de semana, ranking de programas y mapa de calor
     - El filtro por ciudad y el media kit
   out:
     - El CSV y el PDF impreso (se descargan)
-    - Por ciudad, dónde escuchan y sistema (abajo de todo)
+    - Por ciudad y sistema (abajo de todo)
+    - La escucha en el auto (oculta hasta que CarPlay y Android Auto estén en las tiendas)
   environment: >
     QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. Sólo
     lectura: muestra los datos de escucha de demo de Demo Media; no se siembra nada.
-  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+  approved_by: Federico
 
 viewport: desktop
 locale: es-US
@@ -47,7 +46,7 @@ world:
 scenes:
   - id: tarjetas
     title: "Cuánta gente escucha, en una mirada"
-    proves: Cume, AQH, TSL, horas y escucha en el auto, contra el período anterior.
+    proves: Cume, AQH, TSL y horas escuchadas, contra el período anterior.
     covers: [estadisticas]
     watch: Cada tarjeta compara con el período anterior; todo sale de sesiones reales de la app.
     beats:
@@ -56,7 +55,7 @@ scenes:
         awaits: stats-cume
         say: Ana prepara una reunión con un anunciante y abre las estadísticas de la app.
       - say: Oyentes únicos del mes, oyentes por cuarto de hora y cuánto escucha cada uno.
-      - say: Las horas escuchadas, y qué parte se escucha en el auto.
+      - say: Y las horas escuchadas, todo comparado con el período anterior.
 
   - id: explicado
     title: "Cada número, explicado sin jerga"

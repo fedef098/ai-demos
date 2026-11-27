@@ -1,0 +1,57 @@
+{
+  "id": "reproductor-web",
+  "title": "La radio en la computadora y en su propio sitio",
+  "promise": "La radio suena en la computadora y en su propio sitio, con la canción al aire, sin instalar nada: una página para escuchar en vivo por ciudad, y un código de la consola para pegar en su web.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T22:20:32.016Z",
+  "commit": "a370d1b",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 54840,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 1891678,
+    "sha256": "4dcda7f56490af60b5669fe890e1ebd508e620f62f086928dee0b1f6485eccd2"
+  },
+  "usedFixtures": [
+    "**/api/listen/cmwti8qye00024jo49jk43oi7",
+    "**/api/listen/cmwti8qz100054jo41wzysch9",
+    "**/api/listen/cmwti8qzl00084jo4ubha7xb1",
+    "http://127.0.0.1:8790/"
+  ],
+  "scenes": [
+    {
+      "id": "escuchar",
+      "title": "La radio, en la computadora",
+      "proves": "Una página para escuchar en vivo en el dominio de la radio, con su marca, sin instalar nada.",
+      "watch": "Usa los mismos streams y respaldos que la app; si se corta, se reconecta solo.",
+      "startMs": 1,
+      "endMs": 14826
+    },
+    {
+      "id": "ciudad",
+      "title": "Su ciudad, su frecuencia",
+      "proves": "El oyente elige la ciudad y el reproductor pasa a esa señal, con su frecuencia y su canción.",
+      "watch": "Cada ciudad es una señal con su propio stream y su propia programación.",
+      "startMs": 14826,
+      "endMs": 26771
+    },
+    {
+      "id": "codigo",
+      "title": "Un código para su sitio",
+      "proves": "La consola da el enlace para compartir y el código para pegar el reproductor en el sitio de la radio.",
+      "watch": "No hay que programar nada; el código funciona en cualquier sitio que acepte HTML.",
+      "startMs": 26771,
+      "endMs": 40276
+    },
+    {
+      "id": "sitio",
+      "title": "Sonando en su propio sitio",
+      "proves": "El reproductor pegado en el sitio de la radio, con su marca y la canción al aire, sonando sin salir de la página.",
+      "watch": "Es el código tal cual sale de la consola, en una página de ejemplo.",
+      "startMs": 40276,
+      "endMs": 54840
+    }
+  ]
+}

@@ -3,16 +3,16 @@
   "title": "Lo que ve una radio que llega a Latrack por primera vez",
   "promise": "El dueño de una radio entiende en un minuto las dos formas de estar en el celular, su app propia o Latrack desde hoy, qué hace falta para empezar, cuánto cuesta y cómo pedir la demo.\n",
   "product": "Latrack",
-  "recordedAt": "2026-11-27T18:50:21.770Z",
-  "commit": "3b2980e",
+  "recordedAt": "2026-11-27T22:29:31.762Z",
+  "commit": "a370d1b",
   "baseUrl": "https://qa-latrack.adavance.com",
-  "durationMs": 84760,
+  "durationMs": 75040,
   "video": {
     "file": "demo.mp4",
     "poster": "poster.jpg",
     "narrated": true,
-    "bytes": 5232158,
-    "sha256": "7536be714d2355a4bdd33a320518c078a6018c78d9d755928670ffa820732e55"
+    "bytes": 4204930,
+    "sha256": "94628e599f3fef28237f6e2313849bea206374dd681df15507786d3eed1f3a00"
   },
   "usedFixtures": [],
   "scenes": [
@@ -22,39 +22,31 @@
       "proves": "La portada muestra la app de una radio de ejemplo y las dos formas de llegar al teléfono.",
       "watch": "El teléfono es la vista real de la app de ejemplo, La Brisa 101.1.",
       "startMs": 8,
-      "endMs": 11537
+      "endMs": 11539
     },
     {
       "id": "modelos",
       "title": "Tu app propia, o tu radio en Latrack",
       "proves": "Los dos modelos, app propia publicada desde las cuentas de la radio o Latrack desde el primer día, y los dos a la vez.",
       "watch": "Las dos conviven; el link y el QR llevan a cada oyente a la app que corresponde.",
-      "startMs": 11537,
-      "endMs": 35268
-    },
-    {
-      "id": "web",
-      "title": "Su página web y su reproductor",
-      "proves": "Cada radio tiene su página web y su reproductor, y pronto suena en el auto.",
-      "watch": "CarPlay y Android Auto figuran como próximamente.",
-      "startMs": 35268,
-      "endMs": 43498
+      "startMs": 11539,
+      "endMs": 35286
     },
     {
       "id": "precios",
       "title": "Un precio por mes, y la app con su nombre",
       "proves": "Precios publicados sin contrato, y la respuesta honesta sobre la app con el nombre de la radio.",
       "watch": "La respuesta explica por qué la app propia se publica desde las cuentas de la radio.",
-      "startMs": 43498,
-      "endMs": 61287
+      "startMs": 35286,
+      "endMs": 51564
     },
     {
       "id": "demo",
       "title": "Pide la demo con su propia radio",
       "proves": "Formulario corto para pedir una demo con la radio del prospecto.",
       "watch": "El formulario no se envía en este video.",
-      "startMs": 61287,
-      "endMs": 84760
+      "startMs": 51564,
+      "endMs": 75040
     }
   ]
 }

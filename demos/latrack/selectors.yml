@@ -565,3 +565,17 @@ targets:
   dominio-activo:         '#dominio div:has(> p:has-text("ya responde en"))'
   own-pedidos:            'main section:has(h2:text-is("Versiones")) ul'
   app-sheet-participar:   '[data-testid="contest-sheet"] :text-is("Participar")'
+
+  # ── reproductor-web (/listen on the radio's domain, /brands/<id>, the radio's site) ──
+  escuchar-ahora:         'div:has(> p:has-text("En vivo")):has(> p.font-display)'
+  escuchar-pausar:        'button[aria-label="Pausar"]'
+  escuchar-phoenix:       'button[aria-pressed]:has-text("Phoenix")'
+  escuchar-phoenix-on:    'button[aria-pressed="true"]:has-text("Phoenix")'
+  escuchar-cancion-phoenix: 'p:text-is("Desierto, Norteños de Phoenix")'
+  escuchar-lo-que-sono:   'div:has(> p:text-is("Lo que sonó"))'
+  reproductor-panel:      'main section:has(h2:text-is("Reproductor web"))'
+  reproductor-codigo:     'main section:has(h2:text-is("Reproductor web")) div.flex-col:has(> span:text-is("Código para tu sitio web"))'
+  sitio-reproductor:      'iframe[title="La Brisa en vivo"]'
+  sitio-cancion:          'iframe[title="La Brisa en vivo"] >> internal:control=enter-frame >> p:text-is("Te Fuiste en Abril, Los Primos del Norte")'
+  sitio-play:             'iframe[title="La Brisa en vivo"] >> internal:control=enter-frame >> button[aria-label="Escuchar en vivo"]'
+  sitio-sonando:          'iframe[title="La Brisa en vivo"] >> internal:control=enter-frame >> button[aria-label="Pausar"]'

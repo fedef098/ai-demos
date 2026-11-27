@@ -1,0 +1,124 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: reproductor-web
+product: Latrack
+archetype: custom
+title: La radio en la computadora y en su propio sitio
+titleCard: false
+promise: >
+  La radio suena en la computadora y en su propio sitio, con la canción al aire, sin instalar
+  nada: una página para escuchar en vivo por ciudad, y un código de la consola para pegar en su web.
+
+intake:
+  audience: equipo interno y clientes evaluando Latrack (efetrack)
+  in:
+    - La página para escuchar en el dominio de la radio (labrisa-demo.adavance.com/listen)
+    - El programa y la canción al aire, y lo que sonó
+    - Cambiar de ciudad y frecuencia
+    - El código para el sitio web en la consola (Marcas › La Brisa › Reproductor web)
+    - El reproductor pegado y sonando en el sitio de la radio
+  out:
+    - La página web completa de la radio (tiene su video, pagina-web-radio)
+    - La app del oyente (tiene sus videos)
+    - El cambio de idioma
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. Solo lectura.
+    El programa al aire es el real de la grilla; las canciones son una rotación FICTICIA
+    (artistas inventados) que el guion le contesta a /api/listen con un fixture, porque los
+    streams de QA son una radio de rock en inglés. El sitio de la radio es una página ficticia
+    servida por el motor en 127.0.0.1:8790 con el código exacto que da la consola.
+  approved_by: Federico
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+# Higher than the usual 48: on /brands/<id> the pill covered «Editar home» and «Borrar».
+chapter: { position: top-right, top: 12 }
+
+fixtures:
+  - route: "**/api/listen/cmwti8qye00024jo49jk43oi7"
+    body: ./fixtures/listen-houston.json
+    vars: true
+  - route: "**/api/listen/cmwti8qz100054jo41wzysch9"
+    body: ./fixtures/listen-phoenix.json
+    vars: true
+  - route: "**/api/listen/cmwti8qzl00084jo4ubha7xb1"
+    body: ./fixtures/listen-miami.json
+    vars: true
+  - route: "http://127.0.0.1:8790/"
+    body: ./fixtures/sitio-la-brisa.html
+    contentType: text/html
+
+cast:
+  - as: oyente
+    name: Un oyente en la computadora
+    context: Escucha La Brisa desde la oficina, sin instalar nada.
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa. Quiere que su sitio de noticias tenga la radio sonando.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/reproductor-web.mjs
+  assert:
+    - las tres señales de La Brisa tienen su respuesta de "al aire" lista
+
+scenes:
+  - id: escuchar
+    title: "La radio, en la computadora"
+    proves: Una página para escuchar en vivo en el dominio de la radio, con su marca, sin instalar nada.
+    covers: [reproductor-web, reproductor-web-cancion]
+    watch: Usa los mismos streams y respaldos que la app; si se corta, se reconecta solo.
+    beats:
+      - as: oyente
+        go: https://labrisa-demo.adavance.com/listen
+        awaits: escuchar-ahora
+        say: Quien quiere escuchar La Brisa desde la oficina entra a su reproductor, sin instalar nada.
+      - highlight: escuchar-ahora
+        say: Ve el programa que está al aire y la canción que suena en este momento.
+      - click: web-play
+        awaits: escuchar-pausar
+        say: Y en un segundo está escuchando en vivo.
+
+  - id: ciudad
+    title: "Su ciudad, su frecuencia"
+    proves: El oyente elige la ciudad y el reproductor pasa a esa señal, con su frecuencia y su canción.
+    covers: [reproductor-web-cancion]
+    watch: Cada ciudad es una señal con su propio stream y su propia programación.
+    beats:
+      - click: escuchar-phoenix
+        awaits: escuchar-cancion-phoenix
+        say: Si escucha desde Phoenix, elige su ciudad y pasa a esa señal, con su frecuencia.
+      - scroll: escuchar-lo-que-sono
+        say: Y abajo, lo que sonó antes, por si quiere buscar esa canción.
+
+  - id: codigo
+    title: "Un código para su sitio"
+    objection: true
+    proves: La consola da el enlace para compartir y el código para pegar el reproductor en el sitio de la radio.
+    covers: [reproductor-web-sitio]
+    watch: No hay que programar nada; el código funciona en cualquier sitio que acepte HTML.
+    beats:
+      - as: gerente
+        go: /brands/cmwti8qxj00014jo472ejga6p
+        awaits: reproductor-panel
+        say: Del lado de la radio, la consola trae el enlace para compartir y el código para su sitio.
+      - highlight: reproductor-codigo
+        say: Son unas pocas líneas que Ana pega en la página de noticias de La Brisa.
+
+  - id: sitio
+    title: "Sonando en su propio sitio"
+    proves: El reproductor pegado en el sitio de la radio, con su marca y la canción al aire, sonando sin salir de la página.
+    covers: [reproductor-web-sitio, reproductor-web-cancion]
+    watch: Es el código tal cual sale de la consola, en una página de ejemplo.
+    hold: 1s
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8790/
+        awaits: sitio-cancion
+        say: Y ahí está, arriba de las noticias, con su marca y la canción al aire.
+      - click: sitio-play
+        awaits: sitio-sonando
+        say: Quien entra a leer, escucha la radio sin salir del sitio.

@@ -180,3 +180,20 @@ the two models and `pagina-web-radio` gained the «Tu dominio» scene.
   latter and `puesta-en-marcha` closes on the new radio's subdomain.
 - Engine: a phone scene now loads its destination before the desktop goes black (it used to
   load behind the curtain: 3–4 s of black), and the phone label sits below the chapter pill.
+
+## Batch 4 (27 nov 2026): no car metric, web player
+
+Since latrack 71f610d (`CAR_PLAY_SHIPPED = false`) the console Estadísticas, the media kit and
+`/producto` no longer show listening in the car. `estadisticas`, `retencion-salidas` and
+`pagina-producto` were re-recorded without it (`pagina-producto` lost its «web» scene: the card
+still reads «y pronto en el auto»). `reproductor-web` is new (efetrack `reproductor-web`).
+
+| Demo | Creates / changes | Seed resets / `--cleanup` |
+|---|---|---|
+| reproductor-web | nothing. The show on air is the real one; the songs are a FICTITIOUS rotation answered to `/api/listen/<stationId>` by fixtures (`fixtures/listen-*.json`, filled through DEMO_VARS by the seed), so the stream worker's Play rows are never touched. The radio's site is `fixtures/sitio-la-brisa.html`, served by the engine's route at `http://127.0.0.1:8790/` with the console's exact iframe code | — |
+
+- Record `reproductor-web` against `DEMO_BASE_URL=https://qa-latrack.adavance.com`, not the Railway
+  origin: the console's embed code prints the origin it is opened on.
+- Engine: a cross-origin iframe no longer gets the overlay (its black cover was never lifted and the
+  embed came out as a black bar), and the chapter pill is put back after navigating to another
+  origin (it lived in the previous origin's sessionStorage).

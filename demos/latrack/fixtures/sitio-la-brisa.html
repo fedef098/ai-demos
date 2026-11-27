@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- The FICTITIOUS website of La Brisa 101.1 (demo station), served by the engine at
+     http://127.0.0.1:8790/ in reproductor-web. The player is the exact iframe code the
+     console gives in Marcas › La Brisa › Reproductor web, pointed at QA. -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Brisa 101.1 FM · Houston</title>
+<style>
+  :root { --ink: #0F172A; --amber: #F59E0B; --paper: #F8F5EF; --muted: #5B6475; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.55 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  header { background: var(--ink); color: #fff; }
+  .bar { max-width: 1080px; margin: 0 auto; padding: 30px 28px 20px; display: flex; align-items: center; gap: 16px; }
+  .logo { width: 44px; height: 44px; }
+  .name { font-weight: 800; font-size: 22px; letter-spacing: -0.3px; }
+  .name small { display: block; font-weight: 500; font-size: 12px; color: #CBD5E1; letter-spacing: 0; }
+  nav { margin-left: auto; display: flex; gap: 26px; font-size: 15px; }
+  nav a { color: #E2E8F0; text-decoration: none; }
+  nav a.on { color: var(--amber); font-weight: 700; }
+  .player { max-width: 1080px; margin: 0 auto; padding: 22px 28px 0; }
+  .player p { margin: 0 0 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+  main { max-width: 1080px; margin: 0 auto; padding: 30px 28px 60px; display: grid; grid-template-columns: 2fr 1fr; gap: 36px; }
+  .tag { display: inline-block; background: var(--amber); color: var(--ink); font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: .6px; }
+  h1 { font-size: 38px; line-height: 1.12; margin: 14px 0 12px; letter-spacing: -0.6px; }
+  .lead { font-size: 18px; color: #334155; }
+  .photo { height: 230px; border-radius: 16px; margin: 22px 0; background:
+      radial-gradient(circle at 25% 30%, rgba(245,158,11,.9), transparent 45%),
+      radial-gradient(circle at 75% 70%, rgba(244,114,182,.55), transparent 40%),
+      linear-gradient(135deg, #1E293B, #0F172A); }
+  aside h2 { font-size: 18px; margin: 0 0 12px; }
+  aside li { list-style: none; padding: 12px 0; border-bottom: 1px solid #E5DED2; }
+  aside ul { padding: 0; margin: 0; }
+  aside b { display: block; }
+  aside span { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <svg class="logo" viewBox="0 0 1024 1024" aria-hidden="true">
+      <rect x="32" y="32" width="960" height="960" rx="220" fill="#1E293B"/>
+      <g fill="none" stroke="#F59E0B" stroke-linecap="round" stroke-width="60">
+        <path d="M196 336 C 300 266, 410 406, 530 336 S 730 266, 828 336"/>
+        <path d="M276 512 C 370 446, 470 578, 580 512 S 750 450, 828 504"/>
+        <path d="M356 688 C 440 628, 520 744, 620 684"/>
+      </g>
+    </svg>
+    <div class="name">La Brisa 101.1 <small>La regional de Houston</small></div>
+    <nav><a class="on" href="#">Inicio</a><a href="#">Noticias</a><a href="#">Programas</a><a href="#">Eventos</a><a href="#">Contacto</a></nav>
+  </div>
+</header>
+
+<section class="player">
+  <p>Escucha en vivo</p>
+  <iframe src="https://qa-latrack.adavance.com/embed/cmwti8qxj00014jo472ejga6p" title="La Brisa en vivo" width="100%" height="72" style="border:0;border-radius:12px" allow="autoplay"></iframe>
+</section>
+
+<main>
+  <article>
+    <span class="tag">Noticias</span>
+    <h1>La Brisa llega a la Feria de Primavera con su cabina en vivo</h1>
+    <p class="lead">Este fin de semana transmitimos desde la feria: saludos, música y sorpresas para los que pasen por la cabina.</p>
+    <div class="photo" role="img" aria-label="Escenario de la feria"></div>
+    <p>Karla Ibarra y el equipo de La Hora del Regreso estarán al aire desde el escenario principal. Acércate, pide tu canción y llévate un recuerdo de la radio.</p>
+  </article>
+  <aside>
+    <h2>Lo más leído</h2>
+    <ul>
+      <li><b>Las 10 canciones más pedidas de noviembre</b><span>Hace 2 horas</span></li>
+      <li><b>Así se vivió el Baile del Año</b><span>Ayer</span></li>
+      <li><b>Conoce a la nueva voz de las mañanas</b><span>Hace 3 días</span></li>
+      <li><b>Cómo escribirle a la cabina por WhatsApp</b><span>Hace 1 semana</span></li>
+    </ul>
+  </aside>
+</main>
+</body>
+</html>

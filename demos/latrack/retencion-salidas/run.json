@@ -3,16 +3,16 @@
   "title": "Quién se queda, quién se va y con qué canción",
   "promise": "La radio ve cuánto tiempo se quedan sus oyentes, en qué programa se van más rápido y qué canciones los hacen cambiar, con datos de su propia app.\n",
   "product": "Latrack",
-  "recordedAt": "2026-11-27T18:22:10.711Z",
-  "commit": "3b2980e",
-  "baseUrl": "https://web-staging-52227612.up.railway.app",
-  "durationMs": 46640,
+  "recordedAt": "2026-11-27T22:22:07.624Z",
+  "commit": "a370d1b",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 46600,
   "video": {
     "file": "demo.mp4",
     "poster": "poster.jpg",
     "narrated": true,
-    "bytes": 2513030,
-    "sha256": "45d85df619a865bc2f46eef9ba80952483352a697e8e8ddb38045513247a7bc8"
+    "bytes": 2504163,
+    "sha256": "d84e55a3ae9e89dc05341d9a071bb7f271409fe2dca6af14905e545370d94fdd"
   },
   "usedFixtures": [],
   "scenes": [
@@ -21,24 +21,24 @@
       "title": "Cuánto se quedan",
       "proves": "De cada 100 oyentes que empiezan, cuántos siguen después de N minutos.",
       "watch": "Cuenta sesiones terminadas de al menos un minuto.",
-      "startMs": 1,
-      "endMs": 16705
+      "startMs": 3,
+      "endMs": 16654
     },
     {
       "id": "programas",
       "title": "Quién se va rápido, por programa",
       "proves": "Qué parte de los que entran en cada programa se va en los primeros quince minutos.",
       "watch": "El programa es el que estaba al aire cuando el oyente empezó a escuchar.",
-      "startMs": 16705,
-      "endMs": 27766
+      "startMs": 16654,
+      "endMs": 27713
     },
     {
       "id": "canciones",
       "title": "Las canciones que hacen cambiar",
       "proves": "Las canciones con más salidas mientras sonaban, con un mínimo de oyentes para que cuente.",
       "watch": "Una canción necesita al menos veinte oyentes al empezar para entrar en la lista.",
-      "startMs": 27766,
-      "endMs": 46640
+      "startMs": 27713,
+      "endMs": 46600
     }
   ]
 }

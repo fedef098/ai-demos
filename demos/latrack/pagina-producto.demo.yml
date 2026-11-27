@@ -9,24 +9,21 @@ promise: >
   propia o Latrack desde hoy, qué hace falta para empezar, cuánto cuesta y cómo pedir la demo.
 
 intake:
-  audience: >
-    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Reemplaza el video del
-    25/11: la página ahora presenta los dos modelos (app propia y Latrack) y CarPlay como
-    próximamente.
+  audience: equipo interno y clientes evaluando Latrack (efetrack)
   in:
     - La portada con la app de ejemplo en el teléfono
     - Los dos modelos, app propia o Latrack, y que se pueden tener los dos
     - Lo que hace falta para empezar (stream, logo, programación)
-    - El sitio web y el reproductor de cada radio
     - Precios sin contrato, y la pregunta de la app con el nombre de la radio
     - El formulario para pedir la demo (sin enviarlo)
   out:
     - Enviar el formulario (crea un pedido de demo y avisa a ventas; lo muestra puesta-en-marcha)
     - El resto del día al aire y de las preguntas frecuentes
+    - El sitio web y el reproductor (tiene su video, reproductor-web) y lo que llega próximamente (CarPlay / Android Auto)
   environment: >
     QA (https://qa-latrack.adavance.com), página pública /producto, sin sesión. No se
     siembra ni se crea nada; el formulario se completa pero no se envía.
-  approved_by: "Federico (dueño de producto), 2026-11-27: pidió re-grabarlo con los dos modelos en el pedido de la tanda de efetrack"
+  approved_by: Federico
 
 viewport: desktop
 locale: es-US
@@ -73,15 +70,6 @@ scenes:
       - highlight: producto-empezar
         say: Para empezar alcanza con su stream, su logo y su programación.
         voice: Para empezar alcanza con su estrím, su logo y su programación.
-
-  - id: web
-    title: "Su página web y su reproductor"
-    proves: Cada radio tiene su página web y su reproductor, y pronto suena en el auto.
-    covers: [pagina-producto, pagina-web]
-    watch: CarPlay y Android Auto figuran como próximamente.
-    beats:
-      - scroll: producto-sitio-web
-        say: Cada radio tiene además su página web y su reproductor, y pronto, el auto.
 
   - id: precios
     title: "Un precio por mes, y la app con su nombre"
