@@ -146,6 +146,9 @@ async function main() {
 
   const page = await context.newPage();
   page.setDefaultTimeout(TIMING.actionTimeout);
+  // Una app desplegada puede tardar más que un click en cargar en frío: la
+  // navegación tiene su propio margen, sin aflojar el fail-fast de las acciones.
+  page.setDefaultNavigationTimeout(TIMING.navigationTimeout);
 
   // recordVideo escribe un archivo POR PÁGINA. Un popup parte la línea de tiempo
   // en dos webm y no hay forma de recomponerla: mejor fallar claro.
@@ -193,6 +196,28 @@ async function main() {
   // estaba tapando.
   const openingBeat = demo.scenes[0].beats.find((b) => b.go) ?? null;
   await page.goto(openingBeat?.go ? await expandVars(openingBeat.go) : "/", { waitUntil: "domcontentloaded" });
+  // Precalentar el teléfono: su contexto se abre ya y carga el ORIGEN de la primera
+  // URL que va a abrir (sólo "/", sin el path: no sigue links ni cambia estado), así
+  // la app web queda en caché y la primera entrada no es una pantalla negra.
+  // Cada origen distinto que el teléfono va a abrir se precalienta (un `go` a otro
+  // origen a mitad de escena era una pantalla blanca de 4 s).
+  {
+    let asNow = null;
+    const phoneGos = [];
+    for (const b of demo.scenes.flatMap((sc) => sc.beats)) {
+      if (b.as) asNow = b.as;
+      const person = demo.cast.find((c) => c.as === asNow);
+      if (b.go && deviceOf(person)) phoneGos.push({ person, url: new URL(await expandVars(b.go), baseURL) });
+    }
+    if (phoneGos.length) {
+      const { person } = phoneGos[0];
+      await openPhone(page, phone, { demo, person, device: deviceOf(person), tmpDir, demoPath, baseURL });
+      for (const origin of new Set(phoneGos.map((g) => g.url.origin))) {
+        await phone.page.goto(`${origin}/`, { waitUntil: "load" }).catch(() => {});
+        await phone.page.waitForTimeout(1500);
+      }
+    }
+  }
   await applyMask(page, demo);
   // Sin esperar las fuentes, los primeros segundos del video son FOUT.
   // El await va DENTRO del evaluate: FontFaceSet no es serializable.
@@ -718,6 +743,38 @@ async function switchIdentity(page, demo, as, baseURL, demoPath, { goTo, awaitsC
  * webm. El flash de calibración se repite en el teléfono: build.mjs lo busca en
  * ese webm para saber qué cuadro corresponde a cada instante del principal.
  */
+/**
+ * El contexto del teléfono (uno solo para toda la demo). Se abre la primera vez que
+ * entra una persona con `device:`, o antes, detrás del telón de apertura, para
+ * precalentarlo: sin eso, la primera entrada al teléfono dejaba 4–8 s de negro
+ * mientras la app web arrancaba en frío.
+ */
+async function openPhone(page, phone, { demo, person, device, tmpDir, demoPath, baseURL }) {
+  const dir = join(tmpDir, "device");
+  mkdirSync(dir, { recursive: true });
+  phone.ctx = await page.context().browser().newContext({
+    ...device,
+    locale: person.locale ?? demo.locale ?? "es-AR",
+    timezoneId: person.timezone ?? demo.timezone ?? "America/Argentina/Buenos_Aires",
+    colorScheme: "light",
+    // `geolocation:` en el cast: el teléfono "está" ahí y ya dio el permiso, así un
+    // "Cerca de ti" funciona sin el diálogo del navegador (que no se graba).
+    ...(person.geolocation ? { geolocation: person.geolocation, permissions: ["geolocation"] } : {}),
+    // El video va al tamaño del viewport en px CSS. Pedirlo a 2x (dsf) NO da
+    // más resolución: el screencast igual llega en px CSS y Playwright lo pega
+    // arriba a la izquierda de un lienzo gris del doble — un cuarto de imagen.
+    recordVideo: { dir, size: { ...device.viewport } },
+  });
+  await installOverlay(phone.ctx, demo);
+  phone.page = await phone.ctx.newPage();
+  phone.page.setDefaultTimeout(TIMING.actionTimeout);
+  // Una app desplegada puede tardar más que un click en cargar en frío: la
+  // navegación tiene su propio margen, sin aflojar el fail-fast de las acciones.
+  phone.page.setDefaultNavigationTimeout(TIMING.navigationTimeout);
+  await installFixtures(phone.page, demo, demoPath);
+  await authenticate(phone.page, person, baseURL, demoPath);
+}
+
 async function enterDevice(page, phone, { demo, person, device, vp, tmpDir, demoPath, baseURL, goTo, awaitsSel, t0 }) {
   await page.evaluate((fade) => window.__demo.cover("black", { fade }), TIMING.fade);
   await page.waitForTimeout(TIMING.identitySwap);
@@ -729,29 +786,15 @@ async function enterDevice(page, phone, { demo, person, device, vp, tmpDir, demo
     [phone.screen, person.label ?? person.name ?? ""],
   );
 
-  if (!phone.ctx) {
-    const dir = join(tmpDir, "device");
-    mkdirSync(dir, { recursive: true });
-    phone.ctx = await page.context().browser().newContext({
-      ...device,
-      locale: person.locale ?? demo.locale ?? "es-AR",
-      timezoneId: person.timezone ?? demo.timezone ?? "America/Argentina/Buenos_Aires",
-      colorScheme: "light",
-      // El video va al tamaño del viewport en px CSS. Pedirlo a 2x (dsf) NO da
-      // más resolución: el screencast igual llega en px CSS y Playwright lo pega
-      // arriba a la izquierda de un lienzo gris del doble — un cuarto de imagen.
-      recordVideo: { dir, size: { ...device.viewport } },
-    });
-    await installOverlay(phone.ctx, demo);
-    phone.page = await phone.ctx.newPage();
-    phone.page.setDefaultTimeout(TIMING.actionTimeout);
-    await installFixtures(phone.page, demo, demoPath);
-    await authenticate(phone.page, person, baseURL, demoPath);
-  }
+  if (!phone.ctx) await openPhone(page, phone, { demo, person, device, tmpDir, demoPath, baseURL });
   const p = phone.page;
   if (goTo) await p.goto(await expandVars(goTo), { waitUntil: "domcontentloaded" });
   await applyMask(p, demo);
-  if (awaitsSel) await p.locator(awaitsSel).first().waitFor({ state: "visible", timeout: 20000 });
+  // No se espera a que la app termine de cargar con el telón negro: contra un QA
+  // lento eso eran 4–9 s de negro mudo. Se le da un margen corto y el telón sube;
+  // el `awaits` del beat (que corre con la locución ya sonando) espera el resto, y
+  // el oyente ve lo que vería en su teléfono: la app abriendo.
+  if (awaitsSel) await p.locator(awaitsSel).first().waitFor({ state: "visible", timeout: TIMING.deviceSettle }).catch(() => {});
   await p.waitForTimeout(TIMING.openingSettle);
 
   await p.evaluate(() => window.__demo.cover("flash"));
@@ -762,6 +805,13 @@ async function enterDevice(page, phone, { demo, person, device, vp, tmpDir, demo
   await p.waitForTimeout(120);
 
   phone.segStart = now() - t0;
+  // Igual que en el contexto principal: un `go` del teléfono a OTRO origen (sin el
+  // estado del telón en su sessionStorage) arrancaba con el telón negro y el resto
+  // de la escena se grababa a oscuras. Ya se abrió: de acá en adelante, sin telón.
+  if (!phone.coverHidden) {
+    await phone.ctx.addInitScript(() => { window.__demoCoverStart = "hidden"; });
+    phone.coverHidden = true;
+  }
   await page.evaluate((fade) => window.__demo.cover("hidden", { fade }), TIMING.fade);
   await page.waitForTimeout(TIMING.fade);
   return p;

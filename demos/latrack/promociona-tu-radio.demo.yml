@@ -1,0 +1,106 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: promociona-tu-radio
+product: Latrack
+archetype: admin-panel
+title: Promociona tu radio y mide qué campaña trae oyentes
+titleCard: false
+promise: >
+  Cada lugar donde la radio se promociona tiene su link y su QR, el locutor tiene el
+  guion listo para leer, y la consola cuenta los toques y las aperturas de cada campaña.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Tienen que ver que llevar
+    a sus oyentes a Latrack es decirlo al aire, y que saben qué promoción funcionó.
+  in:
+    - Crear una campaña (Instagram) con su link
+    - El QR de la campaña "Feria de Primavera"
+    - Los guiones para el locutor, en español y en inglés
+    - Toques, visitas al reproductor y aperturas por campaña
+  out:
+    - El link y el QR generales de la radio (están en tu-radio-en-latrack)
+    - Archivar una campaña
+    - Instalaciones atribuidas y tiendas (la app Latrack todavía no está en las tiendas)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. "Feria de
+    Primavera" y "Al aire — Mañanas" son datos de demo; el seed les da tres semanas de toques
+    y aperturas creíbles. "Instagram — Diciembre" se crea en cámara y el seed la borra antes
+    de cada corrida y con --cleanup. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa. Promociona la radio al aire, en Instagram y en los eventos de Houston.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/promociona-tu-radio.mjs
+  assert:
+    - "\"Feria de Primavera\" y \"Al aire — Mañanas\" tienen tres semanas de toques; no existe \"Instagram — Diciembre\""
+
+scenes:
+  - id: campanas
+    title: "Una campaña por cada lugar"
+    proves: Cada promoción tiene su propio link, creado en un paso.
+    covers: [promo-campanas]
+    watch: El link de la campaña es el mismo de la radio con un código al final.
+    beats:
+      - as: gerente
+        go: /brands/cmwti8qxj00014jo472ejga6p?tab=promo
+        awaits: promo-campanas
+        say: Si no lo dices al aire, nadie busca tu radio en el celular.
+      - highlight: promo-campanas
+        say: Aquí La Brisa arma sus promociones, una por cada lugar.
+      - type: { target: promo-nombre, text: "Instagram — Diciembre" }
+        say: Ana va a promocionarla en Instagram en diciembre.
+      - select: { target: promo-donde, value: SOCIAL }
+      - click: promo-crear
+        awaits: promo-instagram
+        say: Crea la campaña, y ya tiene su propio link para la bio y las historias.
+
+  - id: qr
+    title: "Un QR para cada evento"
+    proves: Cada campaña tiene su QR, listo para imprimir.
+    covers: [promo-campanas]
+    watch: El QR lleva el código de la campaña; se descarga en PNG o SVG.
+    beats:
+      - click: promo-qr-feria
+        awaits: promo-qr-dialogo
+        say: Para la Feria de Primavera imprimió este QR en los volantes y en el escenario.
+        voice: Para la Feria de Primavera imprimió este código cu erre en los volantes y en el escenario.
+      - click: promo-qr-cerrar
+        awaits: promo-guiones
+
+  - id: guiones
+    title: "El guion para el locutor"
+    proves: Guiones de diez, veinte y treinta segundos con el link de la radio, en español y en inglés.
+    covers: [promo-guiones]
+    watch: Los guiones usan el nombre, la frecuencia y el link de la radio.
+    beats:
+      - highlight: promo-guion-20
+        say: Y el locutor tiene el guion listo para leer al aire, en diez, veinte o treinta segundos.
+      - click: promo-guion-ingles
+        awaits: promo-guion-en
+        say: También en inglés, para el público bilingüe.
+
+  - id: resultados
+    title: "Qué campaña trae oyentes"
+    objection: true
+    proves: Toques, visitas al reproductor y aperturas de la app, separados por campaña.
+    covers: [promo-resultados]
+    watch: Las aperturas son veces que alguien que ya tiene Latrack abrió la radio desde ese link.
+    beats:
+      - highlight: promo-feria
+        say: Y ve cuántos tocaron el link de cada campaña y cuántos abrieron La Brisa desde ahí.
+      - highlight: promo-campanas
+        say: Así sabe si le rinde más la feria, Instagram o lo que dice al aire.
+    hold: 1s

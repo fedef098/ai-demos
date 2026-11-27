@@ -46,8 +46,10 @@ export const TIMING = {
   scrollMax: 2000,
   scrollSettle: 400,      // frena antes del cue
   clickPulse: 250,        // anillo de feedback del click
-  awaitTimeout: 6000,     // waitFor de una consecuencia declarada
-  actionTimeout: 5000,    // fail fast: una demo rota no quema 30 s por click
+  awaitTimeout: 10000,    // waitFor de una consecuencia declarada (una server action en QA llega a tardar 6 s)
+  actionTimeout: 5000,
+  deviceSettle: 2500,    // margen para que el teléfono pinte su destino antes de subir el telón
+  navigationTimeout: 20000, // un `go` contra QA en frío tarda 3–4 s; no es una demo rota    // fail fast: una demo rota no quema 30 s por click
   // Pausa entre las dos esperas de apertura. En una app que hidrata, el shell
   // servido ya trae el elemento y el cliente lo desmonta un instante después:
   // esperarlo una sola vez devuelve el control sobre una pantalla que está por

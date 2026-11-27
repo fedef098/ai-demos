@@ -1,0 +1,52 @@
+{
+  "id": "promociona-tu-radio",
+  "title": "Promociona tu radio y mide qué campaña trae oyentes",
+  "promise": "Cada lugar donde la radio se promociona tiene su link y su QR, el locutor tiene el guion listo para leer, y la consola cuenta los toques y las aperturas de cada campaña.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T13:04:46.535Z",
+  "commit": "6dbf975",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 57000,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3813813,
+    "sha256": "29b3f7c54021fa486691728487ab7302c50caae1d2ecac681d763bcd4f47f728"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "campanas",
+      "title": "Una campaña por cada lugar",
+      "proves": "Cada promoción tiene su propio link, creado en un paso.",
+      "watch": "El link de la campaña es el mismo de la radio con un código al final.",
+      "startMs": 4,
+      "endMs": 20372
+    },
+    {
+      "id": "qr",
+      "title": "Un QR para cada evento",
+      "proves": "Cada campaña tiene su QR, listo para imprimir.",
+      "watch": "El QR lleva el código de la campaña; se descarga en PNG o SVG.",
+      "startMs": 20372,
+      "endMs": 28521
+    },
+    {
+      "id": "guiones",
+      "title": "El guion para el locutor",
+      "proves": "Guiones de diez, veinte y treinta segundos con el link de la radio, en español y en inglés.",
+      "watch": "Los guiones usan el nombre, la frecuencia y el link de la radio.",
+      "startMs": 28521,
+      "endMs": 39966
+    },
+    {
+      "id": "resultados",
+      "title": "Qué campaña trae oyentes",
+      "proves": "Toques, visitas al reproductor y aperturas de la app, separados por campaña.",
+      "watch": "Las aperturas son veces que alguien que ya tiene Latrack abrió la radio desde ese link.",
+      "startMs": 39966,
+      "endMs": 57000
+    }
+  ]
+}

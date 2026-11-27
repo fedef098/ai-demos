@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: ventas-sponsors
+product: Latrack
+archetype: custom
+title: Vender un paquete al sponsor, de la propuesta al reporte
+titleCard: false
+promise: >
+  La radio arma un paquete con precio, se lo presenta al anunciante con su marca ya
+  puesta en la app, le manda un push "Presentado por" y el reporte muestra cuánto del
+  paquete se entregó.
+
+intake:
+  audience: >
+    Dueños, gerentes y vendedores de radio, y el equipo de Adavance (efetrack). Tienen que ver
+    el ciclo de venta completo de la publicidad digital, no sólo la carga de una campaña.
+  in:
+    - El paquete "Pack Mañanas" con su precio sugerido
+    - La propuesta para Taquería El Güero, con los banners puestos en la app
+    - El push patrocinado "Presentado por" (se arma, no se envía)
+    - La entrega del paquete en el reporte del sponsor
+  out:
+    - Cargar la campaña del sponsor (tiene su video, sponsors)
+    - El link del reporte para el cliente (tiene su video, reporte-sponsor)
+    - Crear la propuesta paso a paso y enviarla
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. El paquete,
+    la propuesta, el push programado y la campaña "Taquería El Güero · 2x1 martes" son datos de
+    demo que ya existen; el video sólo los muestra. El push se escribe en cámara pero no se
+    envía. La taquería es ficticia. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: ventas
+    name: Ana Morales
+    context: Vende la publicidad de La Brisa en Houston. Le está vendiendo las mañanas a la Taquería El Güero.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/ventas-sponsors.mjs
+  assert:
+    - existen "Pack Mañanas", la propuesta para Taquería El Güero, su push programado y la campaña con el paquete
+
+scenes:
+  - id: paquete
+    title: "Un paquete con precio"
+    proves: Menciones al aire, pre-roll, banner y push patrocinado en un paquete, con un precio sugerido.
+    covers: [paquetes]
+    watch: El precio sugerido sale de tarifas de referencia que la radio ajusta a su mercado.
+    beats:
+      - as: ventas
+        go: /sponsors/packages
+        awaits: paquete-pack
+        say: La Brisa vende sus mañanas como un paquete con precio.
+      - highlight: paquete-pack
+        say: Menciones al aire, pre-roll, banner y push, por novecientos cincuenta dólares.
+      - highlight: paquete-sugerido
+        say: Y si no sabe cuánto cobrar, la consola le sugiere un precio.
+
+  - id: propuesta
+    title: "La propuesta, con su marca puesta"
+    proves: Una propuesta lista para mandar, con los banners del anunciante en la app y una muestra del reporte.
+    covers: [propuestas]
+    watch: La propuesta se manda en PDF o con un link de solo lectura.
+    beats:
+      - go: /sponsors/proposals/cmwyxrleq000a01o45ahxfame
+        awaits: propuesta-doc
+        say: Para la Taquería El Güero arma una propuesta con su marca.
+      - scroll: propuesta-mockups
+        say: El dueño ve su banner ya puesto en la app de La Brisa, antes de pagar nada.
+      - scroll: propuesta-paquete
+        say: Con el paquete, la audiencia real de la radio…
+      - scroll: propuesta-reporte
+        say: …y una muestra del reporte que va a recibir.
+
+  - id: push
+    title: "El push «Presentado por»"
+    proves: Un push a los oyentes firmado por el sponsor, como parte del paquete.
+    covers: [push-patrocinado]
+    watch: Máximo un push patrocinado por día en la app, de cualquier anunciante.
+    beats:
+      - go: /push?sponsor=demo-sp-guero-banner
+        awaits: push-patrocinado-form
+        say: El paquete incluye notificaciones a los oyentes, firmadas por el sponsor.
+      - type: { target: push-patrocinado-form, text: "Martes de tacos 2x1" }
+        awaits: push-presentado
+      - highlight: push-presentado
+        say: En el teléfono llegan con «Presentado por Taquería El Güero» al final.
+      - highlight: push-fila-guero
+        say: La del martes ya quedó programada.
+
+  - id: entrega
+    title: "Cuánto del paquete se entregó"
+    objection: true
+    proves: El reporte del sponsor compara lo vendido en el paquete con lo entregado.
+    covers: [paquetes, reporte-sponsor]
+    watch: Las menciones al aire las anota la radio; el resto lo cuenta la app.
+    beats:
+      - go: /sponsors/demo-sp-guero-banner?tab=report
+        awaits: reporte-entrega
+        say: Y en el reporte del sponsor…
+      - scroll: reporte-entrega
+        say: …ve cuánto del paquete lleva entregado, menciones, banner y push, contra lo que vendió.
+      - highlight: reporte-paquete-vendido
+        say: Así, al renovar, el anunciante ve lo que pagó y lo que recibió.
+    hold: 1s

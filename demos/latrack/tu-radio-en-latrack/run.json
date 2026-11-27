@@ -1,0 +1,54 @@
+{
+  "id": "tu-radio-en-latrack",
+  "title": "Tu radio en Latrack, sin tiendas ni cuentas de Apple y Google",
+  "promise": "Desde una sola pantalla la radio tiene su link y su QR, decide si aparece en el buscador, ve cómo la ven sus oyentes y apaga lo que no usa, y el teléfono lo refleja al abrir la app.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T13:42:20.428Z",
+  "commit": "6dbf975",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 74760,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3650986,
+    "sha256": "d918a59f9b46eace2ff59f0eb3a7fc50afdb8d138e937f33b588977b9b1cef99"
+  },
+  "usedFixtures": [
+    "**/api/public/v1/brands/*/contests*"
+  ],
+  "scenes": [
+    {
+      "id": "link",
+      "title": "Tu link y tu QR",
+      "proves": "Un link y un QR propios que abren Latrack directo en la radio, o su reproductor web en la computadora.",
+      "watch": "Sin cuentas de Apple ni Google y sin revisiones de tienda.",
+      "startMs": 10,
+      "endMs": 13306
+    },
+    {
+      "id": "buscador",
+      "title": "Aparecer en el buscador, o no",
+      "proves": "Un switch decide si la radio aparece en el buscador de Latrack; el link sigue funcionando.",
+      "watch": "El cambio se guarda al tocarlo.",
+      "startMs": 13306,
+      "endMs": 23940
+    },
+    {
+      "id": "vista",
+      "title": "Así te ven, y en la web también",
+      "proves": "Vista previa de la radio en Latrack y un reproductor web con su marca.",
+      "watch": "La vista previa es la home publicada; el reproductor web es la página pública de la radio.",
+      "startMs": 23940,
+      "endMs": 45063
+    },
+    {
+      "id": "funciones",
+      "title": "Apaga lo que tu radio no usa",
+      "proves": "Las funciones para oyentes se prenden y apagan, y llegan al teléfono sin versión nueva.",
+      "watch": "En el teléfono desaparece la pestaña Shorts al abrir La Brisa.",
+      "startMs": 45063,
+      "endMs": 74760
+    }
+  ]
+}

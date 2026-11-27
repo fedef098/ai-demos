@@ -114,3 +114,22 @@ in QA while someone else records:
 flock /tmp/claude-1003/wig-heavy.lock nice -n 15 bash -c \
   'DEMOS_DIR=demos/latrack bin/demo marca; node demos/latrack/seeds/marca.mjs --cleanup'
 ```
+
+## The single Latrack app, promo and sales (batch nov 2026)
+
+`app-latrack` and `tu-radio-en-latrack` replace `app-oyente` and `apps-tiendas` in
+efetrack (`efetrack-map.json`): there is no per-radio app any more, the radio lives
+inside Latrack with its brand. `promociona-tu-radio` and `ventas-sponsors` are new.
+They use the seeds in `seeds/` (helpers in `seeds/_qa.mjs`, admin session in
+`seeds/.state/admin-session.json`); every seed also GETs the pages the video opens,
+so the first `go` isn't a cold load.
+
+| Demo | Creates / changes | Seed resets / `--cleanup` |
+|---|---|---|
+| app-latrack | nothing; the phone opens `/r/la-brisa` on 127.0.0.1:8787 and a "fresh install" on localhost:8787 (another origin, so empty storage). The cast `geolocation:` makes "Cerca de ti" work | takes the duplicate QA "Radio Sol" (company `radio-sol-qa`) out of search while recording; `--cleanup` puts it back |
+| tu-radio-en-latrack | flips La Brisa's search switch off and on, turns Shorts off on camera | seed and `--cleanup` leave La Brisa listed with every listener feature on |
+| promociona-tu-radio | campaign "Instagram — Diciembre" (on camera) | deletes it and its stats. Also sets three weeks of web taps and app opens for "Feria de Primavera" and "Al aire — Mañanas" (demo data that stays; no store taps or installs, the app isn't in the stores yet) |
+| ventas-sponsors | nothing; the sponsored push is typed but never sent | only checks the package, proposal, push and report exist |
+
+The La Brisa logo (`assets/la-brisa-logo.{svg,png}`) uses the brand's console
+colours, #0F172A and #F59E0B, and is the logo uploaded to La Brisa in QA.

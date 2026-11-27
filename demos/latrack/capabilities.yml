@@ -150,3 +150,69 @@ capabilities:
     title: "Una página pública que explica el producto, sus precios y pide la demo"
     area: Ventas
     priority: media
+
+  # ── Batch nov 2026: the single Latrack app, Tu radio en Latrack, promo and sales ──
+  - id: app-latrack-link
+    title: "El link de la radio abre la app Latrack directo en ella, con su marca"
+    area: App
+    priority: alta
+
+  - id: app-latrack-buscador
+    title: "Sin link, el oyente encuentra la radio por nombre, ciudad, frecuencia o cerca de él"
+    area: App
+    priority: alta
+
+  - id: app-latrack-mis-radios
+    title: "El oyente sigue varias radios y cambia entre ellas; cada una con su logo y sus colores"
+    area: App
+    priority: media
+
+  - id: latrack-link-qr
+    title: "Link directo y QR de la radio, sin cuentas de Apple ni Google ni revisiones de tienda"
+    area: App
+    priority: alta
+
+  - id: latrack-buscador
+    title: "La radio decide si aparece en el buscador de Latrack; el link funciona igual"
+    area: App
+    priority: media
+
+  - id: latrack-vista-previa
+    title: "Vista previa de cómo ven la radio sus oyentes en Latrack"
+    area: App
+    priority: media
+
+  - id: latrack-funciones
+    title: "Funciones para oyentes que se prenden y apagan sin versión nueva de la app"
+    area: App
+    priority: media
+
+  - id: promo-campanas
+    title: "Una campaña por cada lugar donde se promociona la radio, con su link y su QR"
+    area: Crecimiento
+    priority: alta
+
+  - id: promo-guiones
+    title: "Guiones para el locutor de 10, 20 y 30 segundos, en español y en inglés"
+    area: Crecimiento
+    priority: media
+
+  - id: promo-resultados
+    title: "Toques, visitas al reproductor, instalaciones y aperturas por campaña"
+    area: Crecimiento
+    priority: alta
+
+  - id: paquetes
+    title: "Paquetes de menciones, pre-roll, banner y push con precio sugerido, y su entrega en el reporte"
+    area: Ingresos
+    priority: alta
+
+  - id: propuestas
+    title: "Propuesta comercial con los banners del anunciante en la app, en PDF o link de solo lectura"
+    area: Ingresos
+    priority: alta
+
+  - id: push-patrocinado
+    title: "Push «Presentado por» un sponsor, uno por día como máximo"
+    area: Ingresos
+    priority: media

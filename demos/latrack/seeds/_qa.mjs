@@ -214,3 +214,10 @@ export function pruneDemoAudit() {
   `, { companyId: COMPANY_ID });
   return r.pruned;
 }
+
+/** GETs console pages with the admin's session so the first `go` on camera isn't a cold 3–4 s load. */
+export async function warm(paths) {
+  const file = join(STATE, "admin-session.json");
+  const c = JSON.parse(readFileSync(file, "utf8")).cookies?.find((x) => x.name === "lt_session");
+  for (const p of paths) await fetch(`${base.origin}${p}`, { headers: c ? { cookie: `lt_session=${c.value}` } : {} }).then((r) => r.arrayBuffer()).catch(() => {});
+}

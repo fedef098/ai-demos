@@ -1,0 +1,46 @@
+{
+  "id": "app-latrack",
+  "title": "Una sola app, Latrack, y cada radio con su marca adentro",
+  "promise": "Con el link de su radio el oyente cae directo en ella; sin link la encuentra por nombre o cerca de él, y puede seguir varias radios, cada una con su logo y sus colores.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T13:50:35.258Z",
+  "commit": "6dbf975",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 61320,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 1667113,
+    "sha256": "0067669ec9f037204dd8f64a6819f8ca841d7f5f18863c079d516b6ea6117635"
+  },
+  "usedFixtures": [
+    "**/api/public/v1/brands/*/contests*"
+  ],
+  "scenes": [
+    {
+      "id": "link",
+      "title": "El link abre la app en tu radio",
+      "proves": "El link de la radio abre Latrack directo en ella, con su logo y sus colores.",
+      "watch": "Es la app Latrack (build web) en un teléfono; nadie buscó nada.",
+      "startMs": 13,
+      "endMs": 23507
+    },
+    {
+      "id": "primer-inicio",
+      "title": "Sin link: cerca de ti",
+      "proves": "En el primer inicio Latrack ofrece buscar por nombre, ciudad o frecuencia, o las radios cercanas.",
+      "watch": "La ubicación se redondea a unos diez kilómetros antes de buscar.",
+      "startMs": 23507,
+      "endMs": 37788
+    },
+    {
+      "id": "mis-radios",
+      "title": "Varias radios, cada una con su marca",
+      "proves": "El oyente suma otra radio buscándola por nombre y cambia entre las dos desde Mis radios.",
+      "watch": "Al cambiar de radio cambian el logo, los colores, la ciudad y la programación.",
+      "startMs": 37788,
+      "endMs": 61320
+    }
+  ]
+}

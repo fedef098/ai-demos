@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>La Brisa</title>
+  <!-- Original mark for the fictional demo station "La Brisa": three breeze strokes over the wordmark. -->
+  <rect x="32" y="32" width="960" height="960" rx="220" fill="#0F172A"/>
+  <g fill="none" stroke="#F59E0B" stroke-linecap="round" stroke-width="44">
+    <path d="M196 296 C 300 226, 410 366, 530 296 S 730 226, 828 296"/>
+    <path d="M276 412 C 370 346, 470 478, 580 412 S 750 350, 828 404"/>
+    <path d="M356 528 C 440 468, 520 584, 620 524"/>
+  </g>
+  <text x="512" y="780" text-anchor="middle" fill="#FFFFFF" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="168" font-weight="800" letter-spacing="-4">La Brisa</text>
+  <rect x="402" y="830" width="220" height="14" rx="7" fill="#F59E0B"/>
+</svg>

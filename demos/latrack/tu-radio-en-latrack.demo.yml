@@ -1,0 +1,130 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: tu-radio-en-latrack
+product: Latrack
+archetype: admin-panel
+title: Tu radio en Latrack, sin tiendas ni cuentas de Apple y Google
+titleCard: false
+promise: >
+  Desde una sola pantalla la radio tiene su link y su QR, decide si aparece en el
+  buscador, ve cómo la ven sus oyentes y apaga lo que no usa, y el teléfono lo refleja
+  al abrir la app.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Reemplaza el video de la
+    ficha de tiendas: la radio ya no publica una app propia, aparece dentro de Latrack.
+  in:
+    - El link directo y el QR
+    - El switch "Aparece en el buscador de Latrack" (se apaga y se vuelve a prender)
+    - La vista previa de cómo la ven los oyentes
+    - El reproductor web de la radio
+    - Apagar Shorts para los oyentes, guardar y verlo en el teléfono
+  out:
+    - Las campañas y los guiones para promocionarse (tienen su video, promociona-tu-radio)
+    - El editor de la home (tiene su video)
+    - El idioma por defecto, el despertador y CarPlay (no se ven en el build web)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. El seed deja
+    La Brisa en el buscador y con todas las funciones prendidas; el video apaga Shorts y
+    --cleanup lo vuelve a prender. El teléfono es el build web de la app Latrack apuntado a
+    QA, servido en 127.0.0.1:8787. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+fixtures:
+  # La encuesta activa de La Brisa sale en un sheet al abrir la app sólo a veces (una vez
+  # por día y por instalación, y nunca mientras arranca el stream): sin ella el teléfono
+  # graba igual en cada corrida. Es una lectura; los concursos tienen su propio video.
+  - route: "**/api/public/v1/brands/*/contests*"
+    body: ./fixtures/no-contests.json
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa (Demo Media). Quiere a sus oyentes en el celular sin depender de nadie técnico.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Un oyente de La Brisa
+    label: "En el teléfono de un oyente · Houston"
+    device: iphone
+    timezone: America/Chicago
+    context: Sigue a La Brisa en Latrack.
+
+world:
+  seed: ./seeds/tu-radio-en-latrack.mjs
+  assert:
+    - La Brisa aparece en el buscador y tiene todas las funciones para oyentes prendidas
+
+scenes:
+  - id: link
+    title: "Tu link y tu QR"
+    proves: Un link y un QR propios que abren Latrack directo en la radio, o su reproductor web en la computadora.
+    covers: [latrack-link-qr]
+    watch: Sin cuentas de Apple ni Google y sin revisiones de tienda.
+    beats:
+      - as: gerente
+        go: /apps/cmwti8qxj00014jo472ejga6p
+        awaits: tu-link-directo
+        say: La Brisa ya está dentro de Latrack, sin publicar una app propia ni esperar a las tiendas.
+      - highlight: tu-link-directo
+        wait: 2s  # the console hydrates slowly on QA; the switch below is client-side
+        say: Su link y su QR abren Latrack directo en La Brisa; en la computadora, su reproductor web.
+        voice: Su link y su código cu erre abren Latrack directo en La Brisa; en la computadora, su reproductor web.
+
+  - id: buscador
+    title: "Aparecer en el buscador, o no"
+    objection: true
+    proves: Un switch decide si la radio aparece en el buscador de Latrack; el link sigue funcionando.
+    covers: [latrack-buscador]
+    watch: El cambio se guarda al tocarlo.
+    beats:
+      - click: latrack-buscador
+        awaits: latrack-buscador-off
+        say: Si la apaga del buscador, sólo llegan los que entran con su link o su QR.
+        voice: Si la apaga del buscador, sólo llegan los que entran con su link o su código cu erre.
+      - click: latrack-buscador
+        awaits: latrack-buscador-on
+        say: La deja visible, para que cualquiera que la busque la encuentre.
+
+  - id: vista
+    title: "Así te ven, y en la web también"
+    proves: Vista previa de la radio en Latrack y un reproductor web con su marca.
+    covers: [latrack-vista-previa, reproductor-web]
+    watch: La vista previa es la home publicada; el reproductor web es la página pública de la radio.
+    beats:
+      - highlight: latrack-vista-previa
+        say: A la derecha ve a La Brisa como la ve un oyente, con su marca y quién está al aire.
+      - go: /listen/cmwti8qxj00014jo472ejga6p
+        awaits: web-play
+        say: Y quien no instala nada la escucha en su reproductor web, con la misma marca.
+
+  - id: funciones
+    title: "Apaga lo que tu radio no usa"
+    proves: Las funciones para oyentes se prenden y apagan, y llegan al teléfono sin versión nueva.
+    covers: [latrack-funciones]
+    watch: En el teléfono desaparece la pestaña Shorts al abrir La Brisa.
+    beats:
+      - go: /apps/cmwti8qxj00014jo472ejga6p
+        awaits: latrack-funciones
+      - scroll: latrack-funciones
+        wait: 2s  # let the form hydrate before toggling and saving
+        say: La Brisa todavía no publica shorts.
+      - click: latrack-shorts
+        say: Los apaga…
+      - click: latrack-guardar
+        awaits: latrack-guardado
+        say: …y guarda.
+      - as: oyente
+        go: http://127.0.0.1:8787/r/la-brisa
+        awaits: app-home-la-brisa
+        say: Al abrir La Brisa en el teléfono, la pestaña de Shorts ya no está…
+      - highlight: app-sin-shorts
+        say: …y nadie tuvo que actualizar la app.
+    hold: 1s

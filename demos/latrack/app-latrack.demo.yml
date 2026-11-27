@@ -1,0 +1,123 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: app-latrack
+product: Latrack
+archetype: custom
+title: Una sola app, Latrack, y cada radio con su marca adentro
+titleCard: false
+promise: >
+  Con el link de su radio el oyente cae directo en ella; sin link la encuentra por
+  nombre o cerca de él, y puede seguir varias radios, cada una con su logo y sus colores.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Reemplaza el video de la
+    app por radio: ahora hay una sola app, Latrack, y la radio vive adentro con su marca.
+  in:
+    - El link directo de la radio en la consola (sólo para abrir la historia)
+    - Abrir el link en el teléfono y caer en La Brisa
+    - Primer inicio sin link, "Cerca de ti" y la búsqueda por nombre
+    - Agregar una segunda radio y cambiar entre las dos en "Mis radios"
+  out:
+    - Lo que la radio configura en la consola (tiene su video, tu-radio-en-latrack)
+    - Escanear QR (la cámara no se graba en el build web)
+    - Cabina, concursos, shorts y programación dentro de la app (tienen sus videos)
+  environment: >
+    QA (https://qa-latrack.adavance.com). La app es el build web de la app real apuntado a QA,
+    servido en 127.0.0.1:8787; el primer inicio se abre en localhost:8787, que para el
+    navegador es otro sitio y por eso arranca como una instalación nueva. La segunda radio es
+    Radio Sol, la del video de onboarding. El seed saca del buscador mientras graba un Radio
+    Sol duplicado de QA y lo devuelve con --cleanup. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+fixtures:
+  # La encuesta activa de La Brisa sale en un sheet al abrir la app sólo a veces (una vez
+  # por día y por instalación, y nunca mientras arranca el stream): sin ella el teléfono
+  # graba igual en cada corrida. Es una lectura; los concursos tienen su propio video.
+  - route: "**/api/public/v1/brands/*/contests*"
+    body: ./fixtures/no-contests.json
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa. Dice su link al aire y lo pone en Instagram.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Un oyente de La Brisa
+    label: "En el teléfono de un oyente · Houston"
+    device: iphone
+    timezone: America/Chicago
+    geolocation: { latitude: 29.76, longitude: -95.37 }
+    context: Escucha La Brisa en Houston y oyó al locutor decir el link.
+
+world:
+  seed: ./seeds/app-latrack.mjs
+  assert:
+    - La Brisa y Radio Sol aparecen en el buscador de Latrack, una sola vez cada una
+
+scenes:
+  - id: link
+    title: "El link abre la app en tu radio"
+    proves: El link de la radio abre Latrack directo en ella, con su logo y sus colores.
+    covers: [app-latrack-link]
+    watch: Es la app Latrack (build web) en un teléfono; nadie buscó nada.
+    beats:
+      - as: gerente
+        go: /apps
+        awaits: tu-link-directo
+        say: La Brisa tiene un link propio, el que el locutor dice al aire.
+      - as: oyente
+        go: http://127.0.0.1:8787/r/la-brisa
+        awaits: app-home-la-brisa
+        say: El oyente lo toca, y Latrack se abre…
+      - highlight: app-home-la-brisa
+        say: …directo en La Brisa, con su logo y sus colores, sin buscarla ni registrarse.
+
+  - id: primer-inicio
+    title: "Sin link: cerca de ti"
+    objection: true
+    proves: En el primer inicio Latrack ofrece buscar por nombre, ciudad o frecuencia, o las radios cercanas.
+    covers: [app-latrack-buscador]
+    watch: La ubicación se redondea a unos diez kilómetros antes de buscar.
+    beats:
+      - go: http://localhost:8787/
+        awaits: app-encuentra-tu-radio
+        say: Quien instala Latrack sin link, la primera vez elige su radio.
+      - click: app-cerca
+        awaits: app-resultado-brisa
+        say: Con Cerca de ti aparecen las radios de su zona.
+      - click: app-resultado-brisa
+        awaits: app-home-la-brisa
+        say: Toca La Brisa, y queda guardada para la próxima vez.
+
+  - id: mis-radios
+    title: "Varias radios, cada una con su marca"
+    proves: El oyente suma otra radio buscándola por nombre y cambia entre las dos desde Mis radios.
+    covers: [app-latrack-mis-radios]
+    watch: Al cambiar de radio cambian el logo, los colores, la ciudad y la programación.
+    beats:
+      - click: app-cambiar-radio
+        awaits: app-mis-radios
+        say: Si también escucha otra radio, la suma en Mis radios.
+      - click: app-agregar-radio
+        awaits: app-buscar
+      - type: { target: app-buscar, text: "Radio Sol" }
+        awaits: app-resultado-sol
+        say: La busca por su nombre…
+      - click: app-resultado-sol
+        awaits: app-home-sol
+        say: …y Latrack se viste de Radio Sol, con su marca y sus programas.
+      - click: app-cambiar-radio
+        awaits: app-mis-radios-dos
+        say: Las dos quedan en Mis radios.
+      - click: app-mi-radio-brisa
+        awaits: app-home-la-brisa
+        say: Un toque, y vuelve a La Brisa, con la suya.
+    hold: 1s

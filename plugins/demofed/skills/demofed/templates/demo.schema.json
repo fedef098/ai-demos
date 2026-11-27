@@ -108,6 +108,7 @@
           "label": { "type": "string", "description": "Rótulo junto al marco de teléfono (con device:). Por defecto, name." },
           "locale": { "type": "string" },
           "timezone": { "type": "string", "description": "Zona horaria del contexto de esta persona (sólo con device:)." },
+          "geolocation": { "type": "object", "required": ["latitude", "longitude"], "additionalProperties": false, "properties": { "latitude": { "type": "number" }, "longitude": { "type": "number" } }, "description": "Dónde está el teléfono (sólo con device:). El permiso de ubicación queda concedido." },
           "auth": {
             "type": "object",
             "required": ["via"],

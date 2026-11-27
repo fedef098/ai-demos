@@ -1,0 +1,52 @@
+{
+  "id": "ventas-sponsors",
+  "title": "Vender un paquete al sponsor, de la propuesta al reporte",
+  "promise": "La radio arma un paquete con precio, se lo presenta al anunciante con su marca ya puesta en la app, le manda un push \"Presentado por\" y el reporte muestra cuánto del paquete se entregó.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T13:11:40.730Z",
+  "commit": "6dbf975",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 76320,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3608064,
+    "sha256": "91877eca3e6cbae11fad7edf25cd7773dfbd9f27332668f5a6131cab7d4a5779"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "paquete",
+      "title": "Un paquete con precio",
+      "proves": "Menciones al aire, pre-roll, banner y push patrocinado en un paquete, con un precio sugerido.",
+      "watch": "El precio sugerido sale de tarifas de referencia que la radio ajusta a su mercado.",
+      "startMs": 2,
+      "endMs": 16105
+    },
+    {
+      "id": "propuesta",
+      "title": "La propuesta, con su marca puesta",
+      "proves": "Una propuesta lista para mandar, con los banners del anunciante en la app y una muestra del reporte.",
+      "watch": "La propuesta se manda en PDF o con un link de solo lectura.",
+      "startMs": 16105,
+      "endMs": 36710
+    },
+    {
+      "id": "push",
+      "title": "El push «Presentado por»",
+      "proves": "Un push a los oyentes firmado por el sponsor, como parte del paquete.",
+      "watch": "Máximo un push patrocinado por día en la app, de cualquier anunciante.",
+      "startMs": 36710,
+      "endMs": 56063
+    },
+    {
+      "id": "entrega",
+      "title": "Cuánto del paquete se entregó",
+      "proves": "El reporte del sponsor compara lo vendido en el paquete con lo entregado.",
+      "watch": "Las menciones al aire las anota la radio; el resto lo cuenta la app.",
+      "startMs": 56063,
+      "endMs": 76320
+    }
+  ]
+}

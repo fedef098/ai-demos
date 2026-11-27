@@ -57,6 +57,7 @@ async function main() {
   });
   const page = await context.newPage();
   page.setDefaultTimeout(TARGET_TIMEOUT);
+  page.setDefaultNavigationTimeout(20000); // QA en frío tarda 3–4 s en cargar una página; eso no es un target roto
   await installFixtures(page, demo, demoPath);
   // Una persona con `device:` actúa en su propio contexto de teléfono, igual que
   // al grabar (sin video).
@@ -84,9 +85,15 @@ async function main() {
           const device = deviceOf(person);
           if (device) {
             if (!phone) {
-              phone = await browser.newContext({ ...device, locale: person.locale ?? demo.locale ?? "es-AR", timezoneId: person.timezone ?? demo.timezone ?? "America/Argentina/Buenos_Aires" });
+              phone = await browser.newContext({
+                ...device,
+                locale: person.locale ?? demo.locale ?? "es-AR",
+                timezoneId: person.timezone ?? demo.timezone ?? "America/Argentina/Buenos_Aires",
+                ...(person.geolocation ? { geolocation: person.geolocation, permissions: ["geolocation"] } : {}),
+              });
               const p = await phone.newPage();
               p.setDefaultTimeout(TARGET_TIMEOUT);
+              p.setDefaultNavigationTimeout(20000);
               await installFixtures(p, demo, demoPath);
               await authenticate(p, person, baseURL, demoPath);
             }

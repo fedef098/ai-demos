@@ -1,6 +1,5 @@
 {
-  "app-oyente": "app-movil",
-  "apps-tiendas": "apps-tiendas",
+  "app-latrack": "app-movil",
   "concursos": "concursos",
   "equipo-idioma": "equipo",
   "estadisticas": "estadisticas",
@@ -11,8 +10,11 @@
   "onboarding-radio": "puesta-en-marcha",
   "pagina-producto": "pagina-producto",
   "programacion": "programacion",
+  "promociona-tu-radio": "promociona-tu-radio",
   "reels": "shorts",
   "reporte-sponsor": "sponsors",
   "senales-streams": "senales",
-  "sponsors": "sponsors"
+  "sponsors": "sponsors",
+  "tu-radio-en-latrack": "apps-tiendas",
+  "ventas-sponsors": "ventas-sponsors"
 }
