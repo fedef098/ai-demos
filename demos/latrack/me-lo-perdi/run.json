@@ -1,0 +1,38 @@
+{
+  "id": "me-lo-perdi",
+  "title": "Me lo perdí, la entrevista de la mañana cuando quieras",
+  "promise": "La radio publica los segmentos de charla que ya pasaron y el oyente los escucha en la página del programa, y vuelve al vivo con un toque.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T15:02:28.034Z",
+  "commit": "46d506a",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 41320,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 1390369,
+    "sha256": "c64906d55fb22a7acfb72e85637aecbc0260455e37b7db3d77d430dc2d060569"
+  },
+  "usedFixtures": [
+    "**/api/public/v1/brands/*/contests*"
+  ],
+  "scenes": [
+    {
+      "id": "consola",
+      "title": "Lo mejor de la charla, publicado",
+      "proves": "Segmentos de charla de programas que ya pasaron, publicados para escuchar en la app.",
+      "watch": "Solo charla; las licencias de streaming no cubren música a pedido.",
+      "startMs": 2,
+      "endMs": 17516
+    },
+    {
+      "id": "app",
+      "title": "En la página del programa",
+      "proves": "El oyente encuentra el segmento en la página de El Despertador y lo escucha cuando quiere.",
+      "watch": "Es la app Latrack (build web) en un teléfono.",
+      "startMs": 17516,
+      "endMs": 41320
+    }
+  ]
+}

@@ -18,7 +18,7 @@ import { loadDemo, lint } from "./lint.mjs";
 // runAction se importa del grabador A PROPÓSITO: las dos etapas tienen que
 // ejecutar exactamente las mismas acciones. Si divergieran, `--check` podría dar
 // verde y la grabación fallar igual, que es justo lo que esta etapa evita.
-import { runAction, authenticate, demoUserAgent, installFixtures, deviceOf, expandVars } from "./record.mjs";
+import { runAction, authenticate, demoUserAgent, installFixtures, deviceOf, expandVars, fakeMediaArgs } from "./record.mjs";
 
 const playwright = requireDep("@playwright/test");
 if (!playwright) die(missingDepMessage("@playwright/test"));
@@ -47,6 +47,7 @@ async function main() {
   const browser = await chromium.launch({
     headless: true,
     channel: process.env.DEMO_BROWSER === "chromium" ? undefined : "chrome",
+    args: fakeMediaArgs(demo, demoPath),
   });
   const context = await browser.newContext({
     baseURL,

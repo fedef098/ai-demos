@@ -1,0 +1,38 @@
+{
+  "id": "concursos-consentimiento",
+  "title": "Sorteos con consentimiento, y la lista lista para elegir ganador",
+  "promise": "El oyente se anota al sorteo desde la app con su nombre y su teléfono, aceptando que la radio use sus datos sólo para el concurso, y la radio tiene la lista y el CSV en la consola.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T15:06:38.828Z",
+  "commit": "46d506a",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 57280,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 1720763,
+    "sha256": "2329845c45d3459bba26f5e90001061ee2ac624eba9806245c1f0433e9a62fb3"
+  },
+  "usedFixtures": [
+    "**/api/public/v1/brands/*/contests*"
+  ],
+  "scenes": [
+    {
+      "id": "app",
+      "title": "Anotarse, con su permiso",
+      "proves": "El oyente se anota sin cuenta, y no puede participar sin aceptar el uso de sus datos.",
+      "watch": "Es la app Latrack (build web); un participante por teléfono.",
+      "startMs": 12,
+      "endMs": 35814
+    },
+    {
+      "id": "consola",
+      "title": "La lista, y el CSV",
+      "proves": "Los participantes en la consola, uno por teléfono, y la descarga en CSV.",
+      "watch": "El ganador se elige al azar y queda registrado en Actividad.",
+      "startMs": 35814,
+      "endMs": 57280
+    }
+  ]
+}

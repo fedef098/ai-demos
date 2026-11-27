@@ -49,6 +49,20 @@ export const DEVICES = {
   },
 };
 
+/**
+ * `fakeMicrophone: ./assets/voz.wav`: el micrófono del navegador "graba" ese audio y
+ * el permiso queda concedido sin diálogo. Para mostrar una nota de voz grabada en la
+ * app sin una persona hablando frente a un micrófono.
+ */
+export function fakeMediaArgs(demo, demoPath) {
+  if (!demo.fakeMicrophone) return [];
+  return [
+    "--use-fake-device-for-media-stream",
+    "--use-fake-ui-for-media-stream",
+    `--use-file-for-fake-audio-capture=${resolve(dirname(demoPath), demo.fakeMicrophone)}`,
+  ];
+}
+
 export function deviceOf(person) {
   if (!person?.device) return null;
   const d = DEVICES[person.device];
@@ -125,6 +139,7 @@ async function main() {
     // Chrome del sistema: evita bajar ~170 MB de Chromium. DEMO_BROWSER=chromium
     // es el escape hatch si la versión del sistema da problemas.
     channel: process.env.DEMO_BROWSER === "chromium" ? undefined : "chrome",
+    args: fakeMediaArgs(demo, demoPath),
   });
 
   const context = await browser.newContext({
@@ -519,7 +534,15 @@ export async function runAction(page, beat, selectors, demoPath, outDir, shots) 
     await moveTo(page, loc);
     await page.waitForTimeout(TIMING.dwellBeforeClick);
     await pulse(await visibleBox(loc));
-    await loc.setInputFiles(resolve(dirname(demoPath), beat.upload.file));
+    const file = resolve(dirname(demoPath), beat.upload.file);
+    // Un botón que abre el selector de archivos sin un <input> en el DOM (lo crea al
+    // tocarlo, como el "Agregar foto" de una app web): se toca y se contesta el selector.
+    const isInput = await loc.evaluate((el) => el instanceof HTMLInputElement && el.type === "file");
+    if (isInput) await loc.setInputFiles(file);
+    else {
+      const [chooser] = await Promise.all([page.waitForEvent("filechooser"), loc.click()]);
+      await chooser.setFiles(file);
+    }
   }
 
   if (beat.scroll) {
@@ -825,7 +848,12 @@ async function authenticate(page, person, baseURL, demoPath) {
     const file = resolve(dirname(demoPath), auth.file);
     if (!existsSync(file)) throw new Error(`No existe el storageState ${file}. Corré el seed primero.`);
     const state = JSON.parse(readFileSync(file, "utf8"));
-    await page.context().addCookies(state.cookies ?? []);
+    const cookies = state.cookies ?? [];
+    // Grabando contra el origen de la app (sin la CDN de adelante) el host cambia: las
+    // cookies de la sesión se copian también a ese host, si no, la consola pide login.
+    const host = new URL(baseURL).hostname;
+    const extra = cookies.filter((c) => c.domain.replace(/^\./, "") !== host).map((c) => ({ ...c, domain: host }));
+    await page.context().addCookies([...cookies, ...extra]);
     return;
   }
 

@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: retencion-salidas
+product: Latrack
+archetype: custom
+title: Quién se queda, quién se va y con qué canción
+titleCard: false
+promise: >
+  La radio ve cuánto tiempo se quedan sus oyentes, en qué programa se van más rápido y
+  qué canciones los hacen cambiar, con datos de su propia app.
+
+intake:
+  audience: dueños/gerentes y programadores de radio, y el equipo de Adavance (efetrack)
+  in:
+    - La curva de retención
+    - Quién se va rápido, por programa
+    - Las canciones con más salidas
+  out:
+    - El resto de las estadísticas (tienen su video, estadisticas)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. Las sesiones son las de demo;
+    las canciones son una rotación ficticia (artistas inventados) que el seed agrega a las tres
+    señales entre hace 26 y 2 días, y que --cleanup borra. Sólo lectura en cámara.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: programador
+    name: Ana Morales
+    context: Gerente de La Brisa. Arma la programación y quiere saber qué le hace perder oyentes.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/retencion-salidas.mjs
+  assert:
+    - hay sesiones terminadas y una rotación de canciones en el período
+
+scenes:
+  - id: curva
+    title: "Cuánto se quedan"
+    proves: De cada 100 oyentes que empiezan, cuántos siguen después de N minutos.
+    covers: [retencion]
+    watch: Cuenta sesiones terminadas de al menos un minuto.
+    beats:
+      - as: programador
+        go: /analytics
+        awaits: retencion
+        say: En sus estadísticas, Ana ve qué hace que sus oyentes se queden o se vayan.
+      - scroll: retencion
+      - highlight: retencion-curva
+        say: La mitad de las sesiones dura más de cincuenta minutos, y la curva dice dónde se cae.
+
+  - id: programas
+    title: "Quién se va rápido, por programa"
+    objection: true
+    proves: Qué parte de los que entran en cada programa se va en los primeros quince minutos.
+    covers: [retencion]
+    watch: El programa es el que estaba al aire cuando el oyente empezó a escuchar.
+    beats:
+      - highlight: retencion-programas
+        say: Por programa, ve en cuál se le van más rápido.
+      - highlight: retencion-programas
+        say: Noches de Brisa pierde casi uno de cada cinco en el primer cuarto de hora.
+
+  - id: canciones
+    title: "Las canciones que hacen cambiar"
+    proves: Las canciones con más salidas mientras sonaban, con un mínimo de oyentes para que cuente.
+    covers: [retencion]
+    watch: Una canción necesita al menos veinte oyentes al empezar para entrar en la lista.
+    beats:
+      - scroll: retencion-canciones
+        say: Y canción por canción, qué parte se fue mientras sonaba.
+      - highlight: retencion-canciones
+        say: Contra el seis por ciento de siempre, las de arriba duplican las salidas.
+      - highlight: retencion-canciones
+        say: Son las primeras candidatas para salir de la rotación.
+    hold: 1s

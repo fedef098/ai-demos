@@ -1,0 +1,36 @@
+{
+  "id": "pagina-web-radio",
+  "title": "La página web de la radio, armada sola",
+  "promise": "Cada radio tiene una página pública con el vivo, la programación de hoy, Me lo perdí, sus programas, shorts, contacto y sponsors, que se arma sola y se ordena desde la consola.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T15:08:27.562Z",
+  "commit": "46d506a",
+  "baseUrl": "https://qa-latrack.adavance.com",
+  "durationMs": 51360,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2135603,
+    "sha256": "7ef132816342faa8ac83125b2193b56cbc9038e8fb9358f3cb4518aaeefaf6ca"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "pagina",
+      "title": "La página de la radio",
+      "proves": "Página pública con el vivo, la programación de hoy, Me lo perdí, programas, shorts, contacto y sponsors.",
+      "watch": "Se arma sola con lo que la radio ya cargó en la consola; no hay que diseñar nada.",
+      "startMs": 14,
+      "endMs": 26252
+    },
+    {
+      "id": "editor",
+      "title": "Ordenada desde la consola",
+      "proves": "Las secciones se prenden, se apagan y se ordenan, con vista previa antes de guardar.",
+      "watch": "La vista previa usa los cambios sin guardar; al guardar, la página cambia para todos.",
+      "startMs": 26252,
+      "endMs": 51360
+    }
+  ]
+}

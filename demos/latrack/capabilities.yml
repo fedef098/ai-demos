@@ -216,3 +216,34 @@ capabilities:
     title: "Push «Presentado por» un sponsor, uno por día como máximo"
     area: Ingresos
     priority: media
+
+  # ── Batch 2 (nov 2026) ──────────────────────────────────────────────────────
+  - id: alertas-stream
+    title: "Alertas por email si el stream se cae o queda en silencio, con minutos, destinatarios y horario de silencio"
+    area: Señales
+    priority: alta
+
+  - id: retencion
+    title: "Retención: cuánto se quedan, quién se va rápido por programa y las canciones con más salidas"
+    area: Audiencia
+    priority: alta
+
+  - id: me-lo-perdi
+    title: "Me lo perdí: segmentos de charla publicados para escuchar en la app y volver al vivo"
+    area: Contenido
+    priority: media
+
+  - id: cabina-voz-foto
+    title: "Notas de voz y fotos de los oyentes a la cabina, con switches por radio"
+    area: Audiencia
+    priority: media
+
+  - id: concursos-consentimiento
+    title: "Sorteos con consentimiento obligatorio, participantes y CSV"
+    area: Audiencia
+    priority: media
+
+  - id: pagina-web
+    title: "Página web pública de la radio, armada sola y ordenada desde la consola"
+    area: App
+    priority: alta

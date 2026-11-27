@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: alertas-stream
+product: Latrack
+archetype: admin-panel
+title: Te avisamos si el stream se cae, antes que los oyentes
+titleCard: false
+promise: >
+  Cada señal avisa por email si el stream se cae o queda en silencio, después de los
+  minutos que la radio elige, a quien elige y fuera de su horario de descanso; y la
+  consola muestra un solo aviso cuando hay varias con problemas.
+
+intake:
+  audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
+  in:
+    - El aviso único en la consola cuando dos señales tienen problemas
+    - Encender las alertas de Houston, con minutos, destinatarios y horario de silencio
+    - El historial de alertas de la señal
+  out:
+    - El email en sí (no se dispara ninguno en el video)
+    - El aviso por WhatsApp (todavía no se envía)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa, admin de demo. Las caídas de
+    Phoenix y Miami son incidentes ficticios del seed, con alertas sin destinatarios; el
+    historial de Houston también. Los destinatarios de Houston son @demo.latrack.app, que el
+    envío descarta por no ser entregables. --cleanup apaga las alertas y borra los incidentes.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa. Se entera de que el stream se cayó cuando le escriben los oyentes.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/alertas-stream.mjs
+  assert:
+    - Phoenix y Miami tienen un incidente abierto (ficticio); Houston tiene las alertas apagadas
+
+scenes:
+  - id: aviso
+    title: "Un solo aviso, aunque fallen varias"
+    objection: true
+    proves: Un aviso en toda la consola cuando hay señales con problemas, sin una alarma por cada una.
+    covers: [alertas-stream]
+    watch: El aviso sale en cualquier página de la consola y lleva a la señal.
+    beats:
+      - as: gerente
+        go: /stations
+        awaits: banner-senales
+        say: Phoenix se quedó sin señal y Miami está en silencio.
+      - highlight: banner-senales
+        say: La consola lo dice en un solo aviso, en cualquier página, sin una alarma por señal.
+
+  - id: alertas
+    title: "Alertas por email, a su medida"
+    proves: Minutos sin señal o en silencio antes de avisar, quién recibe el email y un horario de silencio.
+    covers: [alertas-stream]
+    watch: El stream se revisa cada minuto; el silencio se mide escuchando unos segundos.
+    beats:
+      - go: /stations/cmwti8qye00024jo49jk43oi7#alertas
+        awaits: alertas-panel
+      - scroll: alertas-panel
+        wait: 2s
+        say: En Houston, Ana enciende las alertas de su señal.
+      - click: alertas-encender
+      - select: { target: alertas-sin-senal, value: "5" }
+        say: Le avisan si pasan cinco minutos sin señal, o con aire muerto.
+      - click: alertas-ana
+      - click: alertas-diego
+        say: El email le llega a ella y al operador, cada uno en su idioma.
+      - click: alertas-horario
+        awaits: alertas-desde
+        say: Y de noche no la despiertan; si el problema sigue, el aviso sale a la mañana.
+      - click: alertas-guardar
+        awaits: alertas-guardadas
+        say: Guarda, y desde ahora el stream se revisa cada minuto.
+
+  - id: historial
+    title: "Lo que pasó, registrado"
+    proves: Cada caída queda en el historial de la señal, con cuándo empezó y cuánto duró.
+    covers: [alertas-stream]
+    watch: Sirve para hablar con el proveedor del stream con datos.
+    beats:
+      - scroll: alertas-historial
+        say: Y cada caída queda registrada, con cuándo empezó y cuánto duró…
+      - highlight: alertas-historial
+        say: …para reclamarle al proveedor del stream con datos.
+    hold: 1s

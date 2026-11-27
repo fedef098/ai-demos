@@ -16,5 +16,5 @@ const [res] = remote(`
   const r = await q('update "Brand" set "listedInLatrack" = $2 where id = $1 returning id', [P.dup, P.cleanup]);
   out({ deleted: del.length, dup: r.length });
 `, { brandId: BRAND_ID, dup: DUPLICATE, cleanup: isCleanup });
-if (!isCleanup) { await ensureAdminSession(); await warm(["/apps"]); }
+if (!isCleanup) { await ensureAdminSession(); await warm(["/apps/cmwti8qxj00014jo472ejga6p"]); }
 console.log(`app-latrack: ${isCleanup ? "duplicate Radio Sol back in search" : `removed ${res.deleted} leftover Demo poll(s); duplicate Radio Sol out of search`}${res.dup ? "" : " (duplicate not found)"}.`);

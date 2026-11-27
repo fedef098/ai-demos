@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: cabina-voz-foto
+product: Latrack
+archetype: custom
+title: Notas de voz y fotos de los oyentes, directo a la cabina
+titleCard: false
+promise: >
+  El oyente le manda a la cabina una nota de voz y una foto desde la app, el locutor las
+  recibe en la bandeja listas para el aire, y cada radio decide si las acepta.
+
+intake:
+  audience: dueños/gerentes, locutores y el equipo de Adavance (efetrack)
+  in:
+    - En la app, un mensaje con nota de voz y foto
+    - En la bandeja de cabina, el mensaje con la nota y la foto
+    - Los switches de notas de voz y fotos de la radio
+  out:
+    - Marcar leído al aire, archivar y atajos (están en mensajes-cabina)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. La oyente "Vero Salinas" es
+    ficticia; su nota de voz es voz sintética (assets/cabina-nota-voz.wav) que el navegador
+    usa como micrófono, y la foto es una ilustración (assets/cabina-foto-carro.jpg). El seed
+    borra los mensajes de Vero antes y después; los de Marisol quedan. Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+fakeMicrophone: ./assets/cabina-nota-voz.wav
+
+fixtures:
+  # La encuesta activa de La Brisa sale en un sheet al abrir la app sólo a veces (una vez por
+  # día y por instalación): sin ella el teléfono graba igual en cada corrida. Es una lectura.
+  - route: "**/api/public/v1/brands/*/contests*"
+    body: ./fixtures/no-contests.json
+
+cast:
+  - as: locutora
+    name: Lupita Garza
+    context: Locutora de El Despertador en La Brisa Houston. Lee los mensajes al aire.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Un oyente de La Brisa
+    label: "En el teléfono de un oyente · Houston"
+    device: iphone
+    timezone: America/Chicago
+    context: Vero, de regreso a casa en el carro, escuchando La Brisa.
+
+world:
+  seed: ./seeds/cabina-voz-foto.mjs
+  assert:
+    - La Brisa acepta notas de voz y fotos; no hay mensajes de Vero Salinas
+
+scenes:
+  - id: app
+    title: "Un mensaje con su voz y una foto"
+    proves: Desde la app el oyente graba una nota de voz y adjunta una foto a su mensaje.
+    covers: [cabina-voz-foto]
+    watch: Es la app Latrack (build web); la nota dura hasta un minuto y la radio se pausa mientras graba.
+    beats:
+      - as: locutora
+        go: /inbox
+        awaits: inbox-lista-cabina
+        say: Los oyentes de La Brisa ya no sólo escriben a la cabina.
+      - as: oyente
+        go: http://127.0.0.1:8787/r/la-brisa
+        awaits: app-tab-cabina-v
+        say: Vero va en el carro de regreso a casa.
+      - click: app-tab-cabina-v
+        awaits: app-cabina-nombre
+      - type: { target: app-cabina-nombre, text: "Vero Salinas" }
+      - type: { target: app-cabina-mensaje, text: "¡Saludos desde la 59! Vamos de regreso con La Brisa." }
+        say: Escribe su saludo…
+      - click: app-cabina-grabar
+        awaits: app-cabina-grabando
+        say: …graba una nota de voz con lo que quiere escuchar…
+      - click: app-cabina-parar
+        awaits: app-cabina-nota
+      - upload: { target: app-cabina-foto, file: ./assets/cabina-foto-carro.jpg }
+        awaits: app-cabina-foto-lista
+        say: …y le suma una foto del camino.
+      - click: app-cabina-enviar
+        awaits: app-cabina-enviado
+        say: Lo manda, y llega a la cabina.
+
+  - id: bandeja
+    title: "En la cabina, lista para el aire"
+    proves: La bandeja recibe el mensaje con la nota de voz para escuchar o descargar y la foto.
+    covers: [cabina-voz-foto]
+    watch: La nota se puede descargar para pasarla al aire desde la consola de audio.
+    beats:
+      - as: locutora
+        go: /inbox
+        awaits: inbox-vero
+        say: Lupita lo ve en la bandeja al instante.
+      - click: inbox-vero
+        awaits: inbox-vero-abierto
+        say: Escucha la nota, la puede pasar al aire, y ve la foto.
+      - highlight: inbox-vero-foto
+
+  - id: switches
+    title: "Cada radio decide"
+    objection: true
+    proves: Notas de voz y fotos se prenden o apagan por radio.
+    covers: [cabina-voz-foto]
+    watch: Si una radio las apaga, la app deja de ofrecer grabar o adjuntar.
+    beats:
+      - go: /brands/cmwti8qxj00014jo472ejga6p
+        awaits: marca-cabina
+      - scroll: marca-cabina
+        say: Y si una radio prefiere sólo texto, apaga las notas de voz o las fotos desde su marca.
+    hold: 1s

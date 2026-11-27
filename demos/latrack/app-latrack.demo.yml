@@ -70,7 +70,7 @@ scenes:
     watch: Es la app Latrack (build web) en un teléfono; nadie buscó nada.
     beats:
       - as: gerente
-        go: /apps
+        go: /apps/cmwti8qxj00014jo472ejga6p
         awaits: tu-link-directo
         say: La Brisa tiene un link propio, el que el locutor dice al aire.
       - as: oyente

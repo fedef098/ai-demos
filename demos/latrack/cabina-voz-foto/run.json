@@ -1,0 +1,46 @@
+{
+  "id": "cabina-voz-foto",
+  "title": "Notas de voz y fotos de los oyentes, directo a la cabina",
+  "promise": "El oyente le manda a la cabina una nota de voz y una foto desde la app, el locutor las recibe en la bandeja listas para el aire, y cada radio decide si las acepta.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T15:04:59.200Z",
+  "commit": "46d506a",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 62520,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2580610,
+    "sha256": "011025a98856dfb0486f0405b28b4e18fc28a656089c785b90892bccbd3f3aef"
+  },
+  "usedFixtures": [
+    "**/api/public/v1/brands/*/contests*"
+  ],
+  "scenes": [
+    {
+      "id": "app",
+      "title": "Un mensaje con su voz y una foto",
+      "proves": "Desde la app el oyente graba una nota de voz y adjunta una foto a su mensaje.",
+      "watch": "Es la app Latrack (build web); la nota dura hasta un minuto y la radio se pausa mientras graba.",
+      "startMs": 15,
+      "endMs": 34237
+    },
+    {
+      "id": "bandeja",
+      "title": "En la cabina, lista para el aire",
+      "proves": "La bandeja recibe el mensaje con la nota de voz para escuchar o descargar y la foto.",
+      "watch": "La nota se puede descargar para pasarla al aire desde la consola de audio.",
+      "startMs": 34237,
+      "endMs": 48065
+    },
+    {
+      "id": "switches",
+      "title": "Cada radio decide",
+      "proves": "Notas de voz y fotos se prenden o apagan por radio.",
+      "watch": "Si una radio las apaga, la app deja de ofrecer grabar o adjuntar.",
+      "startMs": 48065,
+      "endMs": 62520
+    }
+  ]
+}

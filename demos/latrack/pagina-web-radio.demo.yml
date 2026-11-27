@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: pagina-web-radio
+product: Latrack
+archetype: custom
+title: La página web de la radio, armada sola
+titleCard: false
+promise: >
+  Cada radio tiene una página pública con el vivo, la programación de hoy, Me lo perdí, sus
+  programas, shorts, contacto y sponsors, que se arma sola y se ordena desde la consola.
+
+intake:
+  audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
+  in:
+    - La página pública de La Brisa en la computadora
+    - "Tu página web": ocultar una sección, subir otra, ver la vista previa y guardar
+  out:
+    - Foto de portada, contacto y datos para Google (se mencionan, no se tocan)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. Se abre por el link de la
+    radio, /r/la-brisa. En cámara se oculta "Concursos activos" y se sube "Me lo perdí", y se
+    guarda; el seed guarda la configuración original y --cleanup la restaura.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+cast:
+  - as: visitante
+    name: Un oyente en la computadora
+    context: Buscó La Brisa en Google desde el trabajo.
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa. Quiere que la web muestre primero lo que más escuchan.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+
+world:
+  seed: ./seeds/pagina-web-radio.mjs
+  assert:
+    - la página de La Brisa tiene su configuración original
+
+scenes:
+  - id: pagina
+    title: "La página de la radio"
+    proves: Página pública con el vivo, la programación de hoy, Me lo perdí, programas, shorts, contacto y sponsors.
+    covers: [pagina-web]
+    watch: Se arma sola con lo que la radio ya cargó en la consola; no hay que diseñar nada.
+    beats:
+      - as: visitante
+        go: /r/la-brisa
+        awaits: web-hoy
+        say: Quien abre el link de La Brisa en la computadora llega a su página web.
+      - scroll: web-hoy
+        say: La programación de hoy, con lo que está al aire…
+      - scroll: web-me-lo-perdi
+        say: …lo que se perdió…
+      - scroll: web-programas
+        say: …sus programas y conductores, y los shorts.
+      - scroll: web-contacto
+        say: Y abajo, sus sponsors y cómo escribirle a la cabina.
+
+  - id: editor
+    title: "Ordenada desde la consola"
+    objection: true
+    proves: Las secciones se prenden, se apagan y se ordenan, con vista previa antes de guardar.
+    covers: [pagina-web]
+    watch: La vista previa usa los cambios sin guardar; al guardar, la página cambia para todos.
+    beats:
+      - as: gerente
+        go: /web/cmwti8qxj00014jo472ejga6p
+        awaits: editor-secciones
+        wait: 3s  # the editor is client-side; let it hydrate before the first toggle
+        say: Nadie la diseñó. Se arma sola con lo que La Brisa ya cargó en la consola.
+      - click: editor-concursos-off
+        awaits: editor-sin-guardar
+        say: Ana oculta los concursos, que ya terminan…
+      - click: editor-subir-perdi
+        say: …y sube Me lo perdí, que es lo que más escuchan.
+      - highlight: editor-vista-previa
+        say: La vista previa ya lo muestra, antes de guardar.
+      - click: editor-guardar
+        awaits: editor-guardado
+        say: Guarda, y la página cambia para todos.
+    hold: 1s

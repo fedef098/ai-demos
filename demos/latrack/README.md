@@ -133,3 +133,22 @@ so the first `go` isn't a cold load.
 
 The La Brisa logo (`assets/la-brisa-logo.{svg,png}`) uses the brand's console
 colours, #0F172A and #F59E0B, and is the logo uploaded to La Brisa in QA.
+
+## Batch 2 (nov 2026)
+
+| Demo | Creates / changes | Seed resets / `--cleanup` |
+|---|---|---|
+| alertas-stream | Ana turns Houston's alerts on (recipients @demo.latrack.app, which `sendEmail` skips as undeliverable). Two FICTITIOUS open incidents (Phoenix, Miami; alerts on, no recipients) and a closed one for Houston's history, ids `demo_inc_*` | alerts off on the three stations, demo incidents deleted |
+| retencion-salidas | nothing on camera; a FICTITIOUS rotation of regional songs (made-up artists, ids `demoplay_*`) under the demo sessions, 26 to 2 days ago | deletes the demo plays |
+| me-lo-perdi | nothing (read only) | — |
+| cabina-voz-foto | "Vero Salinas" (fictitious) sends a voice note (`assets/cabina-nota-voz.wav` through `fakeMicrophone:`) and a photo (`assets/cabina-foto-carro.jpg`) | deletes Vero's messages; Marisol's stay |
+| concursos-consentimiento | "Daniela Ríos" enters the giveaway from the app; four fictitious participants `demo_ce_*` | deletes them and Daniela's entry, keeps `demo_ce_1` |
+| pagina-web-radio | hides "Concursos activos" and moves "Me lo perdí" up in Tu página web, and saves | restores La Brisa's `webPage` from `seeds/.state/webpage-la-brisa.json` |
+
+QA behind Cloudflare is slow from this VPS (1–2 s per console page, occasional 20 s
+timeouts). The console demos above (all but pagina-web-radio, which shows public URLs)
+were recorded against the Railway origin, `DEMO_BASE_URL=https://web-staging-52227612.up.railway.app`:
+the seeds accept that host and the engine copies the session cookie to it. The listener
+app is the web export with the fast-open changes (3f1752a, 9b71011), served on
+127.0.0.1:8787. Don't record while a QA deploy is rolling out: the charts' client
+chunks failed to load mid-deploy and the retention video came out with empty charts.

@@ -1,0 +1,44 @@
+{
+  "id": "retencion-salidas",
+  "title": "Quién se queda, quién se va y con qué canción",
+  "promise": "La radio ve cuánto tiempo se quedan sus oyentes, en qué programa se van más rápido y qué canciones los hacen cambiar, con datos de su propia app.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T15:01:11.981Z",
+  "commit": "46d506a",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 46760,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2598069,
+    "sha256": "b07870d2182a29c59d3cf0cc0e4202a7e648adcebed1127ab919e4b81ac991ec"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "curva",
+      "title": "Cuánto se quedan",
+      "proves": "De cada 100 oyentes que empiezan, cuántos siguen después de N minutos.",
+      "watch": "Cuenta sesiones terminadas de al menos un minuto.",
+      "startMs": 5,
+      "endMs": 16776
+    },
+    {
+      "id": "programas",
+      "title": "Quién se va rápido, por programa",
+      "proves": "Qué parte de los que entran en cada programa se va en los primeros quince minutos.",
+      "watch": "El programa es el que estaba al aire cuando el oyente empezó a escuchar.",
+      "startMs": 16776,
+      "endMs": 27861
+    },
+    {
+      "id": "canciones",
+      "title": "Las canciones que hacen cambiar",
+      "proves": "Las canciones con más salidas mientras sonaban, con un mínimo de oyentes para que cuente.",
+      "watch": "Una canción necesita al menos veinte oyentes al empezar para entrar en la lista.",
+      "startMs": 27861,
+      "endMs": 46760
+    }
+  ]
+}

@@ -176,6 +176,7 @@
       }
     },
 
+    "fakeMicrophone": { "type": "string", "description": "Ruta a un .wav: el micrófono del navegador lo \"graba\" y el permiso queda concedido. Para notas de voz en la app." },
     "hide": { "type": "array", "items": { "type": "string" }, "description": "Selectores de ruido a ocultar (badges de dev, widgets de chat)." },
     "redact": { "type": "array", "items": { "type": "string" }, "description": "Selectores a difuminar (mails reales, tarjetas)." },
 

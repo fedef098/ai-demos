@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: concursos-consentimiento
+product: Latrack
+archetype: custom
+title: Sorteos con consentimiento, y la lista lista para elegir ganador
+titleCard: false
+promise: >
+  El oyente se anota al sorteo desde la app con su nombre y su teléfono, aceptando que la
+  radio use sus datos sólo para el concurso, y la radio tiene la lista y el CSV en la consola.
+
+intake:
+  audience: dueños/gerentes, promociones y el equipo de Adavance (efetrack)
+  in:
+    - En la app, el sorteo "Gana boletos para el Baile del Año" y el consentimiento obligatorio
+    - En la consola, los participantes y el CSV
+  out:
+    - Elegir ganador (queda en Actividad; no se toca)
+    - Encuestas (están en concursos)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. Los participantes son
+    ficticios (teléfonos 555, correos example.com); "Daniela Ríos" se anota en cámara. El seed
+    los borra antes y después y deja uno de muestra. Anotarse no manda ningún correo.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+fixtures:
+  # Sólo el sorteo: la encuesta activa de La Brisa salía en un sheet al abrir la app y tapaba
+  # la escena. Es una lectura; el sorteo y su consentimiento son los reales.
+  - route: "**/api/public/v1/brands/*/contests*"
+    body: ./fixtures/only-giveaway.json
+
+cast:
+  - as: promociones
+    name: Ana Morales
+    context: Gerente de La Brisa. Regala boletos para el Baile del Año con Mueblería Don Pepe.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Daniela Ríos
+    label: "Daniela · oyente en Houston"
+    device: iphone
+    timezone: America/Chicago
+    context: Quiere ir al Baile del Año.
+
+world:
+  seed: ./seeds/concursos-consentimiento.mjs
+  assert:
+    - el sorteo tiene cuatro participantes ficticios y ninguno de Daniela
+
+scenes:
+  - id: app
+    title: "Anotarse, con su permiso"
+    objection: true
+    proves: El oyente se anota sin cuenta, y no puede participar sin aceptar el uso de sus datos.
+    covers: [concursos-consentimiento]
+    watch: Es la app Latrack (build web); un participante por teléfono.
+    beats:
+      - as: promociones
+        go: /contests/cmwtmjvfz01bf5vqi9rblowyt
+        awaits: sorteo-participantes
+        say: La Brisa regala boletos para el Baile del Año, presentado por Mueblería Don Pepe.
+      - as: oyente
+        go: http://127.0.0.1:8787/r/la-brisa
+        awaits: app-hero-play
+        say: Daniela sigue a La Brisa en Latrack.
+      - go: http://127.0.0.1:8787/contest/cmwtmjvfz01bf5vqi9rblowyt
+        awaits: app-sorteo-nombre
+        say: Se anota al sorteo desde la app, sin crear una cuenta.
+      - type: { target: app-sorteo-nombre, text: "Daniela Ríos" }
+      - type: { target: app-sorteo-telefono, text: "713 555 0168" }
+      - type: { target: app-sorteo-correo, text: "daniela.rios@example.com" }
+      - click: app-sorteo-participar
+        awaits: app-sorteo-sin-consentimiento
+        say: Sin aceptar el uso de sus datos, no puede participar.
+      - click: app-sorteo-consentimiento
+        say: Acepta que La Brisa la contacte sólo por este concurso…
+      - click: app-sorteo-participar
+        awaits: app-sorteo-listo
+        say: …y ya está participando.
+
+  - id: consola
+    title: "La lista, y el CSV"
+    proves: Los participantes en la consola, uno por teléfono, y la descarga en CSV.
+    covers: [concursos-consentimiento]
+    watch: El ganador se elige al azar y queda registrado en Actividad.
+    beats:
+      - as: promociones
+        go: /contests/cmwtmjvfz01bf5vqi9rblowyt
+        awaits: sorteo-daniela
+        say: En la consola, Daniela ya está en la lista, con cuándo se anotó.
+      - highlight: sorteo-participantes
+        say: Todos aceptaron el uso de sus datos, y hay uno por teléfono.
+      - highlight: sorteo-csv
+        say: La lista se descarga en CSV para llamar al ganador.
+    hold: 1s

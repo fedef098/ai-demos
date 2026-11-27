@@ -35,7 +35,8 @@ export const STATIONS = {
 export const ADMIN_EMAIL = "admin@demo.latrack.app";
 
 export const base = new URL(process.env.DEMO_BASE_URL ?? "https://qa-latrack.adavance.com");
-if (base.hostname !== "qa-latrack.adavance.com") {
+// QA, through Cloudflare or straight at its Railway origin (same service, same database).
+if (!["qa-latrack.adavance.com", "web-staging-52227612.up.railway.app"].includes(base.hostname)) {
   throw new Error(`These seeds only run against QA (qa-latrack.adavance.com), not ${base.hostname}.`);
 }
 

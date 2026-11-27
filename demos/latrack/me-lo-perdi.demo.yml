@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: me-lo-perdi
+product: Latrack
+archetype: custom
+title: Me lo perdí, la entrevista de la mañana cuando quieras
+titleCard: false
+promise: >
+  La radio publica los segmentos de charla que ya pasaron y el oyente los escucha en la
+  página del programa, y vuelve al vivo con un toque.
+
+intake:
+  audience: dueños/gerentes de radio, productores y el equipo de Adavance (efetrack)
+  in:
+    - La lista de segmentos publicados en la consola
+    - En la app, el segmento en la página de El Despertador, sonando
+    - Volver al vivo
+  out:
+    - Cortar un segmento de la grabación de la señal (ninguna señal de QA está grabando)
+  environment: >
+    QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. El segmento "Entrevista: 15
+    años de la Taquería El Güero" es dato de demo (voz sintética, la taquería es ficticia).
+    La app es el build web apuntado a QA, servido en 127.0.0.1:8787. Sólo lectura.
+  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+
+fixtures:
+  # La encuesta activa de La Brisa sale en un sheet al abrir la app sólo a veces (una vez por
+  # día y por instalación): sin ella el teléfono graba igual en cada corrida. Es una lectura.
+  - route: "**/api/public/v1/brands/*/contests*"
+    body: ./fixtures/no-contests.json
+
+cast:
+  - as: productor
+    name: Ana Morales
+    context: Gerente de La Brisa. La entrevista de la mañana fue lo más comentado del día.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: oyente
+    name: Un oyente de La Brisa
+    label: "En el teléfono de un oyente · Houston"
+    device: iphone
+    timezone: America/Chicago
+    context: Trabaja a la hora de El Despertador y se pierde las entrevistas.
+
+world:
+  seed: ./seeds/me-lo-perdi.mjs
+  assert:
+    - el segmento de la Taquería El Güero está publicado
+
+scenes:
+  - id: consola
+    title: "Lo mejor de la charla, publicado"
+    proves: Segmentos de charla de programas que ya pasaron, publicados para escuchar en la app.
+    covers: [me-lo-perdi]
+    watch: Solo charla; las licencias de streaming no cubren música a pedido.
+    beats:
+      - as: productor
+        go: /segments
+        awaits: segmento-guero
+        say: La entrevista de esta mañana a la Taquería El Güero fue lo más comentado del día.
+      - highlight: segmento-guero
+        say: La Brisa la publica en Me lo perdí, para quien no la alcanzó a escuchar.
+      - highlight: segmentos-grabacion
+        say: Se cortan de la grabación de la señal o se sube el audio; sólo charla, sin canciones.
+
+  - id: app
+    title: "En la página del programa"
+    objection: true
+    proves: El oyente encuentra el segmento en la página de El Despertador y lo escucha cuando quiere.
+    covers: [me-lo-perdi]
+    watch: Es la app Latrack (build web) en un teléfono.
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8787/r/la-brisa
+        awaits: app-hero-play
+        say: El oyente que trabaja a esa hora abre La Brisa…
+      - click: app-tab-programas
+        awaits: app-programa-despertador
+      - click: app-programa-despertador
+        awaits: app-segmento-guero
+        say: …entra a El Despertador, y ahí está la entrevista.
+      - click: app-segmento-guero
+        awaits: app-volver-al-vivo
+        say: La escucha completa, cuando quiere.
+      - highlight: app-volver-al-vivo
+        say: Y con un toque vuelve a la radio en vivo.
+    hold: 1s

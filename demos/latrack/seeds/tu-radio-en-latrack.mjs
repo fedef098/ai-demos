@@ -14,5 +14,5 @@ const [res] = remote(`
   const r = await q('update "App" set "featureShorts" = true, "featureSchedule" = true, "featureWhatsapp" = true, "featureContests" = true, "featureSleepTimer" = true, "featureAlarm" = true, "featureCarPlay" = true, "defaultLocale" = $2 where id = $1 returning id', [P.appId, "es"]);
   out({ app: r.length });
 `, { brandId: BRAND_ID, appId: APP_ID });
-if (!isCleanup) { await ensureAdminSession(); await warm(["/apps", "/listen/cmwti8qxj00014jo472ejga6p"]); }
+if (!isCleanup) { await ensureAdminSession(); await warm(["/apps/cmwti8qxj00014jo472ejga6p", "/listen/cmwti8qxj00014jo472ejga6p"]); }
 console.log(`tu-radio-en-latrack: La Brisa listed, every listener feature on${res.app ? "" : " (app not found!)"}.`);
