@@ -449,7 +449,8 @@
         Object.assign(st.querySelector(".bezel").style, { left: `${screen.x - b}px`, top: `${screen.y - b}px`, width: `${screen.w + 2 * b}px`, height: `${screen.h + 2 * b}px` });
         const who = st.querySelector(".who");
         who.textContent = label;
-        Object.assign(who.style, { left: `${screen.x + screen.w + 100}px`, top: `${screen.y + 36}px` });
+        // Below the chapter pill's row (top-right, ~48 px): on the same row a long label ran into it.
+        Object.assign(who.style, { left: `${screen.x + screen.w + 100}px`, top: `${screen.y + 104}px` });
         els.caption.style.setProperty("--side-left", `${screen.x + screen.w + 100}px`);
       }
       st.setAttribute("data-on", on ? "1" : "0");

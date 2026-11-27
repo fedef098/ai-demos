@@ -799,8 +799,22 @@ async function openPhone(page, phone, { demo, person, device, tmpDir, demoPath, 
 }
 
 async function enterDevice(page, phone, { demo, person, device, vp, tmpDir, demoPath, baseURL, goTo, awaitsSel, t0 }) {
+  // The phone loads its destination BEFORE the desktop goes black: its frames until the
+  // flash below are never used, and the desktop stays on screen meanwhile. Loading it
+  // behind the black curtain left 3–4 s of black in every phone scene.
+  if (!phone.ctx) await openPhone(page, phone, { demo, person, device, tmpDir, demoPath, baseURL });
+  const p = phone.page;
+  if (goTo) await p.goto(await expandVars(goTo), { waitUntil: "domcontentloaded" });
+  await applyMask(p, demo);
+  // Un margen corto: si el destino no pintó a tiempo, el `awaits` del beat (con la
+  // locución ya sonando) espera el resto y se ve la app abriendo, no negro mudo.
+  const ready = awaitsSel
+    ? await p.locator(awaitsSel).first().waitFor({ state: "visible", timeout: TIMING.deviceSettle }).then(() => true, () => false)
+    : false;
+  await p.waitForTimeout(ready ? 400 : TIMING.openingSettle);
+
   await page.evaluate((fade) => window.__demo.cover("black", { fade }), TIMING.fade);
-  await page.waitForTimeout(TIMING.identitySwap);
+  await page.waitForTimeout(TIMING.fade);
 
   phone.screen = stageScreen(device, vp.viewport);
   phone.device = device;
@@ -808,17 +822,6 @@ async function enterDevice(page, phone, { demo, person, device, vp, tmpDir, demo
     ([screen, label]) => window.__demo.stage(true, { screen, label }),
     [phone.screen, person.label ?? person.name ?? ""],
   );
-
-  if (!phone.ctx) await openPhone(page, phone, { demo, person, device, tmpDir, demoPath, baseURL });
-  const p = phone.page;
-  if (goTo) await p.goto(await expandVars(goTo), { waitUntil: "domcontentloaded" });
-  await applyMask(p, demo);
-  // No se espera a que la app termine de cargar con el telón negro: contra un QA
-  // lento eso eran 4–9 s de negro mudo. Se le da un margen corto y el telón sube;
-  // el `awaits` del beat (que corre con la locución ya sonando) espera el resto, y
-  // el oyente ve lo que vería en su teléfono: la app abriendo.
-  if (awaitsSel) await p.locator(awaitsSel).first().waitFor({ state: "visible", timeout: TIMING.deviceSettle }).catch(() => {});
-  await p.waitForTimeout(TIMING.openingSettle);
 
   await p.evaluate(() => window.__demo.cover("flash"));
   await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));

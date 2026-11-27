@@ -12,20 +12,20 @@ tu voz, respetalos o volvé a generar el video con `--voice` para que se ajuste.
 - Menciones al aire, pre-roll, banner y push, por novecientos cincuenta dólares.
 - Y si no sabe cuánto cobrar, la consola le sugiere un precio.
 
-## La propuesta, con su marca puesta  `00:00:16.104`
+## La propuesta, con su marca puesta  `00:00:16.115`
 
 - Para la Taquería El Güero arma una propuesta con su marca.
 - El dueño ve su banner ya puesto en la app de La Brisa, antes de pagar nada.
 - Con el paquete, la audiencia real de la radio…
 - …y una muestra del reporte que va a recibir.
 
-## El push «Presentado por»  `00:00:36.709`
+## El push «Presentado por»  `00:00:36.769`
 
 - El paquete incluye notificaciones a los oyentes, firmadas por el sponsor.
 - En el teléfono llegan con «Presentado por Taquería El Güero» al final.
 - La del martes ya quedó programada.
 
-## Cuánto del paquete se entregó  `00:00:56.063`
+## Cuánto del paquete se entregó  `00:00:55.981`
 
 - Y en el reporte del sponsor…
 - …ve cuánto del paquete lleva entregado, menciones, banner y push, contra lo que vendió.

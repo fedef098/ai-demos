@@ -1,0 +1,153 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: tus-apps
+product: Latrack
+archetype: admin-panel
+title: Tus apps, en Latrack desde hoy y con app propia en las tiendas
+titleCard: false
+promise: >
+  La radio está en la app Latrack desde el primer día, y si quiere su propia app con su nombre
+  y su ícono, la pide desde la consola: cuatro pasos en sus cuentas, un build pedido, y la app
+  abre directo en su radio.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Reemplaza a
+    tu-radio-en-latrack: desde el 27/11 hay dos modelos a la vez, Latrack y la app propia
+    publicada desde las cuentas de la radio.
+  in:
+    - «Tu radio en Latrack», con link directo, QR y dirección web, sin cuentas de tienda
+    - «Tu app propia» de La Brisa (ya creada en QA, una radio)
+    - El checklist del cliente (Apple como organización, acceso, APNs, Google Play)
+    - Las versiones pedidas (iOS y Android 1.0.0 en cola)
+    - La cola de builds del superadmin
+    - La app propia en el teléfono, abriendo directo en La Brisa
+  out:
+    - Crear otra app propia (una radio pertenece a una sola app; La Brisa ya tiene la suya)
+    - Pedir un build nuevo (ya hay uno en curso y esos dos pedidos son datos de demo que quedan)
+    - Compilar y subir a las tiendas (EAS, nunca en la VPS)
+  environment: >
+    QA, Demo Media / La Brisa, admin de demo y superadmin de QA. Solo lectura: no se guarda
+    nada. El teléfono es el build web de la app (staging de hoy) servido en 127.0.0.1:8788 con
+    ?app= y la clave pública de la app propia de La Brisa, que en web se comporta como app propia.
+    Sin mails.
+  approved_by: "Federico (dueño de producto), 2026-11-27: pidió este video (tus-apps → apps-tiendas) en el pedido de la tanda de efetrack"
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+# The Apple ID clients invite (LATRACK_STORES_APPLE_EMAIL) is a personal mailbox: blurred.
+redact: ['main li:has(#st-appleAccess) fieldset button:first-of-type > span:last-child']
+
+fixtures:
+  # The active poll would pop up as a sheet over the phone at random (once a day per install).
+  - route: "**/api/public/v1/brands/*/contests*"
+    body: ./fixtures/no-contests.json
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa (Demo Media). Quiere a sus oyentes en el celular ya, y su propia app en las tiendas.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: equipo
+    name: Equipo de Latrack
+    context: Compila las apps propias en EAS y las sube a las cuentas del cliente.
+    auth: { via: storageState, file: ./seeds/.state/superadmin-session.json }
+  - as: oyente
+    name: Un oyente de La Brisa
+    label: "En el teléfono de un oyente · App de La Brisa"
+    device: iphone
+    timezone: America/Chicago
+    context: Instaló la app de La Brisa.
+
+world:
+  seed: ./seeds/tus-apps.mjs
+  assert:
+    - La Brisa tiene su app propia con iOS y Android 1.0.0 en cola
+
+scenes:
+  - id: latrack
+    title: "En Latrack desde el primer día"
+    proves: La radio está en la app Latrack sin cuentas de tienda, con su link, su QR y su dirección web.
+    covers: [latrack-link-qr]
+    watch: Nada que publicar ni esperar; el link y el QR ya funcionan.
+    beats:
+      - as: gerente
+        go: /apps/cmwti8qxj00014jo472ejga6p
+        awaits: tu-link-directo
+        say: La Brisa está en la app Latrack desde el primer día, sin cuentas de Apple ni Google.
+        voice: La Brisa está en la app Latrack desde el primer día, sin cuentas de Ápol ni Gúgol.
+      - highlight: tu-link-directo
+        say: Su link y su QR abren Latrack directo en La Brisa, y tiene su propia dirección web.
+        voice: Su link y su código cu erre abren Latrack directo en La Brisa, y tiene su propia dirección web.
+
+  - id: propia
+    title: "Su propia app, con su nombre"
+    proves: Una app propia con el nombre y el ícono de la radio, para una radio o varias.
+    covers: [app-propia]
+    watch: La app propia convive con Latrack; los ajustes de la radio son los mismos para las dos.
+    beats:
+      - click: apps-tab-propia
+        awaits: own-lista-labrisa
+        say: Si además quiere su propia app en las tiendas, con su nombre y su ícono, la pide acá.
+      - click: own-lista-labrisa
+        awaits: own-checklist
+        say: La de La Brisa lleva una sola radio, así que abre directo en ella.
+
+  - id: cuentas
+    title: "Publicada desde sus cuentas"
+    objection: true
+    proves: Checklist del cliente para publicar desde sus cuentas de Apple y Google, como exigen las tiendas.
+    covers: [app-propia-checklist]
+    watch: Apple solo acepta una app así si la publica el dueño del contenido; por eso va desde la cuenta de la radio.
+    beats:
+      - highlight: own-checklist
+        say: Apple solo la acepta si la publica la radio, así que va desde sus propias cuentas.
+        voice: Ápol solo la acepta si la publica la radio, así que va desde sus propias cuentas.
+      - highlight: own-paso-apple
+        say: Ana inscribió a su empresa en Apple y nos dio acceso…
+        voice: Ana inscribió a su empresa en Ápol y nos dio acceso…
+      - highlight: own-paso-push
+        say: …la clave de notificaciones la creamos nosotros, y Google Play ya está listo.
+        voice: …la clave de notificaciones la creamos nosotros, y Gúgol Pléi ya está listo.
+
+  - id: version
+    title: "Pide el build, y lo hacemos nosotros"
+    proves: La radio pide la versión desde la consola y ve en qué estado está, sin tocar código.
+    covers: [app-propia-build]
+    watch: El botón queda bloqueado mientras hay una versión en curso.
+    beats:
+      - highlight: own-pedidos
+        say: Con los pasos listos pidió su primera versión, para iPhone y Android, y la ve en cola.
+        voice: Con los pasos listos pidió su primera versión, para áifon y Ándroid, y la ve en cola.
+      - highlight: own-links
+        say: Cuando esté publicada, el mismo link y el mismo QR mandarán a su app.
+        voice: Cuando esté publicada, el mismo link y el mismo código cu erre mandarán a su app.
+
+  - id: cola
+    title: "Del otro lado, la cola de builds"
+    proves: El equipo de Latrack recibe el pedido con el comando, las variables y lo que falta.
+    covers: [app-propia-build]
+    watch: Se compila en la nube de Expo y se sube a las cuentas de la radio; nunca en un servidor compartido.
+    beats:
+      - as: equipo
+        go: /admin/builds
+        awaits: cola-labrisa-ios
+        say: Del otro lado, el equipo de Latrack la recibe con todo lo necesario para compilarla.
+
+  - id: telefono
+    title: "Abre directo en La Brisa"
+    proves: La app propia abre directo en su radio, sin buscador ni lista de radios.
+    covers: [app-propia]
+    watch: Es la app real en modo app propia de una radio; la misma home que en Latrack.
+    beats:
+      - as: oyente
+        go: http://127.0.0.1:8788/?app=cmwz6uubq000301r0mi87ky53
+        awaits: app-propia-home
+        say: Y en el teléfono, la app de La Brisa abre directo en su radio…
+      - highlight: app-propia-home
+        say: "…sin buscador ni otras radios: solo La Brisa, con su marca."
+    hold: 1s

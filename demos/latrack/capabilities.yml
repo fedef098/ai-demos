@@ -247,3 +247,39 @@ capabilities:
     title: "Página web pública de la radio, armada sola y ordenada desde la consola"
     area: App
     priority: alta
+
+  # ── Batch 3 (27 nov 2026): two distribution models, custom domains, onboarding ──
+  - id: app-propia
+    title: "App propia en las tiendas con el nombre y el ícono de la radio, que abre directo en ella"
+    area: App
+    priority: alta
+
+  - id: app-propia-checklist
+    title: "Checklist del cliente para publicar desde sus cuentas de Apple y Google (Apple 4.2.6)"
+    area: App
+    priority: alta
+
+  - id: app-propia-build
+    title: "La radio pide la versión desde la consola y el equipo la recibe en la cola de builds"
+    area: App
+    priority: media
+
+  - id: pagina-web-dominio
+    title: "La página web en una dirección automática y en el dominio propio de la radio"
+    area: App
+    priority: alta
+
+  - id: pedido-demo
+    title: "Una radio pide la demo en la página de producto y la empresa se crea desde ese pedido"
+    area: Ventas
+    priority: alta
+
+  - id: puesta-en-marcha
+    title: "«Puesta en marcha»: los pasos para tener la radio al aire, que se tachan solos"
+    area: Onboarding
+    priority: alta
+
+  - id: dos-modelos
+    title: "Los dos modelos: la radio en Latrack desde hoy, o con su propia app en las tiendas"
+    area: Ventas
+    priority: alta

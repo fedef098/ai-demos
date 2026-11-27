@@ -85,7 +85,7 @@ async function sessionWorks(file) {
     const st = JSON.parse(readFileSync(file, "utf8"));
     const c = (st.cookies ?? []).find((x) => x.name === "lt_session");
     if (!c || (c.expires > 0 && c.expires * 1000 < Date.now() + 2 * 86_400_000)) return false;
-    const res = await fetch(`${base.origin}/inbox`, { headers: { cookie: `lt_session=${c.value}` }, redirect: "manual" });
+    const res = await fetch(`${base.origin}${file.includes("superadmin") ? "/admin" : "/inbox"}`, { headers: { cookie: `lt_session=${c.value}` }, redirect: "manual" });
     return res.status === 200;
   } catch {
     return false;
@@ -94,23 +94,28 @@ async function sessionWorks(file) {
 
 /** Makes sure a demo user has a valid console session cached; logs in through the form if not.
  *  Returns the storageState path relative to the workspace. */
-export async function ensureSession(email = ADMIN_EMAIL, name = "admin") {
+export async function ensureSession(email = ADMIN_EMAIL, name = "admin", login = "demo") {
   const file = join(STATE, `${name}-session.json`);
   const rel = `./seeds/.state/${name}-session.json`;
   if (await sessionWorks(file)) return rel;
   const logins = JSON.parse(readFileSync(join(homedir(), ".config/latrack/logins.json"), "utf8"));
-  const password = logins?.staging?.demo?.password;
-  if (!password) throw new Error("No staging.demo.password in ~/.config/latrack/logins.json");
+  const password = logins?.staging?.[login]?.password;
+  if (!password) throw new Error(`No staging.${login}.password in ~/.config/latrack/logins.json`);
   const require = createRequire(join(here, "../../../package.json"));
   const { chromium } = require("@playwright/test");
   const browser = await chromium.launch(process.env.DEMO_BROWSER === "chromium" ? {} : { channel: "chrome" });
   try {
     const ctx = await browser.newContext({ locale: "es-US" });
     const page = await ctx.newPage();
-    await page.goto(`${base.origin}/login`, { waitUntil: "domcontentloaded" });
+    // Wait for the form to hydrate: a submit before that is a native form post to /login
+    // that never logs in (and, before latrack 6c5dbbb, a GET with the fields in the URL).
+    await page.goto(`${base.origin}/login`, { waitUntil: "networkidle", timeout: 45_000 });
+    await page.waitForTimeout(1500);
     await page.fill("#email", email);
     await page.fill("#password", password);
-    await Promise.all([page.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 20_000 }), page.click('button[type="submit"]')]);
+    await page.click('button[type="submit"]');
+    // The form navigates client-side (router.push), which never fires a "load" event.
+    await page.waitForFunction(() => !location.pathname.startsWith("/login"), null, { timeout: 30_000 });
     writeFileSync(file, JSON.stringify(await ctx.storageState()), { mode: 0o600 });
     chmodSync(file, 0o600);
   } finally {
@@ -121,6 +126,14 @@ export async function ensureSession(email = ADMIN_EMAIL, name = "admin") {
 }
 
 export const ensureAdminSession = () => ensureSession(ADMIN_EMAIL, "admin");
+
+/** The QA superadmin (staging.superadmin in logins.json): /admin, demo requests, build queue. */
+export function ensureSuperadminSession() {
+  const logins = JSON.parse(readFileSync(join(homedir(), ".config/latrack/logins.json"), "utf8"));
+  const email = logins?.staging?.superadmin?.email;
+  if (!email) throw new Error("No staging.superadmin.email in ~/.config/latrack/logins.json");
+  return ensureSession(email, "superadmin", "superadmin");
+}
 
 /** "YYYY-MM-DD" of a day offset from today in a time zone. */
 export function dayIn(timeZone, offsetDays = 0) {

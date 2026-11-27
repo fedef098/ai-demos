@@ -69,11 +69,12 @@ scenes:
         go: http://127.0.0.1:8787/r/la-brisa
         awaits: app-hero-play
         say: Daniela sigue a La Brisa en Latrack.
-      - go: http://127.0.0.1:8787/contest/cmwtmjvfz01bf5vqi9rblowyt
+      # In-app navigation from the prompt: a `go` reloaded the web app and flashed white.
+      - click: app-sheet-participar
         awaits: app-sorteo-nombre
         say: Se anota al sorteo desde la app, sin crear una cuenta.
       - type: { target: app-sorteo-nombre, text: "Daniela Ríos" }
-      - type: { target: app-sorteo-telefono, text: "713 555 0168" }
+      - type: { target: app-sorteo-telefono, text: "+1 713 555 0168" }
       - type: { target: app-sorteo-correo, text: "daniela.rios@example.com" }
       - click: app-sorteo-participar
         awaits: app-sorteo-sin-consentimiento

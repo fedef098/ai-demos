@@ -3,16 +3,16 @@
   "title": "Vender un paquete al sponsor, de la propuesta al reporte",
   "promise": "La radio arma un paquete con precio, se lo presenta al anunciante con su marca ya puesta en la app, le manda un push \"Presentado por\" y el reporte muestra cuánto del paquete se entregó.\n",
   "product": "Latrack",
-  "recordedAt": "2026-11-27T13:11:40.730Z",
-  "commit": "6dbf975",
-  "baseUrl": "https://qa-latrack.adavance.com",
-  "durationMs": 76320,
+  "recordedAt": "2026-11-27T17:55:25.569Z",
+  "commit": "3b2980e",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 74960,
   "video": {
     "file": "demo.mp4",
     "poster": "poster.jpg",
     "narrated": true,
-    "bytes": 3608064,
-    "sha256": "91877eca3e6cbae11fad7edf25cd7773dfbd9f27332668f5a6131cab7d4a5779"
+    "bytes": 3635106,
+    "sha256": "068a26b424b84ebf8663747552f8c8c414dd4c04735fa589abd342f4e82bf215"
   },
   "usedFixtures": [],
   "scenes": [
@@ -22,31 +22,31 @@
       "proves": "Menciones al aire, pre-roll, banner y push patrocinado en un paquete, con un precio sugerido.",
       "watch": "El precio sugerido sale de tarifas de referencia que la radio ajusta a su mercado.",
       "startMs": 2,
-      "endMs": 16105
+      "endMs": 16115
     },
     {
       "id": "propuesta",
       "title": "La propuesta, con su marca puesta",
       "proves": "Una propuesta lista para mandar, con los banners del anunciante en la app y una muestra del reporte.",
       "watch": "La propuesta se manda en PDF o con un link de solo lectura.",
-      "startMs": 16105,
-      "endMs": 36710
+      "startMs": 16115,
+      "endMs": 36770
     },
     {
       "id": "push",
       "title": "El push «Presentado por»",
       "proves": "Un push a los oyentes firmado por el sponsor, como parte del paquete.",
       "watch": "Máximo un push patrocinado por día en la app, de cualquier anunciante.",
-      "startMs": 36710,
-      "endMs": 56063
+      "startMs": 36770,
+      "endMs": 55982
     },
     {
       "id": "entrega",
       "title": "Cuánto del paquete se entregó",
       "proves": "El reporte del sponsor compara lo vendido en el paquete con lo entregado.",
       "watch": "Las menciones al aire las anota la radio; el resto lo cuenta la app.",
-      "startMs": 56063,
-      "endMs": 76320
+      "startMs": 55982,
+      "endMs": 74960
     }
   ]
 }

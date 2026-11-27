@@ -1,52 +1,60 @@
 {
   "id": "pagina-producto",
   "title": "Lo que ve una radio que llega a Latrack por primera vez",
-  "promise": "El dueño de una radio entiende en un minuto qué es Latrack, cuánto cuesta y cómo pedir una demo con su propia radio.\n",
+  "promise": "El dueño de una radio entiende en un minuto las dos formas de estar en el celular, su app propia o Latrack desde hoy, qué hace falta para empezar, cuánto cuesta y cómo pedir la demo.\n",
   "product": "Latrack",
-  "recordedAt": "2026-11-25T16:49:22.700Z",
-  "commit": "982bf3d",
+  "recordedAt": "2026-11-27T18:50:21.770Z",
+  "commit": "3b2980e",
   "baseUrl": "https://qa-latrack.adavance.com",
-  "durationMs": 63760,
+  "durationMs": 84760,
   "video": {
     "file": "demo.mp4",
     "poster": "poster.jpg",
     "narrated": true,
-    "bytes": 3477169,
-    "sha256": "8085befd14f12ce895c523e63ded05d833ce7f43e40bcf5ec86aa24f89b53924"
+    "bytes": 5232158,
+    "sha256": "7536be714d2355a4bdd33a320518c078a6018c78d9d755928670ffa820732e55"
   },
   "usedFixtures": [],
   "scenes": [
     {
       "id": "portada",
-      "title": "La app de tu radio, con tu marca",
-      "proves": "La portada muestra la app de una radio de ejemplo y el precio de entrada.",
+      "title": "Tu radio en el celular, con tu marca",
+      "proves": "La portada muestra la app de una radio de ejemplo y las dos formas de llegar al teléfono.",
       "watch": "El teléfono es la vista real de la app de ejemplo, La Brisa 101.1.",
-      "startMs": 9,
-      "endMs": 17368
+      "startMs": 8,
+      "endMs": 11537
     },
     {
-      "id": "escuchar",
-      "title": "Escuchar la radio de ejemplo",
-      "proves": "El prospecto escucha el reproductor web de la radio de ejemplo sin registrarse.",
-      "watch": "Es el mismo reproductor web que recibe cada radio.",
-      "startMs": 17368,
-      "endMs": 24880
+      "id": "modelos",
+      "title": "Tu app propia, o tu radio en Latrack",
+      "proves": "Los dos modelos, app propia publicada desde las cuentas de la radio o Latrack desde el primer día, y los dos a la vez.",
+      "watch": "Las dos conviven; el link y el QR llevan a cada oyente a la app que corresponde.",
+      "startMs": 11537,
+      "endMs": 35268
+    },
+    {
+      "id": "web",
+      "title": "Su página web y su reproductor",
+      "proves": "Cada radio tiene su página web y su reproductor, y pronto suena en el auto.",
+      "watch": "CarPlay y Android Auto figuran como próximamente.",
+      "startMs": 35268,
+      "endMs": 43498
     },
     {
       "id": "precios",
-      "title": "Un precio por mes, sin contrato",
-      "proves": "Precios publicados y la respuesta a la objeción del contrato.",
-      "watch": "Los precios están a la vista; la respuesta aclara que la prueba empieza con la app publicada.",
-      "startMs": 24880,
-      "endMs": 40007
+      "title": "Un precio por mes, y la app con su nombre",
+      "proves": "Precios publicados sin contrato, y la respuesta honesta sobre la app con el nombre de la radio.",
+      "watch": "La respuesta explica por qué la app propia se publica desde las cuentas de la radio.",
+      "startMs": 43498,
+      "endMs": 61287
     },
     {
       "id": "demo",
       "title": "Pide la demo con su propia radio",
       "proves": "Formulario corto para pedir una demo con la radio del prospecto.",
-      "watch": "El formulario no se envía en el video.",
-      "startMs": 40007,
-      "endMs": 63760
+      "watch": "El formulario no se envía en este video.",
+      "startMs": 61287,
+      "endMs": 84760
     }
   ]
 }

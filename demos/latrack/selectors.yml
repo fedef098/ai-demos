@@ -42,7 +42,7 @@ targets:
   senal-zona:             '#timezone'
   senal-stream:           'input[aria-label="URL del stream"]'
   senal-probar:           'role=button[name="Probar"]'
-  senal-probar-ok:        '[role="status"]:has-text("Funciona")'
+  senal-probar-ok:        '[role="status"]:has-text("Funciona"):not(:has-text("No funciona"))'
   senal-whatsapp:         '#whatsappNumber'
   senal-frecuencia:       '#freq-0'
   senal-guardar:          'role=button[name="Crear señal"]'
@@ -343,7 +343,7 @@ targets:
 
   # ── pagina-producto (/producto) ───────────────────────────────────────────
   producto-hero:          'h1#hero-title'
-  producto-telefono:      'figure[aria-label^="Vista previa de la app"]'
+  producto-telefono:      'figure[aria-label^="Vista previa de una radio de ejemplo"]'
   producto-dia:           'h2#dia-title'
   producto-precios:       'h2#precios-title'
   producto-contrato:      'summary:has-text("¿Tengo que firmar un contrato?")'
@@ -521,3 +521,47 @@ targets:
   editor-guardar:         'role=button[name="Guardar cambios"]'
   editor-guardado:        '[role="status"]:has-text("Cambios guardados. Ya están en tu página.")'
   inbox-lista-cabina:     'ul[aria-label="Mensajes"]'
+
+  # ── tus-apps (/apps/<La Brisa> → /apps/own → /apps/own/<La Brisa app>, /admin/builds) ──
+  apps-tab-propia:        'main a[href="/apps/own"]:text-is("Tu app propia")'
+  own-lista-labrisa:      'main a[href="/apps/own/cmwz6uubq000201r0mnuy2ipo"]'
+  own-checklist:          'main section:has(h2:text-is("Lo que tienes que hacer"))'
+  own-paso-apple:         'main li:has(#st-appleAccess)'
+  own-paso-push:          'main li:has(#st-push)'
+  own-versiones:          'main section:has(h2:text-is("Versiones"))'
+  own-links:              'main section:has(h2:text-is("Tus links"))'
+  cola-labrisa-ios:       'main :text("La Brisa · iOS 1.0.0 (build 1)")'
+  app-propia-home:        '[data-testid="radio-switcher"][aria-label="La Brisa"]:visible'
+
+  # ── pagina-web-radio: «Tu dominio» (/web/<id>#dominio) ────────────────────
+  dominio-panel:          '#dominio section'
+  dominio-automatico:     '#dominio div.rounded-control:has(span:text-is("Tu dirección web"))'
+  dominio-registros:      '#dominio div:has(> h3:text-is("Registros DNS"))'
+  dominio-aviso:          '#dominio p:has-text("todavía no apunta")'
+
+  # ── pagina-producto: the two models (/producto, since 27/11) ──────────────
+  producto-modelos:       'h2#tuya-title'
+  producto-modelo-propia: 'section:has(#tuya-title) li:has(span:text-is("Tu app propia"))'
+  producto-modelo-latrack: 'section:has(#tuya-title) li:has(span:text-is("Tu radio en Latrack"))'
+  producto-empezar:       'section:has(#tuya-title) div:has(> h3:has-text("Para empezar necesitamos"))'
+  producto-sitio-web:     'li:has(h3:has-text("Suena en tu sitio web"))'
+  producto-app-nombre:    'summary:has-text("¿Puedo tener una app con el nombre de mi radio?")'
+  producto-app-nombre-resp: 'details[open] p:has-text("publica la propia radio")'
+
+  # ── puesta-en-marcha (/producto#demo → /admin → /invite → / → /brands, /stations, /web, /apps/own) ──
+  demo-enviado:           'section#demo [role="status"]'
+  pedido-tucson:          'main li:has-text("Radio Sol de Tucson")'
+  pedido-crear:           'main li:has-text("Radio Sol de Tucson") >> role=link[name="Crear empresa"]'
+  alta-form-tucson:       'input#c-name[value="Radio Sol de Tucson"]'
+  alta-crear:             'role=button[name="Crear empresa e invitar"]'
+  alta-creada:            'main [role="status"]:has-text("Empresa creada")'
+  puesta-checklist:       'main section:has(h2:text-is("Puesta en marcha"))'
+  paso-web:               'main a:has-text("Revisa tu página web")'
+  marca-paleta:           'role=button[name="Usar #7A0F2E con #FFC857"]'
+  marca-guardar-identidad: 'role=button[name="Guardar identidad"]'
+  marca-identidad-guardada: 'main [role="status"]:has-text("Guardad")'
+  senal-tucson-guardada:  'input#name[value="Radio Sol 92.9 Tucson"]'
+  own-crear:              'main a[href="/apps/own/new"]'
+  dominio-activo:         '#dominio div:has(> p:has-text("ya responde en"))'
+  own-pedidos:            'main section:has(h2:text-is("Versiones")) ul'
+  app-sheet-participar:   '[data-testid="contest-sheet"] :text-is("Participar")'

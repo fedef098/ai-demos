@@ -15,7 +15,7 @@ tu voz, respetalos o volvé a generar el video con `--voice` para que se ajuste.
 - Acepta que La Brisa la contacte sólo por este concurso…
 - …y ya está participando.
 
-## La lista, y el CSV  `00:00:35.814`
+## La lista, y el CSV  `00:00:34.020`
 
 - En la consola, Daniela ya está en la lista, con cuándo se anotó.
 - Todos aceptaron el uso de sus datos, y hay uno por teléfono.

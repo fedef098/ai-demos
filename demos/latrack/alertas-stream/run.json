@@ -3,16 +3,16 @@
   "title": "Te avisamos si el stream se cae, antes que los oyentes",
   "promise": "Cada señal avisa por email si el stream se cae o queda en silencio, después de los minutos que la radio elige, a quien elige y fuera de su horario de descanso; y la consola muestra un solo aviso cuando hay varias con problemas.\n",
   "product": "Latrack",
-  "recordedAt": "2026-11-27T14:59:45.617Z",
-  "commit": "46d506a",
+  "recordedAt": "2026-11-27T18:23:37.698Z",
+  "commit": "3b2980e",
   "baseUrl": "https://web-staging-52227612.up.railway.app",
-  "durationMs": 51240,
+  "durationMs": 51280,
   "video": {
     "file": "demo.mp4",
     "poster": "poster.jpg",
     "narrated": true,
-    "bytes": 2344459,
-    "sha256": "9ad92f21ab180eaf32449c5514ad118393741cc92584e5f21af425ca931357ca"
+    "bytes": 2341528,
+    "sha256": "1783eb68e7df8fdf68fec1418dbb03e556ce487c8daa1d678e8ac8fe6a819eb9"
   },
   "usedFixtures": [],
   "scenes": [
@@ -21,24 +21,24 @@
       "title": "Un solo aviso, aunque fallen varias",
       "proves": "Un aviso en toda la consola cuando hay señales con problemas, sin una alarma por cada una.",
       "watch": "El aviso sale en cualquier página de la consola y lleva a la señal.",
-      "startMs": 2,
-      "endMs": 10766
+      "startMs": 3,
+      "endMs": 10770
     },
     {
       "id": "alertas",
       "title": "Alertas por email, a su medida",
       "proves": "Minutos sin señal o en silencio antes de avisar, quién recibe el email y un horario de silencio.",
       "watch": "El stream se revisa cada minuto; el silencio se mide escuchando unos segundos.",
-      "startMs": 10766,
-      "endMs": 37188
+      "startMs": 10770,
+      "endMs": 37221
     },
     {
       "id": "historial",
       "title": "Lo que pasó, registrado",
       "proves": "Cada caída queda en el historial de la señal, con cuándo empezó y cuánto duró.",
       "watch": "Sirve para hablar con el proveedor del stream con datos.",
-      "startMs": 37188,
-      "endMs": 51240
+      "startMs": 37221,
+      "endMs": 51280
     }
   ]
 }

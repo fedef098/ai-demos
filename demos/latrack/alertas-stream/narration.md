@@ -11,7 +11,7 @@ tu voz, respetalos o volvé a generar el video con `--voice` para que se ajuste.
 - Phoenix se quedó sin señal y Miami está en silencio.
 - La consola lo dice en un solo aviso, en cualquier página, sin una alarma por señal.
 
-## Alertas por email, a su medida  `00:00:10.766`
+## Alertas por email, a su medida  `00:00:10.770`
 
 - En Houston, Ana enciende las alertas de su señal.
 - Le avisan si pasan cinco minutos sin señal, o con aire muerto.
@@ -19,7 +19,7 @@ tu voz, respetalos o volvé a generar el video con `--voice` para que se ajuste.
 - Y de noche no la despiertan; si el problema sigue, el aviso sale a la mañana.
 - Guarda, y desde ahora el stream se revisa cada minuto.
 
-## Lo que pasó, registrado  `00:00:37.187`
+## Lo que pasó, registrado  `00:00:37.220`
 
 - Y cada caída queda registrada, con cuándo empezó y cuánto duró…
 - …para reclamarle al proveedor del stream con datos.

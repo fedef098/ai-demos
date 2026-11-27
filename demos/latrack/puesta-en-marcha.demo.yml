@@ -1,0 +1,196 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: puesta-en-marcha
+product: Latrack
+archetype: login-onboarding
+title: De pedir la demo a la radio al aire
+titleCard: false
+promise: >
+  Una radio nueva pide la demo, la damos de alta desde su pedido, entra con la invitación y
+  la consola la guía paso a paso hasta tener su página web y su radio al aire, con la app
+  propia como opción.
+
+intake:
+  audience: >
+    Dueños y gerentes de radio que evalúan Latrack y el equipo de Adavance (efetrack).
+    Reemplaza el video de puesta en marcha del 25/11 con el alta de punta a punta.
+  in:
+    - El pedido de demo en /producto#demo, con una radio ficticia (Radio Sol de Tucson)
+    - Superadmin, «Pedidos de demo» y «Crear empresa» desde el pedido
+    - La invitación aceptada y la consola con «Puesta en marcha»
+    - Dos pasos reales en cámara, logo y colores, y la señal con su stream
+    - Programación y home sembradas mientras corre el video, y la lista que se tacha sola
+    - «Tu página web» y su dirección automática
+    - La opción «Tu app propia»
+    - La página de la radio en vivo
+  out:
+    - Equipo, plan y facturación (tienen su video o no deciden el alta)
+    - Crear la app propia (tiene su video, tus-apps)
+    - Conectar un dominio propio (pagina-web-radio lo muestra)
+  environment: >
+    QA por el origen de Railway. La empresa, el usuario y el pedido son ficticios y el seed
+    los borra antes y después. El contacto es federicofiorottowork+latrack-onboarding@gmail.com,
+    un alias real del dueño, así que el acuse del pedido y la invitación llegan a un buzón
+    real. El link de invitación lo re-firma el watcher del seed; en pantalla se difumina.
+  approved_by: "Federico (dueño de producto), 2026-11-27: pidió este video (puesta-en-marcha) en el pedido de la tanda de efetrack"
+
+viewport: desktop
+locale: es-US
+timezone: America/Phoenix
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+# The invitation link /admin shows once carries the token, and the owner's address on the
+# invitation page is a real mailbox: both blurred.
+redact: ['main [role="status"] input', 'main p strong']
+
+cast:
+  - as: duena
+    name: Marta Ocampo
+    context: >
+      Dueña de Radio Sol de Tucson (ficticia), una FM de regional mexicano en Arizona. No es
+      técnica y quiere a sus oyentes en el celular esta semana.
+  - as: equipo
+    name: Equipo de Latrack
+    context: Da de alta a las radios que piden la demo.
+    auth: { via: storageState, file: ./seeds/.state/superadmin-session.json }
+  - as: oyente
+    name: Un oyente en la computadora
+    context: Abre el link de Radio Sol de Tucson desde el trabajo.
+
+world:
+  seed: ./seeds/puesta-en-marcha.mjs
+  assert:
+    - no existe Radio Sol de Tucson ni su pedido ni su usuario
+
+scenes:
+  - id: pedido
+    title: "Pide la demo"
+    proves: Una radio pide la demo desde la página de producto, con su nombre, su email y sus ciudades.
+    covers: [pedido-demo]
+    watch: El pedido le llega al equipo por email y queda en el superadmin.
+    beats:
+      - as: duena
+        go: /producto#demo
+        awaits: demo-nombre
+        say: Marta tiene una radio en Tucson y pide la demo desde la página de Latrack.
+        voice: Marta tiene una radio en Túson y pide la demo desde la página de Latrack.
+      - type: { target: demo-nombre, text: "Marta Ocampo" }
+      - type: { target: demo-radio, text: "Radio Sol de Tucson" }
+      - type: { target: demo-email, text: "federicofiorottowork+latrack-onboarding@gmail.com" }
+      - type: { target: demo-ciudades, text: "Tucson 92.9 FM" }
+      - click: demo-enviar
+        awaits: demo-enviado
+        say: Deja sus datos, y el pedido llega al equipo de Latrack.
+
+  - id: alta
+    title: "La damos de alta desde su pedido"
+    proves: El pedido completa solo el formulario de la empresa nueva, y la invitación sale sola.
+    covers: [pedido-demo, invitacion]
+    watch: El formulario se llena con los datos del pedido; el link que muestra va difuminado porque es la llave de entrada.
+    beats:
+      - as: equipo
+        go: /admin
+        awaits: pedido-tucson
+        say: En el superadmin, su pedido está primero en la lista.
+      - click: pedido-crear
+        awaits: alta-form-tucson
+        say: Un toque completa la empresa, su email y su primera marca.
+        voice: Un toque completa la empresa, su correo y su primera marca.
+      - click: alta-crear
+        awaits: alta-creada
+        say: La empresa queda creada, con treinta días de prueba, y la invitación sale sola.
+
+  - id: entra
+    title: "Entra con la invitación"
+    proves: La dueña entra con su invitación y la consola la recibe con los pasos para salir al aire.
+    covers: [invitacion, puesta-en-marcha]
+    watch: Es una cuenta nueva; «Puesta en marcha» arranca con todo pendiente.
+    beats:
+      - as: duena
+        go: ${INVITE_URL}
+        awaits: invitacion-form
+        say: Marta abre la invitación que le llegó por email…
+        voice: Marta abre la invitación que le llegó por correo…
+      - type: { target: invitacion-nombre, text: "Marta Ocampo" }
+      - type: { target: invitacion-password, text: "${DEMO_OWNER_PW}" }
+        say: …elige su contraseña…
+      - click: invitacion-aceptar
+        awaits: puesta-checklist
+        say: …y la consola le muestra los pasos para tener su radio al aire.
+
+  - id: marca
+    title: "Su logo y sus colores"
+    proves: Cada paso lleva a su pantalla; la marca toma el logo y los colores al instante.
+    covers: [marca, puesta-en-marcha]
+    watch: El paso se tacha solo cuando la marca tiene logo.
+    beats:
+      - click: paso-marca
+        awaits: marca-form
+      - upload: { target: marca-logo, file: ./assets/radio-sol-logo.png }
+        awaits: marca-logo-listo
+        say: Sube su logo y elige sus colores…
+      - click: marca-paleta
+      - click: marca-guardar-identidad
+        awaits: marca-identidad-guardada
+        say: …y Radio Sol de Tucson ya tiene su marca.
+        voice: …y Radio Sol de Túson ya tiene su marca.
+
+  - id: senal
+    title: "Su señal, con el stream probado"
+    objection: true
+    proves: La señal con su frecuencia, su zona horaria y su stream, probado en el momento.
+    covers: [senales, stream-probe, puesta-en-marcha]
+    watch: La consola prueba el stream antes de guardar; si no responde, lo dice en palabras simples.
+    beats:
+      - go: /stations/new
+        awaits: senal-form
+      - type: { target: senal-nombre, text: "Radio Sol 92.9 Tucson" }
+        say: Después carga su señal, con su ciudad y su hora local.
+      - type: { target: senal-ciudad, text: "Tucson" }
+      - select: { target: senal-zona, value: "America/Phoenix" }
+      - type: { target: senal-frecuencia, text: "92.9" }
+      - type: { target: senal-stream, text: "${DEMO_STREAM_URL}" }
+      - click: senal-probar
+        awaits: senal-probar-ok
+        say: La consola prueba su stream en el momento y le confirma que suena.
+        voice: La consola prueba su estrím en el momento y le confirma que suena.
+      - click: senal-guardar
+        awaits: senal-tucson-guardada
+
+  - id: lista
+    title: "La lista se tacha sola"
+    proves: «Puesta en marcha» se tacha sola a medida que la radio completa cada paso.
+    covers: [puesta-en-marcha]
+    watch: La programación y la home se cargaron fuera de cámara; los pasos opcionales no cuentan para la barra.
+    beats:
+      - go: /
+        awaits: puesta-checklist
+        say: Con la programación y la home cargadas, la lista se tacha sola.
+      - highlight: puesta-checklist
+        say: Y le quedan dos opcionales, su propio dominio y su propia app en las tiendas.
+
+  - id: web
+    title: "Su página web, con su dirección"
+    proves: La radio tiene página web desde el alta, con una dirección propia automática.
+    covers: [pagina-web, pagina-web-dominio, app-propia, dos-modelos]
+    watch: La dirección automática usa la misma palabra que su link; un dominio propio se conecta en el mismo panel.
+    beats:
+      - click: paso-web
+        awaits: editor-secciones
+      - scroll: dominio-panel
+      - highlight: dominio-automatico
+        say: Su página web ya existe, con su propia dirección; si quiere, conecta su dominio acá.
+
+  - id: aire
+    title: "Al aire"
+    proves: La página de la radio queda en vivo, con su marca, su programación y el reproductor.
+    covers: [pagina-web]
+    watch: Es la página pública real, en vivo, con el stream que cargó.
+    beats:
+      - as: oyente
+        go: https://radio-sol-de-tucson.qa-latrack.adavance.com/
+        awaits: web-hero-play
+        say: Esa misma tarde, Radio Sol de Tucson está al aire en su propia dirección, con su marca.
+        voice: Esa misma tarde, Radio Sol de Túson está al aire en su propia dirección, con su marca.
+    hold: 2s

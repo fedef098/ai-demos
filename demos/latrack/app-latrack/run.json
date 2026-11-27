@@ -3,16 +3,16 @@
   "title": "Una sola app, Latrack, y cada radio con su marca adentro",
   "promise": "Con el link de su radio el oyente cae directo en ella; sin link la encuentra por nombre o cerca de él, y puede seguir varias radios, cada una con su logo y sus colores.\n",
   "product": "Latrack",
-  "recordedAt": "2026-11-27T14:21:44.447Z",
-  "commit": "46d506a",
-  "baseUrl": "https://qa-latrack.adavance.com",
-  "durationMs": 55560,
+  "recordedAt": "2026-11-27T18:26:51.158Z",
+  "commit": "3b2980e",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 52040,
   "video": {
     "file": "demo.mp4",
     "poster": "poster.jpg",
     "narrated": true,
-    "bytes": 1568991,
-    "sha256": "432484b8c33713fc69a9dc75edb7897701a74d4a155b66e35c0bf56add4f7f7b"
+    "bytes": 1744424,
+    "sha256": "d5ee96052f5def32fd3f2f72c2fb5e45e88469a937c9fa0eff091eac7e690d38"
   },
   "usedFixtures": [
     "**/api/public/v1/brands/*/contests*"
@@ -23,24 +23,24 @@
       "title": "El link abre la app en tu radio",
       "proves": "El link de la radio abre Latrack directo en ella, con su logo y sus colores.",
       "watch": "Es la app Latrack (build web) en un teléfono; nadie buscó nada.",
-      "startMs": 15,
-      "endMs": 19102
+      "startMs": 4,
+      "endMs": 16907
     },
     {
       "id": "primer-inicio",
       "title": "Sin link: cerca de ti",
       "proves": "En el primer inicio Latrack ofrece buscar por nombre, ciudad o frecuencia, o las radios cercanas.",
       "watch": "La ubicación se redondea a unos diez kilómetros antes de buscar.",
-      "startMs": 19102,
-      "endMs": 31959
+      "startMs": 16907,
+      "endMs": 29513
     },
     {
       "id": "mis-radios",
       "title": "Varias radios, cada una con su marca",
       "proves": "El oyente suma otra radio buscándola por nombre y cambia entre las dos desde Mis radios.",
       "watch": "Al cambiar de radio cambian el logo, los colores, la ciudad y la programación.",
-      "startMs": 31959,
-      "endMs": 55560
+      "startMs": 29513,
+      "endMs": 51001
     }
   ]
 }

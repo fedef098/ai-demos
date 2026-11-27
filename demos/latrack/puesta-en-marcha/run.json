@@ -1,0 +1,84 @@
+{
+  "id": "puesta-en-marcha",
+  "title": "De pedir la demo a la radio al aire",
+  "promise": "Una radio nueva pide la demo, la damos de alta desde su pedido, entra con la invitación y la consola la guía paso a paso hasta tener su página web y su radio al aire, con la app propia como opción.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T18:53:53.782Z",
+  "commit": "3b2980e",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 125480,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 4839672,
+    "sha256": "08a38767db3783dbdbea30dbb70253dadd4e93bf61c10a23adf60144616e07de"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "pedido",
+      "title": "Pide la demo",
+      "proves": "Una radio pide la demo desde la página de producto, con su nombre, su email y sus ciudades.",
+      "watch": "El pedido le llega al equipo por email y queda en el superadmin.",
+      "startMs": 8,
+      "endMs": 20873
+    },
+    {
+      "id": "alta",
+      "title": "La damos de alta desde su pedido",
+      "proves": "El pedido completa solo el formulario de la empresa nueva, y la invitación sale sola.",
+      "watch": "El formulario se llena con los datos del pedido; el link que muestra va difuminado porque es la llave de entrada.",
+      "startMs": 20873,
+      "endMs": 36213
+    },
+    {
+      "id": "entra",
+      "title": "Entra con la invitación",
+      "proves": "La dueña entra con su invitación y la consola la recibe con los pasos para salir al aire.",
+      "watch": "Es una cuenta nueva; «Puesta en marcha» arranca con todo pendiente.",
+      "startMs": 36213,
+      "endMs": 50995
+    },
+    {
+      "id": "marca",
+      "title": "Su logo y sus colores",
+      "proves": "Cada paso lleva a su pantalla; la marca toma el logo y los colores al instante.",
+      "watch": "El paso se tacha solo cuando la marca tiene logo.",
+      "startMs": 50995,
+      "endMs": 62834
+    },
+    {
+      "id": "senal",
+      "title": "Su señal, con el stream probado",
+      "proves": "La señal con su frecuencia, su zona horaria y su stream, probado en el momento.",
+      "watch": "La consola prueba el stream antes de guardar; si no responde, lo dice en palabras simples.",
+      "startMs": 62834,
+      "endMs": 87116
+    },
+    {
+      "id": "lista",
+      "title": "La lista se tacha sola",
+      "proves": "«Puesta en marcha» se tacha sola a medida que la radio completa cada paso.",
+      "watch": "La programación y la home se cargaron fuera de cámara; los pasos opcionales no cuentan para la barra.",
+      "startMs": 87116,
+      "endMs": 98797
+    },
+    {
+      "id": "web",
+      "title": "Su página web, con su dirección",
+      "proves": "La radio tiene página web desde el alta, con una dirección propia automática.",
+      "watch": "La dirección automática usa la misma palabra que su link; un dominio propio se conecta en el mismo panel.",
+      "startMs": 98797,
+      "endMs": 112949
+    },
+    {
+      "id": "aire",
+      "title": "Al aire",
+      "proves": "La página de la radio queda en vivo, con su marca, su programación y el reproductor.",
+      "watch": "Es la página pública real, en vivo, con el stream que cargó.",
+      "startMs": 112949,
+      "endMs": 125480
+    }
+  ]
+}

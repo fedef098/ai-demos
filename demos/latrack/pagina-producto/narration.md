@@ -1,27 +1,32 @@
 # Lo que ve una radio que llega a Latrack por primera vez
 
-> El dueño de una radio entiende en un minuto qué es Latrack, cuánto cuesta y cómo pedir una demo con su propia radio.
+> El dueño de una radio entiende en un minuto las dos formas de estar en el celular, su app propia o Latrack desde hoy, qué hace falta para empezar, cuánto cuesta y cómo pedir la demo.
 
 
 Texto para locutar. Los tiempos son del video ya montado — si lo grabás con
 tu voz, respetalos o volvé a generar el video con `--voice` para que se ajuste.
 
-## La app de tu radio, con tu marca  `00:00:00.009`
+## Tu radio en el celular, con tu marca  `00:00:00.007`
 
-- Jorge tiene dos radios en Texas y llega a la página de Latrack.
-- Lo primero que ve es la app de una radio de ejemplo, con su marca, en un teléfono.
-- Y cómo se trabaja un día al aire, de la mañana a la noche.
+- Jorge tiene dos radios en Tejas y llega a la página de Latrack.
+- Lo primero que ve es una radio de ejemplo en un teléfono, con su marca.
 
-## Escuchar la radio de ejemplo  `00:00:17.367`
+## Tu app propia, o tu radio en Latrack  `00:00:11.537`
 
-- Puede escuchar la radio de ejemplo, en el mismo reproductor que tendría la suya.
+- Puede tener su propia app en las tiendas, con su nombre y su ícono…
+- …o estar en Latrack desde el primer día, sin cuentas de tienda. O las dos.
+- Para empezar alcanza con su estrím, su logo y su programación.
 
-## Un precio por mes, sin contrato  `00:00:24.879`
+## Su página web y su reproductor  `00:00:35.268`
 
-- Los precios están a la vista, por mes.
-- Y a la pregunta de siempre, la respuesta es no hay contrato, se paga mes a mes.
+- Cada radio tiene además su página web y su reproductor, y pronto, el auto.
 
-## Pide la demo con su propia radio  `00:00:40.006`
+## Un precio por mes, y la app con su nombre  `00:00:43.497`
+
+- Los precios están a la vista, por mes y sin contrato.
+- Y la app con su nombre sale desde sus cuentas; mientras tanto, ya está en Latrack.
+
+## Pide la demo con su propia radio  `00:01:01.287`
 
 - Al final, pide una demo con su propia radio.
 - Deja su nombre, su radio y sus ciudades, y el equipo le arma la demo con su señal.

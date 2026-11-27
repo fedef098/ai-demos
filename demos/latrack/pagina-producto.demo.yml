@@ -5,26 +5,28 @@ archetype: custom
 title: Lo que ve una radio que llega a Latrack por primera vez
 titleCard: false
 promise: >
-  El dueño de una radio entiende en un minuto qué es Latrack, cuánto cuesta y cómo
-  pedir una demo con su propia radio.
+  El dueño de una radio entiende en un minuto las dos formas de estar en el celular, su app
+  propia o Latrack desde hoy, qué hace falta para empezar, cuánto cuesta y cómo pedir la demo.
 
 intake:
   audience: >
-    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Muestra el recorrido
-    de un prospecto por la página pública antes de hablar con ventas.
+    Dueños y gerentes de radio y el equipo de Adavance (efetrack). Reemplaza el video del
+    25/11: la página ahora presenta los dos modelos (app propia y Latrack) y CarPlay como
+    próximamente.
   in:
     - La portada con la app de ejemplo en el teléfono
-    - Un día al aire con la app
-    - El reproductor de ejemplo
-    - Precios, sin contrato, y la pregunta del contrato
+    - Los dos modelos, app propia o Latrack, y que se pueden tener los dos
+    - Lo que hace falta para empezar (stream, logo, programación)
+    - El sitio web y el reproductor de cada radio
+    - Precios sin contrato, y la pregunta de la app con el nombre de la radio
     - El formulario para pedir la demo (sin enviarlo)
   out:
-    - Enviar el formulario (crearía un pedido de demo y avisaría a ventas)
-    - El resto de las preguntas frecuentes
+    - Enviar el formulario (crea un pedido de demo y avisa a ventas; lo muestra puesta-en-marcha)
+    - El resto del día al aire y de las preguntas frecuentes
   environment: >
     QA (https://qa-latrack.adavance.com), página pública /producto, sin sesión. No se
-    siembra ni se crea nada: el formulario se completa pero no se envía.
-  approved_by: "Federico (dueño de producto), 2026-11-25: aprobó el estilo; videos por módulo autorizados sin revisión de guion"
+    siembra ni se crea nada; el formulario se completa pero no se envía.
+  approved_by: "Federico (dueño de producto), 2026-11-27: pidió re-grabarlo con los dos modelos en el pedido de la tanda de efetrack"
 
 viewport: desktop
 locale: es-US
@@ -37,15 +39,15 @@ chapter: { position: top-right, top: 48 }
 cast:
   - as: prospecto
     name: Jorge Villarreal
-    context: Dueño de dos FM regionales en el Valle de Texas. Busca una app para su radio.
+    context: Dueño de dos FM regionales en el Valle de Texas. Quiere a su radio en el celular.
 
 world:
   seed: ./seeds/pagina-producto.mjs
 
 scenes:
   - id: portada
-    title: "La app de tu radio, con tu marca"
-    proves: La portada muestra la app de una radio de ejemplo y el precio de entrada.
+    title: "Tu radio en el celular, con tu marca"
+    proves: La portada muestra la app de una radio de ejemplo y las dos formas de llegar al teléfono.
     covers: [pagina-producto]
     watch: El teléfono es la vista real de la app de ejemplo, La Brisa 101.1.
     beats:
@@ -53,42 +55,55 @@ scenes:
         go: /producto
         awaits: producto-telefono
         say: Jorge tiene dos radios en Texas y llega a la página de Latrack.
-      - say: Lo primero que ve es la app de una radio de ejemplo, con su marca, en un teléfono.
-      - scroll: producto-dia
-        say: Y cómo se trabaja un día al aire, de la mañana a la noche.
+        voice: Jorge tiene dos radios en Tejas y llega a la página de Latrack.
+      - highlight: producto-telefono
+        say: Lo primero que ve es una radio de ejemplo en un teléfono, con su marca.
 
-  - id: escuchar
-    title: "Escuchar la radio de ejemplo"
-    proves: El prospecto escucha el reproductor web de la radio de ejemplo sin registrarse.
-    covers: [pagina-producto, reproductor-web]
-    watch: Es el mismo reproductor web que recibe cada radio.
+  - id: modelos
+    title: "Tu app propia, o tu radio en Latrack"
+    proves: Los dos modelos, app propia publicada desde las cuentas de la radio o Latrack desde el primer día, y los dos a la vez.
+    covers: [dos-modelos, pagina-producto]
+    watch: Las dos conviven; el link y el QR llevan a cada oyente a la app que corresponde.
     beats:
-      - go: /producto
-        awaits: producto-reproductor
-      - click: producto-reproductor
-        awaits: web-play
-        say: Puede escuchar la radio de ejemplo, en el mismo reproductor que tendría la suya.
+      - scroll: producto-modelos
+      - highlight: producto-modelo-propia
+        say: Puede tener su propia app en las tiendas, con su nombre y su ícono…
+      - highlight: producto-modelo-latrack
+        say: …o estar en Latrack desde el primer día, sin cuentas de tienda. O las dos.
+      - highlight: producto-empezar
+        say: Para empezar alcanza con su stream, su logo y su programación.
+        voice: Para empezar alcanza con su estrím, su logo y su programación.
+
+  - id: web
+    title: "Su página web y su reproductor"
+    proves: Cada radio tiene su página web y su reproductor, y pronto suena en el auto.
+    covers: [pagina-producto, pagina-web]
+    watch: CarPlay y Android Auto figuran como próximamente.
+    beats:
+      - scroll: producto-sitio-web
+        say: Cada radio tiene además su página web y su reproductor, y pronto, el auto.
 
   - id: precios
-    title: "Un precio por mes, sin contrato"
+    title: "Un precio por mes, y la app con su nombre"
     objection: true
-    proves: Precios publicados y la respuesta a la objeción del contrato.
+    proves: Precios publicados sin contrato, y la respuesta honesta sobre la app con el nombre de la radio.
     covers: [pagina-producto]
-    watch: Los precios están a la vista; la respuesta aclara que la prueba empieza con la app publicada.
+    watch: La respuesta explica por qué la app propia se publica desde las cuentas de la radio.
     beats:
-      - go: /producto
-        awaits: producto-hero
       - scroll: producto-precios
-        say: Los precios están a la vista, por mes.
-      - click: producto-contrato
-        awaits: producto-contrato-resp
-        say: Y a la pregunta de siempre, la respuesta es no hay contrato, se paga mes a mes.
+        say: Los precios están a la vista, por mes y sin contrato.
+      - click: producto-app-nombre
+        awaits: producto-app-nombre-resp
+      # A scroll forces a full repaint: in the screencast the rows under the opened answer
+      # kept their old paint and overlapped.
+      - scroll: producto-app-nombre-resp
+        say: Y la app con su nombre sale desde sus cuentas; mientras tanto, ya está en Latrack.
 
   - id: demo
     title: "Pide la demo con su propia radio"
     proves: Formulario corto para pedir una demo con la radio del prospecto.
     covers: [pagina-producto]
-    watch: El formulario no se envía en el video.
+    watch: El formulario no se envía en este video.
     hold: 2s
     beats:
       - scroll: producto-volver-demo

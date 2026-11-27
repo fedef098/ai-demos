@@ -12,9 +12,11 @@ intake:
   audience: dueños/gerentes de radio y el equipo de Adavance (efetrack)
   in:
     - La página pública de La Brisa en la computadora
-    - "Tu página web": ocultar una sección, subir otra, ver la vista previa y guardar
+    - «Tu página web», ocultar una sección, subir otra, ver la vista previa y guardar
+    - «Tu dominio», con la dirección automática y el dominio propio activo, y la página abierta en ese dominio
   out:
     - Foto de portada, contacto y datos para Google (se mencionan, no se tocan)
+    - Tocar «Verificar» o quitar el dominio (es dato de demo que queda)
   environment: >
     QA (https://qa-latrack.adavance.com), Demo Media / La Brisa. Se abre por el link de la
     radio, /r/la-brisa. En cámara se oculta "Concursos activos" y se sube "Me lo perdí", y se
@@ -85,4 +87,21 @@ scenes:
       - click: editor-guardar
         awaits: editor-guardado
         say: Guarda, y la página cambia para todos.
+
+  - id: dominio
+    title: "Su propia dirección"
+    proves: Una dirección automática desde el alta y el dominio propio de la radio, activo y con certificado.
+    covers: [pagina-web-dominio]
+    watch: El dominio propio pasa a ser la dirección principal para Google; la automática sigue funcionando.
+    beats:
+      - scroll: dominio-panel
+        say: Y la página tiene su propia dirección, desde el día en que La Brisa se dio de alta.
+      - highlight: dominio-automatico
+        say: Esta se la dimos sin hacer nada, con la misma palabra que su link.
+      - highlight: dominio-activo
+        say: Además conectó su propio dominio, que ya está activo y con certificado.
+      - as: visitante
+        go: https://labrisa-demo.adavance.com/
+        awaits: web-hoy
+        say: Y quien entra a su dominio llega a su página, con su marca.
     hold: 1s

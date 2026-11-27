@@ -1,0 +1,70 @@
+{
+  "id": "tus-apps",
+  "title": "Tus apps, en Latrack desde hoy y con app propia en las tiendas",
+  "promise": "La radio está en la app Latrack desde el primer día, y si quiere su propia app con su nombre y su ícono, la pide desde la consola: cuatro pasos en sus cuentas, un build pedido, y la app abre directo en su radio.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T18:46:21.835Z",
+  "commit": "3b2980e",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 82760,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 4473228,
+    "sha256": "8dec69c4af025d7c83ebb92acb3fcc2967e498b799fcbf1a069ccaaae99ca7e8"
+  },
+  "usedFixtures": [
+    "**/api/public/v1/brands/*/contests*"
+  ],
+  "scenes": [
+    {
+      "id": "latrack",
+      "title": "En Latrack desde el primer día",
+      "proves": "La radio está en la app Latrack sin cuentas de tienda, con su link, su QR y su dirección web.",
+      "watch": "Nada que publicar ni esperar; el link y el QR ya funcionan.",
+      "startMs": 3,
+      "endMs": 13788
+    },
+    {
+      "id": "propia",
+      "title": "Su propia app, con su nombre",
+      "proves": "Una app propia con el nombre y el ícono de la radio, para una radio o varias.",
+      "watch": "La app propia convive con Latrack; los ajustes de la radio son los mismos para las dos.",
+      "startMs": 13788,
+      "endMs": 24530
+    },
+    {
+      "id": "cuentas",
+      "title": "Publicada desde sus cuentas",
+      "proves": "Checklist del cliente para publicar desde sus cuentas de Apple y Google, como exigen las tiendas.",
+      "watch": "Apple solo acepta una app así si la publica el dueño del contenido; por eso va desde la cuenta de la radio.",
+      "startMs": 24530,
+      "endMs": 43856
+    },
+    {
+      "id": "version",
+      "title": "Pide el build, y lo hacemos nosotros",
+      "proves": "La radio pide la versión desde la consola y ve en qué estado está, sin tocar código.",
+      "watch": "El botón queda bloqueado mientras hay una versión en curso.",
+      "startMs": 43856,
+      "endMs": 58479
+    },
+    {
+      "id": "cola",
+      "title": "Del otro lado, la cola de builds",
+      "proves": "El equipo de Latrack recibe el pedido con el comando, las variables y lo que falta.",
+      "watch": "Se compila en la nube de Expo y se sube a las cuentas de la radio; nunca en un servidor compartido.",
+      "startMs": 58479,
+      "endMs": 66386
+    },
+    {
+      "id": "telefono",
+      "title": "Abre directo en La Brisa",
+      "proves": "La app propia abre directo en su radio, sin buscador ni lista de radios.",
+      "watch": "Es la app real en modo app propia de una radio; la misma home que en Latrack.",
+      "startMs": 66386,
+      "endMs": 82760
+    }
+  ]
+}

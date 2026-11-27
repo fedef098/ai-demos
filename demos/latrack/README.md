@@ -152,3 +152,31 @@ the seeds accept that host and the engine copies the session cookie to it. The l
 app is the web export with the fast-open changes (3f1752a, 9b71011), served on
 127.0.0.1:8787. Don't record while a QA deploy is rolling out: the charts' client
 chunks failed to load mid-deploy and the retention video came out with empty charts.
+
+## Batch 3 (27 nov 2026): two distribution models, domains, onboarding
+
+`tus-apps` replaces `tu-radio-en-latrack` (efetrack `apps-tiendas`), `puesta-en-marcha`
+replaces `onboarding-radio` (efetrack `puesta-en-marcha`), `pagina-producto` was rewritten for
+the two models and `pagina-web-radio` gained the «Tu dominio» scene.
+
+| Demo | Creates / changes | Seed resets / `--cleanup` |
+|---|---|---|
+| tus-apps | nothing (read only): La Brisa's own app (`cmwz6uubq000201r0mnuy2ipo`, demo data that stays, with its two queued 1.0.0 builds), `/admin/builds` as superadmin, and the phone on the own app | checks the own app and its queued builds exist |
+| puesta-en-marcha | a demo request, the company «Radio Sol de Tucson» (FICTITIOUS) from it, the owner's account from the invitation, the brand's logo and colours, the station and its stream; a watcher re-keys the invitation (INVITE_URL) and, once the station exists, seeds three shows and a published home | deletes the company (cascade), its assets / rollups / link stats / audit lines, the owner's user and the demo requests of the contact email |
+| pagina-producto | nothing; the form is filled but not sent | — |
+
+- The contact of `puesta-en-marcha` is `federicofiorottowork+latrack-onboarding@gmail.com`, a
+  real alias of the owner: the receipt of the demo request, the sales notice and the invitation
+  are real emails. `/producto` rate-limits demo requests to 5 per hour per IP: a `--check` plus
+  a recording is 2.
+- The superadmin session (`seeds/.state/superadmin-session.json`, 600) is minted from
+  `staging.superadmin` in `~/.config/latrack/logins.json` (`ensureSuperadminSession`).
+- The own app's phone is the same web export of the listener app with `?app=<publicKey>`, served
+  on 127.0.0.1:8788 (a fresh origin): on web that key makes it behave as an own app. A web
+  export does not bake `LATRACK_APP_KEY` (Expo's web build carries no `expoConfig.extra`), so
+  building one with it changes nothing.
+- The automatic subdomain (`<slug>.qa-latrack.adavance.com`) and the custom domain
+  `labrisa-demo.adavance.com` answer over HTTPS since 27/11 18:00; `pagina-web-radio` opens the
+  latter and `puesta-en-marcha` closes on the new radio's subdomain.
+- Engine: a phone scene now loads its destination before the desktop goes black (it used to
+  load behind the curtain: 3–4 s of black), and the phone label sits below the chapter pill.
