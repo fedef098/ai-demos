@@ -1,0 +1,76 @@
+{
+  "id": "emails",
+  "title": "Los emails que manda Latrack",
+  "promise": "Cada aviso llega a la persona correcta, en su idioma, con el nombre de su radio y un botón que la lleva a resolverlo.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T22:59:37.263Z",
+  "commit": "2e2ee84",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 74640,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 3876950,
+    "sha256": "e07cabfcd6ea01ce00054619e0b8d7bd83dfeefce1462ae36d54c19711a6749c"
+  },
+  "usedFixtures": [
+    "https://correo.latrack-demo.invalid/alerta-caida",
+    "https://correo.latrack-demo.invalid/alerta-silencio-en",
+    "https://correo.latrack-demo.invalid/alerta-vuelve",
+    "https://correo.latrack-demo.invalid/invitacion",
+    "https://correo.latrack-demo.invalid/contrasena",
+    "https://correo.latrack-demo.invalid/demo-acuse",
+    "https://correo.latrack-demo.invalid/demo-ventas"
+  ],
+  "scenes": [
+    {
+      "id": "alerta",
+      "title": "Si se cae la señal, se entera quien tiene que enterarse",
+      "proves": "Las alertas de cada señal van a las personas elegidas, con la hora local, el motivo y un botón a la señal.",
+      "watch": "El stream se revisa cada minuto; el email sale después de los minutos que eligió la radio.",
+      "startMs": 2,
+      "endMs": 17541
+    },
+    {
+      "id": "silencio",
+      "title": "También el silencio, y en su idioma",
+      "proves": "Avisa también cuando el stream responde pero no suena nada, y cada persona lo recibe en su idioma.",
+      "watch": "El idioma es el que cada persona eligió para su consola; sin elegir, español.",
+      "startMs": 17541,
+      "endMs": 27857
+    },
+    {
+      "id": "vuelve",
+      "title": "Y cuando vuelve, cuánto duró",
+      "proves": "Un segundo aviso cuando la señal vuelve, con cuánto duró el problema.",
+      "watch": "Si se vuelve a cortar, el aviso lo dice; nunca llega un email viejo fuera de hora.",
+      "startMs": 27857,
+      "endMs": 36026
+    },
+    {
+      "id": "equipo",
+      "title": "La invitación, con quién y para qué",
+      "proves": "La invitación al equipo dice quién invita, a qué radio y con qué rol, y cuánto dura el enlace.",
+      "watch": "El formulario no se envía en el video; el email es la plantilla real con datos de ejemplo.",
+      "startMs": 36026,
+      "endMs": 55408
+    },
+    {
+      "id": "contrasena",
+      "title": "La contraseña, sin llamar a nadie",
+      "proves": "El enlace para elegir una contraseña nueva vence en una hora, sirve una vez y cierra las otras sesiones.",
+      "watch": "Sale en el idioma de la cuenta; si el email no existe, la pantalla dice lo mismo y no se manda nada.",
+      "startMs": 55408,
+      "endMs": 61824
+    },
+    {
+      "id": "demo",
+      "title": "Un pedido de demo, dos emails",
+      "proves": "Quien pide la demo recibe el acuse al instante, y ventas el pedido con sus datos y un botón para responder.",
+      "watch": "El acuse sale en el idioma en que la radio vio la página de producto; el aviso a ventas, en español.",
+      "startMs": 61824,
+      "endMs": 74640
+    }
+  ]
+}

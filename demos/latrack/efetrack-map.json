@@ -4,6 +4,7 @@
   "cabina-voz-foto": "mensajes",
   "concursos": "concursos",
   "concursos-consentimiento": "concursos",
+  "emails": "emails",
   "equipo-idioma": "equipo",
   "estadisticas": "estadisticas",
   "home-app": "home",
@@ -22,6 +23,7 @@
   "retencion-salidas": "estadisticas",
   "senales-streams": "senales",
   "sponsors": "sponsors",
+  "superadmin": "superadmin",
   "tus-apps": "apps-tiendas",
   "ventas-sponsors": "ventas-sponsors"
 }

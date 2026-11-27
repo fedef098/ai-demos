@@ -1,0 +1,154 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: emails
+product: Latrack
+archetype: custom
+title: Los emails que manda Latrack
+titleCard: false
+promise: >
+  Cada aviso llega a la persona correcta, en su idioma, con el nombre de su radio y un botón
+  que la lleva a resolverlo.
+
+intake:
+  audience: equipo interno y clientes evaluando Latrack (efetrack)
+  in:
+    - Las alertas de una señal en la consola (destinatarios de Houston)
+    - El aviso de señal caída, el de silencio (en inglés, para quien usa la consola en inglés) y el de vuelta
+    - La invitación al equipo, desde el formulario de Equipo
+    - El enlace para cambiar la contraseña
+    - El acuse del pedido de demo y el aviso a ventas
+  out:
+    - Los emails de facturación (pedido de factura y acuse), que dependen de un plan pago
+    - La invitación al primer administrador (la muestra superadmin)
+    - Mandar emails reales (las plantillas se muestran renderizadas, sin enviar)
+  environment: >
+    QA (Demo Media / La Brisa, admin de demo). Los emails son las plantillas reales de Latrack
+    (lib/email.ts) renderizadas con seeds/render-emails.ts en una bandeja estática servida por
+    el motor (correo.latrack-demo.invalid): no se manda ningún email. Datos de ejemplo: Pedro
+    Salas y Radio Sol de Laredo son ficticios; los enlaces de invitación y contraseña son de
+    ejemplo y van difuminados. El seed enciende las alertas de Houston con Ana y Diego
+    (@demo.latrack.app, que sendEmail descarta) y --cleanup las apaga como estaban. El
+    formulario de Equipo se completa pero no se envía.
+  approved_by: Federico
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 64 }
+# The invitation and reset links are fake, but they look like the real thing: blurred. The
+# station's «Lo que sonó» lists the songs of QA's stream (a real third-party station): blurred.
+redact:
+  - 'section[data-open] .mail a[style*="break-all"]'
+  - 'main aside section > ul > li'
+
+fixtures:
+  - { route: "https://correo.latrack-demo.invalid/alerta-caida", body: ./fixtures/correo/alerta-caida.html, contentType: text/html; charset=utf-8 }
+  - { route: "https://correo.latrack-demo.invalid/alerta-silencio-en", body: ./fixtures/correo/alerta-silencio-en.html, contentType: text/html; charset=utf-8 }
+  - { route: "https://correo.latrack-demo.invalid/alerta-vuelve", body: ./fixtures/correo/alerta-vuelve.html, contentType: text/html; charset=utf-8 }
+  - { route: "https://correo.latrack-demo.invalid/invitacion", body: ./fixtures/correo/invitacion.html, contentType: text/html; charset=utf-8 }
+  - { route: "https://correo.latrack-demo.invalid/contrasena", body: ./fixtures/correo/contrasena.html, contentType: text/html; charset=utf-8 }
+  - { route: "https://correo.latrack-demo.invalid/demo-acuse", body: ./fixtures/correo/demo-acuse.html, contentType: text/html; charset=utf-8 }
+  - { route: "https://correo.latrack-demo.invalid/demo-ventas", body: ./fixtures/correo/demo-ventas.html, contentType: text/html; charset=utf-8 }
+
+cast:
+  - as: gerente
+    name: Ana Morales
+    context: Gerente de La Brisa (Demo Media). Configura quién se entera de qué.
+    auth: { via: storageState, file: ./seeds/.state/admin-session.json }
+  - as: correo
+    name: La bandeja de entrada
+    context: Los emails que manda Latrack, renderizados con sus plantillas reales y datos de ejemplo.
+
+world:
+  seed: ./seeds/emails.mjs
+  assert:
+    - Houston tiene las alertas encendidas con Ana y Diego como destinatarios
+
+scenes:
+  - id: alerta
+    title: "Si se cae la señal, se entera quien tiene que enterarse"
+    proves: Las alertas de cada señal van a las personas elegidas, con la hora local, el motivo y un botón a la señal.
+    covers: [emails-alertas, alertas-stream]
+    watch: El stream se revisa cada minuto; el email sale después de los minutos que eligió la radio.
+    beats:
+      - as: gerente
+        go: /stations/cmwti8qye00024jo49jk43oi7#alertas
+        awaits: em-alertas-destinatarios
+      - scroll: em-alertas-destinatarios
+        say: En cada señal, Ana elige quién se entera si el stream se cae.
+        voice: En cada señal, Ana elige quién se entera si el estrím se cae.
+      - as: correo
+        go: https://correo.latrack-demo.invalid/alerta-caida
+        awaits: correo-alerta-caida
+        say: Si Houston se queda sin señal, el aviso llega con la hora local y el motivo…
+      - highlight: correo-boton
+        say: …y un botón que la lleva directo a la señal.
+
+  - id: silencio
+    title: "También el silencio, y en su idioma"
+    objection: true
+    proves: Avisa también cuando el stream responde pero no suena nada, y cada persona lo recibe en su idioma.
+    covers: [emails-alertas, emails-idioma]
+    watch: El idioma es el que cada persona eligió para su consola; sin elegir, español.
+    beats:
+      - click: correo-lista-silencio
+        awaits: correo-alerta-silencio
+        say: También avisa si el stream responde pero sale aire muerto.
+        voice: También avisa si el estrím responde pero sale aire muerto.
+      - highlight: correo-detalles
+        say: Y a Pedro, que usa la consola en inglés, le llega en inglés.
+
+  - id: vuelve
+    title: "Y cuando vuelve, cuánto duró"
+    proves: Un segundo aviso cuando la señal vuelve, con cuánto duró el problema.
+    covers: [emails-alertas]
+    watch: Si se vuelve a cortar, el aviso lo dice; nunca llega un email viejo fuera de hora.
+    beats:
+      - click: correo-lista-vuelve
+        awaits: correo-alerta-vuelve
+      - highlight: correo-detalles
+        say: Cuando vuelve la señal, otro aviso dice cuánto duró la caída.
+
+  - id: equipo
+    title: "La invitación, con quién y para qué"
+    proves: La invitación al equipo dice quién invita, a qué radio y con qué rol, y cuánto dura el enlace.
+    covers: [emails-invitacion, equipo]
+    watch: El formulario no se envía en el video; el email es la plantilla real con datos de ejemplo.
+    beats:
+      - as: gerente
+        go: /team
+        awaits: em-equipo-form
+        say: Cuando Ana suma a Pedro al equipo como editor…
+      - type: { target: em-equipo-email, text: "pedro@labrisa-demo.adavance.com" }
+      - as: correo
+        go: https://correo.latrack-demo.invalid/invitacion
+        awaits: correo-invitacion-abierta
+        say: …a él le llega quién lo invitó, a qué radio y con qué rol.
+      - highlight: correo-boton
+        say: El enlace vence en siete días y sirve una sola vez.
+
+  - id: contrasena
+    title: "La contraseña, sin llamar a nadie"
+    proves: El enlace para elegir una contraseña nueva vence en una hora, sirve una vez y cierra las otras sesiones.
+    covers: [emails-contrasena]
+    watch: Sale en el idioma de la cuenta; si el email no existe, la pantalla dice lo mismo y no se manda nada.
+    beats:
+      - click: correo-lista-contrasena
+        awaits: correo-contrasena
+        say: Si alguien olvida su contraseña, el enlace vence en una hora y sirve una sola vez.
+
+  - id: demo
+    title: "Un pedido de demo, dos emails"
+    proves: Quien pide la demo recibe el acuse al instante, y ventas el pedido con sus datos y un botón para responder.
+    covers: [emails-demo]
+    watch: El acuse sale en el idioma en que la radio vio la página de producto; el aviso a ventas, en español.
+    beats:
+      - click: correo-lista-demo-acuse
+        awaits: correo-demo-acuse
+        say: Y cuando una radio pide la demo, recibe el acuse al instante…
+      - click: correo-lista-demo-ventas
+        awaits: correo-demo-ventas
+        say: …y ventas, el pedido con sus datos y un botón para responderle.
+    hold: 1s

@@ -293,3 +293,55 @@ capabilities:
     title: "Los dos modelos: la radio en Latrack desde hoy, o con su propia app en las tiendas"
     area: Ventas
     priority: alta
+
+  # ── Superadmin (equipo de Latrack) ─────────────────────────────────────────
+  - id: superadmin-pedidos
+    title: "El equipo de Latrack ve cada pedido de demo de la página de producto, y cuáles ya son empresa"
+    area: Superadmin
+    priority: media
+
+  - id: superadmin-alta
+    title: "Alta de una radio en un minuto desde su pedido, con la invitación a su administrador"
+    area: Superadmin
+    priority: alta
+
+  - id: superadmin-empresas
+    title: "Todas las empresas con estado, prueba, marcas, señales, instalaciones y horas escuchadas"
+    area: Superadmin
+    priority: media
+
+  - id: superadmin-entrar
+    title: "«Entrar» en la consola de una empresa para darle soporte, sin pedirle la contraseña"
+    area: Superadmin
+    priority: media
+
+  - id: superadmin-builds
+    title: "La cola de builds de las apps propias, con su estado y el comando para compilarlas"
+    area: Superadmin
+    priority: media
+
+  # ── Emails ─────────────────────────────────────────────────────────────────
+  - id: emails-alertas
+    title: "Emails de señal caída, en silencio y de vuelta, con la hora local, el motivo y un botón a la señal"
+    area: Emails
+    priority: alta
+
+  - id: emails-idioma
+    title: "Cada persona recibe los emails en el idioma de su consola"
+    area: Emails
+    priority: media
+
+  - id: emails-invitacion
+    title: "La invitación al equipo dice quién invita, a qué radio, con qué rol y cuánto dura el enlace"
+    area: Emails
+    priority: media
+
+  - id: emails-contrasena
+    title: "El enlace para cambiar la contraseña vence en una hora, sirve una vez y cierra las otras sesiones"
+    area: Emails
+    priority: baja
+
+  - id: emails-demo
+    title: "El pedido de demo manda el acuse a la radio y el aviso con sus datos a ventas"
+    area: Emails
+    priority: media

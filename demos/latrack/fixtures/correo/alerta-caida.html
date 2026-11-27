@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sin señal: La Brisa 101.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet"><style>
+  body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+  table,td{mso-table-lspace:0;mso-table-rspace:0}
+  img{border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic}
+  body{margin:0;padding:0;width:100%!important;background:#f3f4f7}
+  a.btn-link:hover{background:#2d20c4!important}
+  @media screen and (max-width:620px){
+    .card{width:100%!important;border-radius:0!important}
+    .pad{padding-left:24px!important;padding-right:24px!important}
+    .title{font-size:24px!important}
+    .btn-table{width:100%!important}
+    .btn-cell{display:block!important;width:100%!important}
+    .btn-link{display:block!important;text-align:center!important}
+  }
+</style>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;background:#eef0f4!important;color:#1f2430}
+  .top{position:sticky;top:0;z-index:2;height:56px;display:flex;align-items:center;gap:18px;padding:0 20px;background:#fff;border-bottom:1px solid #e3e6ec}
+  .top .app{font-weight:700;font-size:17px;color:#1f2430;display:flex;align-items:center;gap:8px}
+  .top .app i{display:inline-block;width:26px;height:20px;border-radius:4px;background:#3a2be0;position:relative}
+  .top .app i:after{content:"";position:absolute;left:4px;right:4px;top:4px;height:8px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:7px solid #fff;box-sizing:border-box}
+  .top .search{flex:0 1 420px;height:36px;border-radius:18px;background:#f1f3f6;color:#7a8091;font-size:14px;display:flex;align-items:center;padding:0 16px}
+  .top .tag{margin-left:auto;font-size:12px;color:#5a6072;background:#f1f3f6;border-radius:12px;padding:5px 11px}
+  .wrap{display:grid;grid-template-columns:330px 1fr;min-height:calc(100vh - 56px)}
+  .list{background:#fff;border-right:1px solid #e3e6ec;position:sticky;top:56px;align-self:start;height:calc(100vh - 56px);overflow:hidden}
+  .list h2{margin:0;padding:14px 18px 10px;font-size:13px;font-weight:600;color:#5a6072;text-transform:uppercase;letter-spacing:.04em}
+  .list a{display:block;padding:11px 18px 12px;border-bottom:1px solid #f0f1f4;text-decoration:none;color:inherit;border-left:3px solid transparent}
+  .list a.on{background:#eeedfd;border-left-color:#3a2be0}
+  .list .r1{display:flex;justify-content:space-between;font-size:13px;color:#1f2430;font-weight:600}
+  .list .r1 span:last-child{font-weight:400;color:#7a8091;font-size:12px}
+  .list .r2{font-size:13px;color:#1f2430;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .list .r3{font-size:12px;color:#7a8091;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pane{min-width:0}
+  .head{background:#fff;border-bottom:1px solid #e3e6ec;padding:18px 32px 16px}
+  .head h1{margin:0 0 8px;font-size:21px;font-weight:600;color:#111827}
+  .head p{margin:0;font-size:14px;color:#4b5563}
+  .head p strong{color:#111827}
+</style></head>
+<body>
+<div class="top"><span class="app"><i></i>Correo</span><span class="search">Buscar en el correo</span><span class="tag">Plantillas reales de Latrack · datos de ejemplo</span></div>
+<div class="wrap">
+  <nav class="list" aria-label="Correos"><h2>Recibidos</h2>
+<a href="/alerta-vuelve" data-mail="alerta-vuelve">
+      <div class="r1"><span>Latrack</span><span>11:03</span></div>
+      <div class="r2">Volvió la señal: La Brisa 101.1</div>
+      <div class="r3">Para Ana Morales · Volvió a las 11:01 (Houston), después de 19 min.</div></a>
+<a href="/alerta-caida" data-mail="alerta-caida" class="on">
+      <div class="r1"><span>Latrack</span><span>10:45</span></div>
+      <div class="r2">Sin señal: La Brisa 101.1</div>
+      <div class="r3">Para Ana Morales · La app no logra conectarse al stream desde 10:42 (Houston).</div></a>
+<a href="/alerta-silencio-en" data-mail="alerta-silencio-en">
+      <div class="r1"><span>Latrack</span><span>10:31</span></div>
+      <div class="r2">On air but silent: La Brisa 97.3</div>
+      <div class="r3">Para Pedro Salas · The stream answers but there</div></a>
+<a href="/invitacion" data-mail="invitacion">
+      <div class="r1"><span>Latrack</span><span>09:12</span></div>
+      <div class="r2">Ana Morales te invitó a Demo Media en Latrack</div>
+      <div class="r3">Para Pedro Salas · Acepta la invitación para entrar a la consola de Demo Media.</div></a>
+<a href="/contrasena" data-mail="contrasena">
+      <div class="r1"><span>Latrack</span><span>08:50</span></div>
+      <div class="r2">Cambia tu contraseña de Latrack</div>
+      <div class="r3">Para Ana Morales · Usa este enlace para elegir una contraseña nueva.</div></a>
+<a href="/demo-acuse" data-mail="demo-acuse">
+      <div class="r1"><span>Latrack</span><span>08:31</span></div>
+      <div class="r2">Recibimos tu pedido de demo de Latrack</div>
+      <div class="r3">Para Héctor Villarreal · Te escribimos en un día hábil para coordinar la demo.</div></a>
+<a href="/demo-ventas" data-mail="demo-ventas">
+      <div class="r1"><span>Latrack</span><span>08:31</span></div>
+      <div class="r2">Pedido de demo: Radio Sol de Laredo</div>
+      <div class="r3">Para Ventas de Latrack · Radio Sol de Laredo pidió una demo.</div></a>
+  </nav>
+  <section class="pane" data-open="alerta-caida">
+    <div class="head"><h1>Sin señal: La Brisa 101.1</h1>
+      <p><strong>Latrack</strong> &lt;latrack@adavance.com&gt; &nbsp;·&nbsp; para <strong>Ana Morales</strong> (gerente de La Brisa) &nbsp;·&nbsp; 10:45</p></div>
+    <div class="mail">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">La app no logra conectarse al stream desde 10:42 (Houston).&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f7;">
+<tr><td align="center" style="padding:32px 12px;">
+  <table role="presentation" class="card" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e6e8ee;">
+    <tr><td style="height:4px;line-height:4px;font-size:0;background:#3a2be0;">&nbsp;</td></tr>
+    <tr><td class="pad" style="padding:28px 40px 4px;">
+      <a href="https://qa-latrack.adavance.com/producto" style="text-decoration:none;"><img src="https://qa-latrack.adavance.com/email/latrack-logo.png" width="120" height="32" alt="latrack" style="display:block;width:120px;height:32px;"></a>
+    </td></tr>
+    <tr><td class="pad" style="padding:28px 40px 36px;">
+      <p style="margin:0 0 10px;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#3a2be0;">La Brisa 101.1</p>
+      <h1 class="title" style="margin:0 0 18px;font-family:'Bricolage Grotesque',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:28px;line-height:1.2;font-weight:600;letter-spacing:-0.01em;color:#171a21;">Se cayó la señal de La Brisa 101.1</h1>
+      <p style="margin:0 0 16px;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#2f3441;">Desde las <strong style="color:#171a21;font-weight:600;">10:42 (Houston)</strong> la app no logra conectarse al stream. Los oyentes que abran la app ahora no van a escuchar nada.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 16px;background:#f6f7f9;border:1px solid #e6e8ee;border-radius:10px;border-collapse:separate;"><tr><td style="padding:12px 16px;border-bottom:1px solid #e6e8ee;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;color:#5a6072;width:38%;vertical-align:top;">Estación</td><td style="padding:12px 16px;border-bottom:1px solid #e6e8ee;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;color:#171a21;vertical-align:top;word-break:break-word;">La Brisa 101.1</td></tr><tr><td style="padding:12px 16px;border-bottom:1px solid #e6e8ee;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;color:#5a6072;width:38%;vertical-align:top;">Desde</td><td style="padding:12px 16px;border-bottom:1px solid #e6e8ee;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;color:#171a21;vertical-align:top;word-break:break-word;">10:42 (Houston)</td></tr><tr><td style="padding:12px 16px;border-bottom:1px solid #e6e8ee;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;color:#5a6072;width:38%;vertical-align:top;">Stream</td><td style="padding:12px 16px;border-bottom:1px solid #e6e8ee;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;color:#171a21;vertical-align:top;word-break:break-word;">stream.labrisa-demo.adavance.com</td></tr><tr><td style="padding:12px 16px;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;color:#5a6072;width:38%;vertical-align:top;">Último chequeo</td><td style="padding:12px 16px;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;color:#171a21;vertical-align:top;word-break:break-word;">HTTP 503</td></tr></table>
+<table role="presentation" class="btn-table" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 8px;"><tr>
+  <td class="btn-cell" align="center" bgcolor="#3a2be0" style="border-radius:10px;">
+    <a href="https://qa-latrack.adavance.com/stations/cmwti8qye00024jo49jk43oi7#alertas" class="btn-link" style="display:inline-block;padding:15px 26px;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px;">Ver la estación</a>
+  </td></tr></table>
+<p style="margin:20px 0 0;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.55;color:#5a6072;">Te avisamos de nuevo cuando vuelva. Revisamos cada minuto.</p>
+    </td></tr>
+    <tr><td class="pad" style="padding:22px 40px 26px;background:#f6f7f9;border-top:1px solid #e6e8ee;">
+      <p style="margin:0 0 6px;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.55;color:#5a6072;">Te llegó porque estás en la lista de alertas de La Brisa 101.1 en Latrack. Puedes salir de la lista en la página de la estación, en Alertas.</p>
+      <p style="margin:0;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.55;color:#6b7180;">Latrack, tu radio en el celular con tu marca · <a href="https://qa-latrack.adavance.com/producto" style="color:#6b7180;text-decoration:underline;">latrack.adavance.com</a></p>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</div>
+  </section>
+</div>
+</body></html>

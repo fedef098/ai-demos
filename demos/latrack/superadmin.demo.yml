@@ -1,0 +1,125 @@
+# yaml-language-server: $schema=../../plugins/demofed/skills/demofed/templates/demo.schema.json
+id: superadmin
+product: Latrack
+archetype: admin-panel
+title: El panel del equipo de Latrack
+titleCard: false
+promise: >
+  El equipo de Latrack ve cada pedido de demo, da de alta la radio en un minuto y sigue sus
+  apps desde un solo panel.
+
+intake:
+  audience: equipo interno y clientes evaluando Latrack (efetrack)
+  in:
+    - «Pedidos de demo», con los pedidos que llegan de la página de producto
+    - «Crear empresa» desde el pedido, con la invitación al administrador
+    - La lista de empresas, con estado, prueba, marcas, señales, instalaciones y horas
+    - «Entrar» en la consola de una empresa (Demo Media), para darle soporte
+    - La cola de builds de las apps propias, con su estado y el comando para compilar
+  out:
+    - El pedido de demo desde /producto y la invitación aceptada (los muestra puesta-en-marcha)
+    - Activar un plan o cambiar el estado de una empresa (afecta su facturación)
+    - Mover un build de estado (los dos de La Brisa son datos de demo que quedan)
+  environment: >
+    QA por el origen de Railway, superadmin de QA. El seed deja un pedido de demo FICTICIO
+    («Radio Sol de Laredo», Héctor Villarreal) como fila, sin mandar nada; al crear la empresa
+    en cámara sale la invitación real a federicofiorottowork+latrack-onboarding@gmail.com, un
+    alias real del dueño, y nunca se acepta. El seed y --cleanup borran la empresa, su
+    invitación y el pedido. «Entrar» abre Demo Media y la cola es la app propia de La Brisa,
+    datos de QA que quedan. Los emails de contacto y el link de invitación van difuminados.
+  approved_by: Federico
+
+viewport: desktop
+locale: es-US
+timezone: America/Chicago
+narration: true
+pace: medium
+captions: false
+chapter: { position: top-right, top: 48 }
+# The invitation link (the token), the admin's address in the form and the contacts' emails in
+# the demo-request list are blurred. The console home's "now playing" line names the songs of
+# QA's stream (a real third-party station): blurred too.
+redact:
+  - 'main [role="status"] input'
+  - '#c-admin'
+  - 'main li > span > span.block'
+  - 'main a[href^="/stations/"] > span.min-w-0 > span:nth-child(3)'
+
+cast:
+  - as: equipo
+    name: Equipo de Latrack
+    context: Da de alta a las radios que piden la demo, les da soporte y compila sus apps propias.
+    auth: { via: storageState, file: ./seeds/.state/superadmin-session.json }
+
+world:
+  seed: ./seeds/superadmin.mjs
+  assert:
+    - hay un pedido de demo de Radio Sol de Laredo sin empresa
+    - la app propia de La Brisa tiene versiones en la cola de builds
+
+scenes:
+  - id: pedidos
+    title: "Cada pedido de demo, a la vista"
+    proves: Los pedidos que llegan de la página de producto quedan en el panel, con la radio y su contacto.
+    covers: [superadmin-pedidos]
+    watch: Los pedidos ya convertidos en empresa quedan marcados como invitados.
+    beats:
+      - as: equipo
+        go: /admin
+        awaits: sa-pedido-laredo
+        say: Radio Sol de Laredo pidió una demo hace un rato, y el equipo de Latrack ya la ve.
+      - highlight: sa-pedidos
+        say: Cada pedido de la página de producto llega acá, con la radio y su contacto.
+
+  - id: alta
+    title: "La radio, dada de alta en un minuto"
+    proves: Un toque completa la empresa desde el pedido; al crearla sale la invitación a su administrador.
+    covers: [superadmin-alta, invitacion]
+    watch: El link de invitación que se muestra una vez va difuminado; es la llave de entrada.
+    beats:
+      - click: sa-pedido-crear
+        awaits: sa-alta-laredo
+        say: Con un toque, la empresa nueva toma el nombre, el email y la primera marca del pedido.
+        voice: Con un toque, la empresa nueva toma el nombre, el correo y la primera marca del pedido.
+      - click: alta-crear
+        awaits: alta-creada
+        say: Queda creada con treinta días de prueba, y su dueño recibe la invitación por email.
+        voice: Queda creada con treinta días de prueba, y su dueño recibe la invitación por correo.
+
+  - id: empresas
+    title: "Todas las radios, de un vistazo"
+    proves: La lista de empresas con su estado, la prueba, marcas, señales, instalaciones y horas escuchadas.
+    covers: [superadmin-empresas]
+    watch: Las horas son de los últimos siete días; las instalaciones, de todas sus apps.
+    beats:
+      - scroll: sa-empresas
+        say: Abajo están todas las radios, con su estado y cuánto se las escucha.
+      - highlight: sa-empresa-demo
+        say: Demo Media tiene tres señales y cientos de instalaciones; Laredo arranca de cero.
+
+  - id: entrar
+    title: "Soporte sin pedir contraseñas"
+    objection: true
+    proves: «Entrar» abre la consola de cualquier empresa tal como la ve su equipo, sin pedirle la contraseña.
+    covers: [superadmin-entrar]
+    watch: Solo el superadmin tiene el botón; la sesión pasa a esa empresa y se vuelve desde el panel.
+    beats:
+      - click: sa-entrar-demo
+        awaits: sa-consola-demo
+      - scroll: sa-consola-demo
+        say: Si una radio pide ayuda, el equipo entra a su consola sin pedirle la contraseña…
+      - highlight: sa-consola-kpis
+        say: …y ve exactamente lo que ve ella.
+
+  - id: cola
+    title: "Sus apps propias, en la cola de builds"
+    proves: Las versiones pedidas por las radios, con su estado y el comando exacto para compilarlas.
+    covers: [superadmin-builds, app-propia-build]
+    watch: Se compila a mano en la nube de Expo, nunca en el servidor compartido; el estado lo ve la radio.
+    beats:
+      - go: /admin/builds
+        awaits: sa-cola-android
+        say: Y en la cola de builds siguen las apps propias que pidieron las radios…
+      - highlight: sa-cola-comando
+        say: …cada una con su estado y el comando listo para compilarla.
+    hold: 1s

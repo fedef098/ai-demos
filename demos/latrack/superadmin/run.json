@@ -1,0 +1,60 @@
+{
+  "id": "superadmin",
+  "title": "El panel del equipo de Latrack",
+  "promise": "El equipo de Latrack ve cada pedido de demo, da de alta la radio en un minuto y sigue sus apps desde un solo panel.\n",
+  "product": "Latrack",
+  "recordedAt": "2026-11-27T22:52:12.551Z",
+  "commit": "2e2ee84",
+  "baseUrl": "https://web-staging-52227612.up.railway.app",
+  "durationMs": 63720,
+  "video": {
+    "file": "demo.mp4",
+    "poster": "poster.jpg",
+    "narrated": true,
+    "bytes": 2439097,
+    "sha256": "8c5e9c94e0a3dcdb14fc9a6e7a5f2f937e8e3efd8fceebdc05d21954f074ae28"
+  },
+  "usedFixtures": [],
+  "scenes": [
+    {
+      "id": "pedidos",
+      "title": "Cada pedido de demo, a la vista",
+      "proves": "Los pedidos que llegan de la página de producto quedan en el panel, con la radio y su contacto.",
+      "watch": "Los pedidos ya convertidos en empresa quedan marcados como invitados.",
+      "startMs": 2,
+      "endMs": 11691
+    },
+    {
+      "id": "alta",
+      "title": "La radio, dada de alta en un minuto",
+      "proves": "Un toque completa la empresa desde el pedido; al crearla sale la invitación a su administrador.",
+      "watch": "El link de invitación que se muestra una vez va difuminado; es la llave de entrada.",
+      "startMs": 11691,
+      "endMs": 23748
+    },
+    {
+      "id": "empresas",
+      "title": "Todas las radios, de un vistazo",
+      "proves": "La lista de empresas con su estado, la prueba, marcas, señales, instalaciones y horas escuchadas.",
+      "watch": "Las horas son de los últimos siete días; las instalaciones, de todas sus apps.",
+      "startMs": 23748,
+      "endMs": 36646
+    },
+    {
+      "id": "entrar",
+      "title": "Soporte sin pedir contraseñas",
+      "proves": "«Entrar» abre la consola de cualquier empresa tal como la ve su equipo, sin pedirle la contraseña.",
+      "watch": "Solo el superadmin tiene el botón; la sesión pasa a esa empresa y se vuelve desde el panel.",
+      "startMs": 36646,
+      "endMs": 49708
+    },
+    {
+      "id": "cola",
+      "title": "Sus apps propias, en la cola de builds",
+      "proves": "Las versiones pedidas por las radios, con su estado y el comando exacto para compilarlas.",
+      "watch": "Se compila a mano en la nube de Expo, nunca en el servidor compartido; el estado lo ve la radio.",
+      "startMs": 49708,
+      "endMs": 63720
+    }
+  ]
+}

@@ -197,3 +197,15 @@ still reads «y pronto en el auto»). `reproductor-web` is new (efetrack `reprod
 - Engine: a cross-origin iframe no longer gets the overlay (its black cover was never lifted and the
   embed came out as a black bar), and the chapter pill is put back after navigating to another
   origin (it lived in the previous origin's sessionStorage).
+
+## Batch 5 (27 nov 2026): superadmin, emails
+
+| Demo | Creates / changes | Seed resets / `--cleanup` |
+|---|---|---|
+| superadmin | a demo request row for the FICTITIOUS «Radio Sol de Laredo» (no email); on camera the company is created from it, which sends the REAL first-admin invitation to `federicofiorottowork+latrack-onboarding@gmail.com` (never accepted). «Entrar» opens Demo Media; the build queue is read only | deletes the company (cascade: brand, home draft, invitation), its audit lines / assets and the demo request |
+| emails | nothing is emailed. The emails are Latrack's real templates rendered by `seeds/render-emails.ts` into `fixtures/correo/*.html` (fictitious data, fake blurred links) and served at `https://correo.latrack-demo.invalid/<id>`. Houston's alerts are turned on with Ana and Diego (@demo.latrack.app, undeliverable) for the console moment; the team form is typed, never sent | Houston's alerts back off with no recipients, as found |
+
+- Re-render the inbox when the templates change:
+  `PUBLIC_BASE_URL=https://qa-latrack.adavance.com ../latrack/apps/web/node_modules/.bin/tsx demos/latrack/seeds/render-emails.ts`.
+- Both blur the songs QA's stream reports (a real third-party station): the console home's
+  «Sonando» line and the station's «Lo que sonó».
